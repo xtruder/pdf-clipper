@@ -1,13 +1,13 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { Annotator } from "./Annotator";
+import { PdfReader } from "./PdfReader";
 
 export default {
-  title: "Annotator",
+  title: "PdfReader",
 };
 
-export const TheAnnotator: Story = (args) => {
+export const ThePdfReader: Story = (args) => {
   return (
     <div
       style={{
@@ -16,11 +16,11 @@ export const TheAnnotator: Story = (args) => {
         position: "relative",
       }}
     >
-      <Annotator url={args.url}></Annotator>
+      <PdfReader url={args.url}></PdfReader>
     </div>
   );
 };
 
-TheAnnotator.args = {
+ThePdfReader.args = {
   url: "https://arxiv.org/pdf/1708.08021.pdf",
 };

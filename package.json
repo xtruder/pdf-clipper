@@ -20,6 +20,8 @@
   "homepage": "https://github.com/xtruder/pdf-clipper#readme",
   "dependencies": {
     "@types/react-helmet": "^6.1.4",
+    "pdfjs-dist": "^2.11.338",
+    "rambda": "^6.9.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-helmet": "^6.1.0",

@@ -1,3 +1,4 @@
+import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 import React, { useState } from "react";
 
 import {
@@ -51,7 +52,7 @@ export type AnnotatorArgs = {
   ) => void;
 };
 
-export const Annotator: React.FC<AnnotatorArgs> = ({
+export const PdfReader: React.FC<AnnotatorArgs> = ({
   url,
   highlights: initialHighlights = [],
   onHighightChange,
