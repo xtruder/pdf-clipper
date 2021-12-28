@@ -1,7 +1,7 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { PdfLoader } from "./PdfLoader";
+import { PDFLoader } from "./PdfLoader";
 
 export default {
   title: "PdfLoader",
@@ -9,14 +9,14 @@ export default {
 
 export const ThePdfLoader: Story = (args) => {
   return (
-    <PdfLoader
+    <PDFLoader
       url={args.url}
       showDocument={(document) => (
         <a>New PDF document with {document.numPages} pages</a>
       )}
       onError={args.onError}
       showLoader={() => <a>Loading...</a>}
-    ></PdfLoader>
+    ></PDFLoader>
   );
 };
 

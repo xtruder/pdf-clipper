@@ -45,11 +45,12 @@ export interface PDFViewerProps {
   disableInteractions?: boolean;
   pageLayers?: PageLayer[];
 
-  onDocumentReady(doc: PDFDocument): void;
-  onTextLayerRendered(event: { pageNumber: number }): void;
-  onKeyDown(event: KeyboardEvent): void;
-  onMouseDown(event: MouseEvent): void;
-  onRangeSelection(isCollapsed: boolean, range: Range | null): void;
+  onDocumentReady?: (doc: PDFDocument) => void;
+  onTextLayerRendered?: (event: { pageNumber: number }) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
+  onMouseDown?: (event: MouseEvent) => void;
+  onMouseUp?: (event: MouseEvent) => void;
+  onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -60,11 +61,12 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   disableInteractions = false,
   pageLayers = [],
 
-  onDocumentReady,
-  onTextLayerRendered,
-  onKeyDown,
-  onMouseDown,
-  onRangeSelection,
+  onDocumentReady = () => null,
+  onTextLayerRendered = () => null,
+  onKeyDown = () => null,
+  onMouseUp = () => null,
+  onMouseDown = () => null,
+  onRangeSelection = () => null,
 }) => {
   // current pdf document that we are displaying
   const [currentPdfDocument, setCurrentPdfDocument] =
@@ -120,7 +122,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   };
 
   // when selected text on pdf has changed
-  const onSelectionChanged = debounce(() => {
+  const onSelectionChanged = () => {
     const selection = getWindow(containerRef.current).getSelection();
     if (!selection) return;
 
@@ -132,7 +134,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     }
 
     onRangeSelection(selection.isCollapsed, range);
-  }, 10);
+  };
 
   const onScroll = () => null;
 
@@ -184,6 +186,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
         }`;
 
         const layerPage = layer.pages.find((p) => p.pageNumber === pageNumber);
+        ReactDOM.unstable_renderSubtreeIntoContainer;
         ReactDOM.render(layerPage?.element || <></>, pageLayerDiv);
       }
     }
@@ -205,7 +208,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     const pdfViewer = new PDFJSViewer({
       container: containerRef.current,
       eventBus,
-      textLayerMode: 2,
+      textLayerMode: 1,
       removePageBorders: true,
       linkService,
       renderer: "canvas",
@@ -274,12 +277,12 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     : "";
 
   return (
-    <div onPointerDown={onMouseDown}>
+    <div onPointerDown={onMouseDown} onPointerUp={onMouseUp}>
       <div
         ref={containerRef}
-        className={`absolute overflow-auto w-full h-full ${disableInteractionsClass}`}
+        className={`absolute overflow-auto w-full h-full`}
       >
-        <div className="pdfViewer" />
+        <div className={`pdfViewer ${disableInteractionsClass}`} />
         {children}
       </div>
     </div>

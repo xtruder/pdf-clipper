@@ -8,7 +8,7 @@ export const groupHighlightsByPage = (
   // get all rects from all highlights
   const allRects = highlights
     .map((highlight) =>
-      highlight.location.areas.map((rect) => ({
+      highlight.location.rects.map((rect) => ({
         ...rect,
         pageNumber: rect.pageNumber || highlight.location.pageNumber,
         highlight,

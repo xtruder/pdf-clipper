@@ -2,7 +2,7 @@ import React from "react";
 import { Story } from "@storybook/react";
 
 import { PDFViewer } from "./PdfViewer";
-import { PdfLoader } from "./PdfLoader";
+import { PDFLoader } from "./PdfLoader";
 
 export default {
   title: "PdfViewer",
@@ -10,7 +10,7 @@ export default {
 
 export const ThePdfViewer: Story = (args) => {
   return (
-    <PdfLoader
+    <PDFLoader
       url={args.url}
       showDocument={(document) => (
         <PDFViewer
@@ -31,7 +31,7 @@ export const ThePdfViewer: Story = (args) => {
       )}
       onError={args.onError}
       showLoader={() => <a>Loading...</a>}
-    ></PdfLoader>
+    ></PDFLoader>
   );
 };
 

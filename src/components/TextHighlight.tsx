@@ -30,7 +30,7 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
     ? scrolledToColorClass
     : colorToClass[color || defaultColor];
 
-  const rectClass = `cursor-pointer absolute transition-color duration-200 ${colorClass}`;
+  const rectClass = `cursor-pointer absolute ${colorClass}`;
 
   return (
     <div className={`absolute`}>
