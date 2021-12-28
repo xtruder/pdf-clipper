@@ -21,8 +21,8 @@ const initialDragState: DragState = {
 };
 
 export type MouseSelectionProps = {
-  className: string;
-  containerClassName: string;
+  className?: string;
+  containerClassName?: string;
   minSelection?: number;
   onSelection: (
     start: Target,
@@ -32,30 +32,25 @@ export type MouseSelectionProps = {
   ) => void;
   shouldStart?: (event: MouseEvent) => boolean;
   onDragStart?: (start: Target) => void;
-  onDragEnd?: (start: Target, end: Target) => void;
-  onReset?: () => void;
+  onDragEnd?: (start: Target, end: Target | null) => void;
 };
 
 export const MouseSelection: React.FC<MouseSelectionProps> = ({
-  className,
-  containerClassName,
-  onSelection,
+  className = "",
+  containerClassName = "",
   minSelection = 10,
+
+  // handlers
+  onSelection,
   shouldStart = () => true,
   onDragStart = () => null,
   onDragEnd = () => null,
-  onReset = () => null,
 }) => {
   const [dragState, setDragState] = useState<DragState>(initialDragState);
 
   const { start, end, selected } = dragState;
 
   const rootEl = useRef<HTMLDivElement | null>(null);
-
-  const reset = () => {
-    setDragState(initialDragState);
-    onReset();
-  };
 
   const shouldRender = (boundingRect: Rect): boolean =>
     boundingRect.width >= minSelection && boundingRect.height >= minSelection;
@@ -85,7 +80,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      if (!shouldStart(event)) return reset();
+      if (!shouldStart(event)) return setDragState(initialDragState);
       if (!event.target || !isHTMLElement(event.target)) return;
 
       const start = {
@@ -133,7 +128,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
           !containerEl.contains(asElement(event.target)) ||
           !shouldRender(boundingRect)
         ) {
-          return reset();
+          return setDragState({ start, end: null, selected: true });
         }
 
         setDragState({
@@ -167,10 +162,16 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
 
   // drag end effect handler
   useEffect(() => {
-    if (selected && start && end) {
-      const boundingRect = getBoundingRect(start, end);
+    if (selected && start) {
       onDragEnd(start, end);
-      onSelection(start, end, boundingRect, reset);
+
+      if (end) {
+        const boundingRect = getBoundingRect(start, end);
+
+        onSelection(start, end, boundingRect, () =>
+          setDragState(initialDragState)
+        );
+      }
     }
   }, [dragState]);
 

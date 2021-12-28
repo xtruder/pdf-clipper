@@ -17,7 +17,6 @@ export const TheMouseSelection: Story = (args) => {
       onSelection={args.onSelection}
       onDragStart={args.onDragStart}
       onDragEnd={args.onDragEnd}
-      onReset={args.onReset}
     ></MouseSelection>
   );
 };
@@ -36,8 +35,5 @@ TheMouseSelection.argTypes = {
   },
   onDragEnd: {
     action: "drag end",
-  },
-  onReset: {
-    action: "drag reset",
   },
 };
