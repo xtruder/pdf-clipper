@@ -1,18 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import { Story } from "@storybook/react";
 
 import { PDFReader } from "./PdfReader";
+
+import { Highlight } from "~/types";
 
 export default {
   title: "PdfReader",
 };
 
+let s4 = () => {
+  return Math.floor((1 + Math.random()) * 0x10000)
+    .toString(16)
+    .substring(1);
+};
+
 export const ThePdfReader: Story = (args) => {
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+
   return (
     <PDFReader
       url={args.url}
+      highlights={highlights}
       pdfScaleValue={args.pdfScaleValue}
       selectionColor={args.selectionColor}
+      onNewHighlight={(highlight) => {
+        const id = s4();
+        console.log("here");
+
+        setHighlights([...highlights, { ...highlight, id }]);
+      }}
     ></PDFReader>
   );
 };

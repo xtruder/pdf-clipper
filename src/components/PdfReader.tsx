@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
+import useState from "react-usestateref";
 
 import { PDFLoader } from "./PdfLoader";
 import { MouseSelection, Target } from "./MouseSelection";
@@ -13,6 +14,7 @@ import {
 import {
   Highlight,
   HighlightColor,
+  NewHighlight,
   PartialHighlight,
   Rect,
   Viewport,
@@ -26,6 +28,7 @@ import { groupHighlightsByPage } from "~/lib/highlights";
 import { PdfHighlight } from "./PdfHighlight";
 
 import "./PdfReader.css";
+import { clearRangeSelection } from "~/lib/dom-util";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "textLayer__selection_red",
@@ -43,7 +46,11 @@ const colorToClassName: Record<HighlightColor, string> = {
 
 const defaultColor = HighlightColor.YELLOW;
 
-export interface PDFReaderProps {
+interface PDFReaderHandlers {
+  onNewHighlight?: (highlight: NewHighlight) => void;
+}
+
+export interface PDFReaderProps extends PDFReaderHandlers {
   url: string;
   pdfScaleValue?: string;
   pageNumber?: number;
@@ -55,6 +62,7 @@ export interface PDFReaderProps {
   // selection is a highlight that is still in progress of selecting
   selection?: PartialHighlight;
 
+  // color to use for selection
   selectionColor?: HighlightColor;
 }
 
@@ -64,19 +72,17 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   highlights = [],
   selection,
   selectionColor = defaultColor,
+
+  onNewHighlight = () => null,
 }) => {
   const [disableInteractions, setDisableInteractions] = useState(false);
-  const [pdfDocument, setPDFDocument] = useState<PDFDocument | null>(null);
-  const [currentSelection, setCurrentSelection] =
-    useState<PartialHighlight | null>(null);
-  const [inprogressSelection, setInprogressSelection] =
-    useState<PartialHighlight | null>(null);
-
-  const pdfDocumentRef = useRef(pdfDocument);
-  pdfDocumentRef.current = pdfDocument;
-
-  const inprogressSelectionRef = useRef(inprogressSelection);
-  inprogressSelectionRef.current = inprogressSelection;
+  const [pdfDocument, setPDFDocument, pdfDocumentRef] =
+    useState<PDFDocument | null>(null);
+  const [currentSelection, setCurrentSelection] = useState<NewHighlight | null>(
+    null
+  );
+  const [inprogressSelection, setInprogressSelection, inprogressSelectionRef] =
+    useState<NewHighlight | null>(null);
 
   const selectionColorRef = useRef(selectionColor);
   selectionColorRef.current = selectionColor;
@@ -102,7 +108,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     const page = pdfDocument.getPageView(pageNumber)!;
 
     // create a new highlight
-    const highlight: PartialHighlight = {
+    const highlight: NewHighlight = {
       location: {
         boundingRect: viewportRectToScaledPageRect(boundingRect, page.viewport),
         rects: rects.map((rect) =>
@@ -117,6 +123,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     };
 
     console.log("set in progress", selectionColorRef.current);
+    setCurrentSelection(null);
     setInprogressSelection(highlight);
   };
 
@@ -142,7 +149,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     if (!image) return;
 
     // create a new higlightwith image content
-    const highlight: PartialHighlight = {
+    const highlight: NewHighlight = {
       location: {
         boundingRect: viewportRectToScaledPageRect(
           { ...boundingRect, pageNumber: page.number },
@@ -152,9 +159,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         pageNumber: page.number,
       },
       content: { image },
+      color: selectionColorRef.current,
     };
 
     console.log("set in progress");
+    setCurrentSelection(null);
     setInprogressSelection(highlight);
   };
 
@@ -206,11 +215,16 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   };
 
   let allHighlights: PartialHighlight[] = [...highlights];
-  if (currentSelection) allHighlights.push(currentSelection);
+  //if (currentSelection) allHighlights.push(currentSelection);
 
-  useEffect(() => {}, [highlights]);
+  useEffect(() => {
+    if (currentSelection === inprogressSelection && currentSelection !== null) {
+      onNewHighlight(currentSelection);
+      setInprogressSelection(null);
 
-  useEffect(() => {}, [selection, currentSelection]);
+      if (currentSelection.content.text) clearRangeSelection();
+    }
+  }, [currentSelection]);
 
   return (
     <PDFLoader
@@ -221,12 +235,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           pdfScaleValue={pdfScaleValue}
           disableInteractions={disableInteractions}
           containerClassName={colorToRangeSelectionClassName[selectionColor]}
-          onDocumentReady={(doc) => {
-            setPDFDocument(doc);
-          }}
+          onDocumentReady={setPDFDocument}
           onRangeSelection={onRangeSelection}
           onKeyDown={(event) => {
-            if (event.code === "Escape") setCurrentSelection(null);
+            if (event.code === "Escape") clearRangeSelection();
             if (event.code === "Enter") {
               setCurrentSelection(inprogressSelectionRef.current);
             }

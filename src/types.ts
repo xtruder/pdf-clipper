@@ -73,6 +73,10 @@ export interface Highlight {
   comment?: HighlightComment;
 }
 
+export interface NewHighlight
+  extends Omit<Highlight, "id">,
+    Partial<Pick<Highlight, "id">> {}
+
 export interface PartialHighlight extends Partial<Highlight> {
   location: HighlightLocation;
 }

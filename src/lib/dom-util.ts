@@ -1,9 +1,9 @@
-import { LTWH } from "~/types";
+import { Rect } from "~/types";
 
 // gets canvas area as png data url
 export const getCanvasAreaAsPNG = (
   canvas: HTMLCanvasElement,
-  { left, top, width, height }: LTWH
+  { left, top, width, height }: Rect
 ): string => {
   const doc = canvas.ownerDocument;
 
@@ -30,4 +30,14 @@ export const getCanvasAreaAsPNG = (
 
   // return image as png data url
   return imgCanvas.toDataURL("image/png");
+};
+
+export const clearRangeSelection = () => {
+  if (window.getSelection()?.empty) {
+    // Chrome
+    window.getSelection()?.empty();
+  } else if (window.getSelection()?.removeAllRanges) {
+    // Firefox
+    window.getSelection()?.removeAllRanges();
+  }
 };
