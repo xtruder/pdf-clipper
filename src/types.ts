@@ -49,10 +49,10 @@ export interface HighlightLocation {
 }
 
 export enum HighlightColor {
-  RED,
-  YELLOW,
-  GREEN,
-  BLUE,
+  RED = "red",
+  YELLOW = "yellow",
+  GREEN = "green",
+  BLUE = "blue",
 }
 
 export interface HighlightContent {

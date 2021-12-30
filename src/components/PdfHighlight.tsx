@@ -26,6 +26,7 @@ export const PdfHighlight: React.FC<PdfHighlightProps> = ({
 
   const component = isTextHighlight ? (
     <TextHighlight
+      index={index}
       isScrolledTo={isScrolledTo}
       highlight={highlight}
       toViewportRect={toViewportRect}

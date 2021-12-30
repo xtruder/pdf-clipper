@@ -24,6 +24,7 @@ export type MouseSelectionProps = {
   className?: string;
   containerClassName?: string;
   minSelection?: number;
+  active?: boolean;
   onSelection: (
     start: Target,
     end: Target,
@@ -31,6 +32,7 @@ export type MouseSelectionProps = {
     resetSelection: () => void
   ) => void;
   shouldStart?: (event: MouseEvent) => boolean;
+  shouldEnd?: (event: MouseEvent | KeyboardEvent) => boolean;
   onDragStart?: (start: Target) => void;
   onDragEnd?: (start: Target, end: Target | null) => void;
 };
@@ -39,14 +41,18 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   className = "",
   containerClassName = "",
   minSelection = 10,
+  active = true,
 
   // handlers
   onSelection,
   shouldStart = () => true,
+  shouldEnd = () => true,
   onDragStart = () => null,
   onDragEnd = () => null,
 }) => {
   const [dragState, setDragState] = useState<DragState>(initialDragState);
+  const dragStateRef = useRef(dragState);
+  dragStateRef.current = dragState;
 
   const { start, end, selected } = dragState;
 
@@ -57,6 +63,8 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
 
   // componentDidMount set event listeners
   useEffect(() => {
+    if (!active) return setDragState(initialDragState);
+
     const containerEl = rootEl.current?.parentElement;
 
     if (!containerEl) return;
@@ -80,12 +88,18 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     };
 
     const onMouseDown = (event: MouseEvent) => {
-      if (!shouldStart(event)) return setDragState(initialDragState);
+      // don't reset drag state if still dragging
+      if (dragStateRef.current.start !== null && !dragStateRef.current.selected)
+        return;
+
+      // check whether there is event target
       if (!event.target || !isHTMLElement(event.target)) return;
 
+      // if we should not start reset the drag state
+      if (!shouldStart(event)) return setDragState(initialDragState);
+
       const start = {
-        x: event.pageX,
-        y: event.pageY,
+        ...containerCoords(event.pageX, event.pageY),
         target: asElement(event.target),
       };
 
@@ -105,22 +119,18 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
           selected: false,
         });
 
-      const onMouseUp = (event: MouseEvent): void => {
-        if (!event.currentTarget) return;
+      const onEnd = (end: Point): void => {
+        const { ownerDocument: doc } = containerEl;
 
         // reset mousemove event listener
-        event.currentTarget.removeEventListener(
-          "mousemove",
-          onMouseMove as EventListener
-        );
+        doc.body.removeEventListener("mousemove", onMouseMove as EventListener);
 
         // reset mouseup event listener
-        event.currentTarget.removeEventListener(
-          "mouseup",
-          onMouseUp as EventListener
-        );
+        doc.body.removeEventListener("mouseup", onMouseUp as EventListener);
 
-        const end = containerCoords(event.pageX, event.pageY);
+        // reset mouseup event listener
+        doc.body.removeEventListener("keyup", onKeyUp as EventListener);
+
         const boundingRect = getBoundingRect(start, end);
 
         if (
@@ -138,11 +148,31 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
         });
       };
 
+      const onKeyUp = (event: KeyboardEvent): void => {
+        console.log(event);
+        if (!shouldEnd(event)) return;
+
+        const end = dragStateRef.current.end;
+
+        if (!end) return;
+
+        onEnd(end);
+      };
+
+      const onMouseUp = (event: MouseEvent): void => {
+        if (!event.currentTarget) return;
+
+        if (!shouldEnd(event)) return;
+
+        onEnd(containerCoords(event.pageX, event.pageY));
+      };
+
       // add event listener for mouseup and mousemove events
       const { ownerDocument: doc } = containerEl;
       if (doc.body) {
         doc.body.addEventListener("mouseup", onMouseUp);
         doc.body.addEventListener("mousemove", onMouseMove);
+        doc.body.addEventListener("keyup", onKeyUp);
       }
 
       return;
@@ -153,7 +183,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
 
     // remove mousedown listener on component unmount
     return () => containerEl.removeEventListener("mousedown", onMouseDown);
-  }, [shouldStart, minSelection, onSelection, onDragStart, onDragEnd]);
+  }, [shouldStart, minSelection, onSelection, onDragStart, onDragEnd, active]);
 
   // drag start effect handler
   useEffect(() => {
@@ -177,7 +207,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
 
   return (
     <div ref={rootEl} className={containerClassName}>
-      {start && end && (
+      {active && start && end && (
         <div
           className={className}
           style={{ ...getBoundingRect(start, end), position: "absolute" }}

@@ -8,7 +8,13 @@ export default {
 };
 
 export const ThePdfReader: Story = (args) => {
-  return <PDFReader url={args.url}></PDFReader>;
+  return (
+    <PDFReader
+      url={args.url}
+      pdfScaleValue={args.pdfScaleValue}
+      selectionColor={args.selectionColor}
+    ></PDFReader>
+  );
 };
 
 ThePdfReader.args = {
@@ -16,4 +22,5 @@ ThePdfReader.args = {
   pdfScaleValue: "auto",
   pageNumber: 1,
   scrollTop: 0,
+  selectionColor: "red",
 };

@@ -10,7 +10,13 @@ import {
   getPagesFromRange,
   isHTMLElement,
 } from "~/lib/pdfjs-dom";
-import { Highlight, PartialHighlight, Rect } from "~/types";
+import {
+  Highlight,
+  HighlightColor,
+  PartialHighlight,
+  Rect,
+  Viewport,
+} from "~/types";
 import {
   getBoundingRectForRects,
   getHighlightedRectsWithinPages,
@@ -18,11 +24,28 @@ import {
 } from "~/lib/coordinates";
 import { groupHighlightsByPage } from "~/lib/highlights";
 import { PdfHighlight } from "./PdfHighlight";
-import debounce from "lodash.debounce";
+
+import "./PdfReader.css";
+
+const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
+  [HighlightColor.RED]: "textLayer__selection_red",
+  [HighlightColor.YELLOW]: "textLayer__selection_yellow",
+  [HighlightColor.GREEN]: "textLayer__selection_green",
+  [HighlightColor.BLUE]: "textLayer__selection_blue",
+};
+
+const colorToClassName: Record<HighlightColor, string> = {
+  [HighlightColor.RED]: "bg-red-200",
+  [HighlightColor.YELLOW]: "bg-yellow-200",
+  [HighlightColor.GREEN]: "bg-green-200",
+  [HighlightColor.BLUE]: "bg-blue-200",
+};
+
+const defaultColor = HighlightColor.YELLOW;
 
 export interface PDFReaderProps {
   url: string;
-  pdfScale?: string;
+  pdfScaleValue?: string;
   pageNumber?: number;
   scrollTop?: number;
 
@@ -31,12 +54,16 @@ export interface PDFReaderProps {
 
   // selection is a highlight that is still in progress of selecting
   selection?: PartialHighlight;
+
+  selectionColor?: HighlightColor;
 }
 
 export const PDFReader: React.FC<PDFReaderProps> = ({
   url,
+  pdfScaleValue,
   highlights = [],
   selection,
+  selectionColor = defaultColor,
 }) => {
   const [disableInteractions, setDisableInteractions] = useState(false);
   const [pdfDocument, setPDFDocument] = useState<PDFDocument | null>(null);
@@ -50,6 +77,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   const inprogressSelectionRef = useRef(inprogressSelection);
   inprogressSelectionRef.current = inprogressSelection;
+
+  const selectionColorRef = useRef(selectionColor);
+  selectionColorRef.current = selectionColor;
 
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
     const pdfDocument = pdfDocumentRef.current;
@@ -83,9 +113,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
       content: {
         text: range.toString(),
       },
+      color: selectionColorRef.current,
     };
 
-    console.log("set in progress");
+    console.log("set in progress", selectionColorRef.current);
     setInprogressSelection(highlight);
   };
 
@@ -123,7 +154,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
       content: { image },
     };
 
-    setCurrentSelection(highlight);
+    console.log("set in progress");
+    setInprogressSelection(highlight);
   };
 
   const shouldStartAreaSelection = (event: MouseEvent): boolean => {
@@ -132,6 +164,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
       isHTMLElement(event.target) &&
       Boolean(asElement(event.target).closest(".page"))
     );
+  };
+
+  const shouldEndAreaSelection = (
+    event: MouseEvent | KeyboardEvent
+  ): boolean => {
+    if (event.type === "keyup" && event.altKey) return true;
+    return !event.altKey;
   };
 
   const renderPageLayers = (allHighlights: PartialHighlight[]): PageLayer[] => {
@@ -147,10 +186,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     for (const [key, pageHighlights] of Object.entries(highlightsByPage)) {
       const pageNumber = Number(key);
 
-      const viewport = pdfDocument?.getPageView(pageNumber)?.viewport;
-      if (!viewport) continue;
-
-      const element = (
+      const element = (viewport: Viewport) => (
         <>
           {pageHighlights.map((highlight, index) => (
             <PdfHighlight
@@ -158,7 +194,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               highlight={highlight}
               isScrolledTo={false}
               viewport={viewport}
-            ></PdfHighlight>
+            />
           ))}
         </>
       );
@@ -182,8 +218,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
       showDocument={(document) => (
         <PDFViewer
           pdfDocument={document}
+          pdfScaleValue={pdfScaleValue}
           disableInteractions={disableInteractions}
-          onDocumentReady={setPDFDocument}
+          containerClassName={colorToRangeSelectionClassName[selectionColor]}
+          onDocumentReady={(doc) => {
+            setPDFDocument(doc);
+          }}
           onRangeSelection={onRangeSelection}
           onKeyDown={(event) => {
             if (event.code === "Escape") setCurrentSelection(null);
@@ -199,16 +239,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           pageLayers={renderPageLayers(allHighlights)}
         >
           <MouseSelection
-            className="absolute mix-blend-multiply border-dashed border-2 bg-yellow-200"
-            onDragStart={() => {
-              console.log("drag start");
-              setDisableInteractions(true);
-            }}
-            onDragEnd={() => {
-              console.log("drag end");
-              setDisableInteractions(false);
-            }}
+            className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[selectionColor]}`}
+            onDragStart={() => setDisableInteractions(true)}
+            onDragEnd={() => setDisableInteractions(false)}
             shouldStart={shouldStartAreaSelection}
+            shouldEnd={shouldEndAreaSelection}
             onSelection={onMouseSelection}
           />
         </PDFViewer>

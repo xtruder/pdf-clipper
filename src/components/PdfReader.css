@@ -1,0 +1,17 @@
+.textLayer__selection_red .textLayer ::selection {
+  @apply bg-red-100;
+}
+
+.textLayer__selection_yellow .textLayer ::selection {
+  @apply bg-yellow-100;
+}
+
+.textLayer__selection_green .textLayer ::selection {
+  @apply bg-green-100;
+}
+
+.textLayer__selection_blue .textLayer ::selection {
+  @apply bg-blue-100;
+}
+
+

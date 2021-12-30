@@ -27,6 +27,7 @@ export const ThePdfViewer: Story = (args) => {
             top: args.scrollTop,
           }}
           pageLayers={args.pageLayers}
+          containerClassName="textLayer__selection_red"
         />
       )}
       onError={args.onError}

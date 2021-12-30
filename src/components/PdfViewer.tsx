@@ -1,5 +1,6 @@
 import React, { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
-import { debounce } from "lodash";
+import ReactDOM from "react-dom";
+import debounce from "lodash.debounce";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
 import {
@@ -9,13 +10,16 @@ import {
   PDFViewer as PDFJSViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import { findOrCreateContainerLayer, getWindow } from "~/lib/pdfjs-dom";
-import { PageView, Rect } from "~/types";
+import {
+  findOrCreateContainerLayer,
+  getPagesFromRange,
+  getWindow,
+} from "~/lib/pdfjs-dom";
+import { PageView, Rect, Viewport } from "~/types";
 import { getCanvasAreaAsPNG } from "~/lib/dom-util";
 
 import "pdfjs-dist/web/pdf_viewer.css";
 import "./PdfViewer.css";
-import ReactDOM from "react-dom";
 
 interface ScrollPosition {
   pageNumber: number;
@@ -27,7 +31,7 @@ export interface PageLayer {
   className?: string;
   pages: {
     pageNumber: number;
-    element: JSX.Element;
+    element: JSX.Element | ((viewport: Viewport) => JSX.Element);
   }[];
 }
 
@@ -38,6 +42,7 @@ export interface PDFDocument {
 }
 
 export interface PDFViewerProps {
+  containerClassName?: string;
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
   children?: JSX.Element | null;
@@ -54,6 +59,7 @@ export interface PDFViewerProps {
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({
+  containerClassName = "",
   pdfDocument,
   pdfScaleValue = "auto",
   children = null,
@@ -139,8 +145,9 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   const onScroll = () => null;
 
   const onPagesInit = () => {
-    if (scrollTo) doScroll(scrollTo);
     onDocumentReady({ getPageView, screenshotPageArea, pdfDocument });
+
+    if (scrollTo) doScroll(scrollTo);
   };
 
   const textLayerRendered = (event: any) => {
@@ -171,12 +178,12 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
 
     for (const layer of pageLayers) {
       for (let pageNumber of renderedPages) {
-        const page = getPageView(pageNumber);
-        if (!page) continue;
+        const pageView = getPageView(pageNumber);
+        if (!pageView) continue;
 
         // adds div to page div for highlights
         const pageLayerDiv = findOrCreateContainerLayer<HTMLDivElement>(
-          page.div,
+          pageView.div,
           layer.name
         );
         if (!pageLayerDiv) return;
@@ -186,8 +193,13 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
         }`;
 
         const layerPage = layer.pages.find((p) => p.pageNumber === pageNumber);
-        ReactDOM.unstable_renderSubtreeIntoContainer;
-        ReactDOM.render(layerPage?.element || <></>, pageLayerDiv);
+
+        let element = layerPage?.element || <></>;
+        if (typeof element === "function") {
+          element = element(pageView.viewport);
+        }
+
+        ReactDOM.render(element, pageLayerDiv);
       }
     }
   };
@@ -270,19 +282,28 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   }, [pdfScaleValue]);
 
   // update page layers when pageLayers change or list of rendered pages change
-  useEffect(() => updatePageLayers(), [pageLayers, renderedPages]);
+  useEffect(
+    () => updatePageLayers(),
+    [pageLayers, renderedPages, pdfScaleValue]
+  );
 
-  const disableInteractionsClass = disableInteractions
-    ? "select-none pointer-events-none"
-    : "";
+  useEffect(() => {
+    pdfViewer?.viewer?.classList.toggle("select-none", disableInteractions);
+    pdfViewer?.viewer?.classList.toggle(
+      "pointer-events-none",
+      disableInteractions
+    );
+  }, [disableInteractions, pdfViewer]);
 
   return (
     <div onPointerDown={onMouseDown} onPointerUp={onMouseUp}>
       <div
         ref={containerRef}
-        className={`absolute overflow-auto w-full h-full`}
+        className={`absolute overflow-auto w-full h-full ${containerClassName}`}
       >
-        <div className={`pdfViewer ${disableInteractionsClass}`} />
+        {/** React must not change this div, as it is being rendered by pdfjs */}
+        <div className="pdfViewer" />
+
         {children}
       </div>
     </div>

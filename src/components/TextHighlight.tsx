@@ -3,10 +3,10 @@ import React from "react";
 import { PartialHighlight, HighlightColor, ScaledRect, Rect } from "~/types";
 
 const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-100 text-red-800",
-  [HighlightColor.YELLOW]: "bg-yellow-100 text-yellow-800",
-  [HighlightColor.GREEN]: "bg-green-100 text-green-800",
-  [HighlightColor.BLUE]: "bg-blue-100 text-blue-800",
+  [HighlightColor.RED]: "bg-red-200 text-red-800",
+  [HighlightColor.YELLOW]: "bg-yellow-200 text-yellow-800",
+  [HighlightColor.GREEN]: "bg-green-200 text-green-800",
+  [HighlightColor.BLUE]: "bg-blue-200 text-blue-800",
 };
 
 const defaultColor = HighlightColor.YELLOW;
@@ -14,12 +14,14 @@ const defaultColor = HighlightColor.YELLOW;
 const scrolledToColorClass: string = "bg-red-100";
 
 export interface TextHighlightProps {
+  index: string | number;
   highlight: PartialHighlight;
   isScrolledTo: boolean;
   toViewportRect: (rect: ScaledRect) => Rect;
 }
 
 export const TextHighlight: React.FC<TextHighlightProps> = ({
+  index,
   highlight,
   isScrolledTo,
   toViewportRect,
@@ -33,7 +35,7 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
   const rectClass = `cursor-pointer absolute ${colorClass}`;
 
   return (
-    <div className={`absolute`}>
+    <div className={`absolute`} key={index}>
       <div className="opacity-100">
         {location.rects.map((rect, index) => (
           <div key={index} style={toViewportRect(rect)} className={rectClass} />
