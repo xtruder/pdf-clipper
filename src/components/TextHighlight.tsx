@@ -32,13 +32,15 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
     ? scrolledToColorClass
     : colorToClass[color || defaultColor];
 
-  const rectClass = `cursor-pointer absolute ${colorClass}`;
-
   return (
     <div className={`absolute`} key={index}>
       <div className="opacity-100">
         {location.rects.map((rect, index) => (
-          <div key={index} style={toViewportRect(rect)} className={rectClass} />
+          <div
+            key={index}
+            style={toViewportRect(rect)}
+            className={`cursor-pointer absolute ${colorClass}`}
+          />
         ))}
       </div>
     </div>

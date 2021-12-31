@@ -2,6 +2,7 @@ import React from "react";
 import { scaledRectToViewportRect } from "~/lib/coordinates";
 
 import { PartialHighlight, ScaledRect, Viewport } from "~/types";
+import { AreaHighlight } from "./AreaHighlight";
 import { TextHighlight } from "./TextHighlight";
 
 export interface PdfHighlightProps {
@@ -31,7 +32,13 @@ export const PdfHighlight: React.FC<PdfHighlightProps> = ({
       highlight={highlight}
       toViewportRect={toViewportRect}
     />
-  ) : null;
+  ) : (
+    <AreaHighlight
+      isScrolledTo={isScrolledTo}
+      highlight={highlight}
+      toViewportRect={toViewportRect}
+    />
+  );
 
-  return <div>{component}</div>;
+  return <div key={index}>{component}</div>;
 };

@@ -84,6 +84,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [inprogressSelection, setInprogressSelection, inprogressSelectionRef] =
     useState<NewHighlight | null>(null);
 
+  const [mouseSelectionActive, setMouseSelectionActive] = useState(true);
+
   const selectionColorRef = useRef(selectionColor);
   selectionColorRef.current = selectionColor;
 
@@ -152,7 +154,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     const highlight: NewHighlight = {
       location: {
         boundingRect: viewportRectToScaledPageRect(
-          { ...boundingRect, pageNumber: page.number },
+          { ...pageBoundingRect, pageNumber: page.number },
           viewport
         ),
         rects: [],
@@ -187,7 +189,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
     let highlightLayer: PageLayer = {
       name: "annotationLayer",
-      className: "mix-blend-multiply",
+      className: "mix-blend-multiply z-10",
       pages: [],
     };
 
@@ -214,15 +216,16 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     return [highlightLayer];
   };
 
-  let allHighlights: PartialHighlight[] = [...highlights];
-  //if (currentSelection) allHighlights.push(currentSelection);
-
   useEffect(() => {
     if (currentSelection === inprogressSelection && currentSelection !== null) {
       onNewHighlight(currentSelection);
       setInprogressSelection(null);
 
       if (currentSelection.content.text) clearRangeSelection();
+      else {
+        setMouseSelectionActive(false);
+        setTimeout(() => setMouseSelectionActive(true), 0);
+      }
     }
   }, [currentSelection]);
 
@@ -248,10 +251,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
             const element = asElement(event.target);
           }}
-          pageLayers={renderPageLayers(allHighlights)}
+          pageLayers={renderPageLayers(highlights)}
         >
           <MouseSelection
             className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[selectionColor]}`}
+            active={mouseSelectionActive}
             onDragStart={() => setDisableInteractions(true)}
             onDragEnd={() => setDisableInteractions(false)}
             shouldStart={shouldStartAreaSelection}
