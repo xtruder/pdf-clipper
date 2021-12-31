@@ -17,17 +17,19 @@ export const ThePdfViewer: Story = (args) => {
           pdfDocument={document}
           pdfScaleValue={args.pdfScaleValue}
           disableInteractions={args.disableInteractions}
-          onDocumentReady={args.onDocumentReady}
-          onTextLayerRendered={args.onTextLayerRendered}
-          onKeyDown={args.onKeyDown}
-          onMouseDown={args.onMouseDown}
-          onRangeSelection={args.onRangeSelection}
           scrollTo={{
             pageNumber: args.pageNumber,
             top: args.scrollTop,
           }}
           pageLayers={args.pageLayers}
           containerClassName="textLayer__selection_red"
+          // handlers
+          onDocumentReady={args.onDocumentReady}
+          onTextLayerRendered={args.onTextLayerRendered}
+          onKeyDown={args.onKeyDown}
+          onMouseDown={args.onMouseDown}
+          onRangeSelection={args.onRangeSelection}
+          onPageScroll={args.onPageScroll}
         />
       )}
       onError={args.onError}
@@ -81,5 +83,8 @@ ThePdfViewer.argTypes = {
   },
   onRangeSelection: {
     action: "on range selection",
+  },
+  onPageScroll: {
+    action: "on page scroll",
   },
 };

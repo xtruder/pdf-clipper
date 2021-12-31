@@ -49,8 +49,9 @@ const colorToClassName: Record<HighlightColor, string> = {
 const defaultColor = HighlightColor.YELLOW;
 
 interface PDFReaderHandlers {
-  onNewHighlight?: (highlight: NewHighlight) => void;
+  onHighlightCreate?: (highlight: NewHighlight) => void;
   onHighlightUpdate?: (highlight: Highlight) => void;
+  onHighlightSelection?: (highlight: Highlight) => void;
 }
 
 export interface PDFReaderProps extends PDFReaderHandlers {
@@ -62,30 +63,35 @@ export interface PDFReaderProps extends PDFReaderHandlers {
   // list of existing highlights
   highlights?: Highlight[];
 
+  selectedHighlight?: string;
+
   // selection is a highlight that is still in progress of selecting
   selection?: PartialHighlight;
 
   // color to use for selection
   selectionColor?: HighlightColor;
+
+  // enable highlights controls whether to enable highlights
+  enableHighlights?: boolean;
 }
 
 export const PDFReader: React.FC<PDFReaderProps> = ({
   url,
   pdfScaleValue,
   highlights = [],
+  selectedHighlight,
   selection,
   selectionColor = defaultColor,
+  enableHighlights = true,
 
-  onNewHighlight = () => null,
+  onHighlightCreate = () => null,
   onHighlightUpdate = () => null,
+  onHighlightSelection = () => null,
 }) => {
   const [disableInteractions, setDisableInteractions] = useState(false);
   const [pdfDocument, setPDFDocument, pdfDocumentRef] =
     useState<PDFDocument | null>(null);
-  const [currentSelection, setCurrentSelection] = useState<NewHighlight | null>(
-    null
-  );
-  const [inprogressSelection, setInprogressSelection, inprogressSelectionRef] =
+  const [_, setInprogressHighlight, inprogressHighlightRef] =
     useState<NewHighlight | null>(null);
 
   const [mouseSelectionActive, setMouseSelectionActive] = useState(true);
@@ -93,7 +99,15 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const selectionColorRef = useRef(selectionColor);
   selectionColorRef.current = selectionColor;
 
+  const enableHighlightsRef = useRef(enableHighlights);
+  enableHighlightsRef.current = enableHighlights;
+
+  const selectedHighlightRef = useRef(selectedHighlight);
+  selectedHighlightRef.current = selectedHighlight;
+
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
+    if (!enableHighlightsRef.current) return;
+
     const pdfDocument = pdfDocumentRef.current;
 
     if (isCollapsed || !range) return;
@@ -129,8 +143,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     };
 
     console.log("set in progress", selectionColorRef.current);
-    setCurrentSelection(null);
-    setInprogressSelection(highlight);
+    setInprogressHighlight(highlight);
   };
 
   const onMouseSelection = (start: Target, end: Target, boundingRect: Rect) => {
@@ -169,12 +182,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     };
 
     console.log("set in progress");
-    setCurrentSelection(null);
-    setInprogressSelection(highlight);
+    setInprogressHighlight(highlight);
   };
 
   const shouldStartAreaSelection = (event: MouseEvent): boolean => {
     return (
+      enableHighlightsRef.current &&
       event.altKey &&
       isHTMLElement(event.target) &&
       Boolean(asElement(event.target).closest(".page"))
@@ -193,7 +206,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     highlight: Highlight,
     viewport: Viewport
   ): JSX.Element => {
+    const isSelected = highlight.id === selectedHighlightRef.current;
     if (highlight.content?.text) {
+      console.log(selectedHighlightRef.current);
       return (
         <TextHighlight
           key={key}
@@ -201,7 +216,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
             scaledRectToViewportRect(r, viewport)
           )}
           color={highlight.color}
-          isScrolledTo={false}
+          isSelected={isSelected}
+          onClick={() => onHighlightSelection(highlight)}
         />
       );
     } else {
@@ -213,9 +229,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
             viewport
           )}
           color={highlight.color}
-          isScrolledTo={false}
+          isSelected={isSelected}
+          onClick={() => onHighlightSelection(highlight)}
           onChange={(boundingRect) => {
-            onHighlightUpdate({
+            const newHighlight = {
               ...highlight,
               location: {
                 ...highlight.location,
@@ -227,7 +244,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
                   viewport
                 ),
               },
-            });
+            };
+
+            onHighlightUpdate(newHighlight);
           }}
         />
       );
@@ -261,18 +280,23 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     return [highlightLayer];
   };
 
-  useEffect(() => {
-    if (currentSelection === inprogressSelection && currentSelection !== null) {
-      onNewHighlight(currentSelection);
-      setInprogressSelection(null);
+  const newHighlightCreated = (highlight: NewHighlight): void => {
+    onHighlightCreate(highlight);
+    clearSelection();
+    setInprogressHighlight(null);
+  };
 
-      if (currentSelection.content.text) clearRangeSelection();
-      else {
-        setMouseSelectionActive(false);
-        setTimeout(() => setMouseSelectionActive(true), 0);
-      }
+  const clearMouseSelection = () => {
+    if (mouseSelectionActive) {
+      setMouseSelectionActive(false);
+      setTimeout(() => setMouseSelectionActive(true), 0);
     }
-  }, [currentSelection]);
+  };
+
+  const clearSelection = () => {
+    clearRangeSelection();
+    clearMouseSelection();
+  };
 
   return (
     <PDFLoader
@@ -286,9 +310,16 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           onDocumentReady={setPDFDocument}
           onRangeSelection={onRangeSelection}
           onKeyDown={(event) => {
-            if (event.code === "Escape") clearRangeSelection();
-            if (event.code === "Enter") {
-              setCurrentSelection(inprogressSelectionRef.current);
+            switch (event.code) {
+              case "Escape":
+                clearSelection();
+                break;
+              case "Enter":
+                if (inprogressHighlightRef.current) {
+                  newHighlightCreated(inprogressHighlightRef.current);
+                }
+
+                break;
             }
           }}
           onMouseDown={(event) => {
@@ -296,7 +327,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
             const element = asElement(event.target);
           }}
-          pageLayers={renderPageLayers(highlights)}
+          pageLayers={renderPageLayers(enableHighlights ? highlights : [])}
         >
           <MouseSelection
             className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[selectionColor]}`}

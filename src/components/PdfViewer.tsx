@@ -12,6 +12,7 @@ import {
 
 import {
   findOrCreateContainerLayer,
+  getPageFromElement,
   getPagesFromRange,
   getWindow,
 } from "~/lib/pdfjs-dom";
@@ -56,6 +57,7 @@ export interface PDFViewerProps {
   onMouseDown?: (event: MouseEvent) => void;
   onMouseUp?: (event: MouseEvent) => void;
   onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
+  onPageScroll?: (position: ScrollPosition) => void;
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({
@@ -73,6 +75,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
   onMouseUp = () => null,
   onMouseDown = () => null,
   onRangeSelection = () => null,
+  onPageScroll = () => null,
 }) => {
   // current pdf document that we are displaying
   const [currentPdfDocument, setCurrentPdfDocument] =
@@ -142,7 +145,14 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     onRangeSelection(selection.isCollapsed, range);
   };
 
-  const onScroll = () => null;
+  const onScroll = (scroll: any) => {
+    if (!pdfViewer) return;
+
+    onPageScroll({
+      pageNumber: pdfViewer.currentPageNumber,
+      top: pdfViewer.scroll.lastY,
+    });
+  };
 
   const onPagesInit = () => {
     onDocumentReady({ getPageView, screenshotPageArea, pdfDocument });

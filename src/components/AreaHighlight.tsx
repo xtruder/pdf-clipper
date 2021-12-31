@@ -10,22 +10,34 @@ const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.BLUE]: "bg-blue-200",
 };
 
+const selectedColorToClass: Record<HighlightColor, string> = {
+  [HighlightColor.RED]: "bg-red-300",
+  [HighlightColor.YELLOW]: "bg-yellow-300",
+  [HighlightColor.GREEN]: "bg-green-300",
+  [HighlightColor.BLUE]: "bg-blue-300",
+};
+
 const defaultColor = HighlightColor.YELLOW;
 
 export interface AreaHighlightProps {
   boundingRect: Rect;
   color?: HighlightColor;
-  isScrolledTo: boolean;
+  isSelected: boolean;
 
   onChange?: (rect: Rect) => void;
+  onClick?: (event: MouseEvent) => void;
 }
 
 export const AreaHighlight: React.FC<AreaHighlightProps> = ({
-  color,
   boundingRect,
+  color,
+  isSelected,
   onChange = () => null,
+  onClick = () => null,
 }) => {
-  const colorClass = colorToClass[color || defaultColor];
+  const colorClass = isSelected
+    ? selectedColorToClass[color || defaultColor]
+    : colorToClass[color || defaultColor];
 
   return (
     <div className="border-solid opacity-100 mix-blend-multiply absolute">
@@ -33,6 +45,7 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
         className={`cursor-pointer transition-colors ${colorClass}`}
         position={{ x: boundingRect.left, y: boundingRect.top }}
         size={{ width: boundingRect.width, height: boundingRect.height }}
+        onMouseDown={onClick}
         onResizeStop={(_mouseEvent, _direction, ref, _delta, position) =>
           onChange({
             top: position.y,

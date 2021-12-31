@@ -71,6 +71,7 @@ export interface Highlight {
   content: HighlightContent;
   color: HighlightColor;
   comment?: HighlightComment;
+  deleted?: boolean;
 }
 
 export interface NewHighlight

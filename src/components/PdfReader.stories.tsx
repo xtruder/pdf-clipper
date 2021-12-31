@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import useState from "react-usestateref";
 import { Story } from "@storybook/react";
 
 import { PDFReader } from "./PdfReader";
@@ -16,7 +17,8 @@ let s4 = () => {
 };
 
 export const ThePdfReader: Story = (args) => {
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [highlights, setHighlights, highlightsRef] = useState<Highlight[]>([]);
+  const [selectedHighlight, setSelectedHighlight] = useState<string>();
 
   return (
     <PDFReader
@@ -24,11 +26,13 @@ export const ThePdfReader: Story = (args) => {
       highlights={highlights}
       pdfScaleValue={args.pdfScaleValue}
       selectionColor={args.selectionColor}
-      onNewHighlight={(highlight) => {
-        const id = s4();
-        console.log("here");
+      selectedHighlight={selectedHighlight}
+      enableHighlights={args.enableHighlights}
+      onHighlightCreate={(highlight) => {
+        highlight.id = s4();
 
-        setHighlights([...highlights, { ...highlight, id }]);
+        setSelectedHighlight(highlight.id);
+        setHighlights([...highlightsRef.current, highlight as Highlight]);
       }}
       onHighlightUpdate={(highlight) => {
         const newHighlights = [...highlights];
@@ -36,8 +40,10 @@ export const ThePdfReader: Story = (args) => {
 
         newHighlights[idx] = highlight;
 
+        setSelectedHighlight(highlight.id);
         setHighlights(newHighlights);
       }}
+      onHighlightSelection={(highlight) => setSelectedHighlight(highlight.id)}
     ></PDFReader>
   );
 };
@@ -48,4 +54,5 @@ ThePdfReader.args = {
   pageNumber: 1,
   scrollTop: 0,
   selectionColor: "red",
+  enableHighlights: true,
 };
