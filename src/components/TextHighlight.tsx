@@ -14,31 +14,27 @@ const defaultColor = HighlightColor.YELLOW;
 const scrolledToColorClass: string = "bg-red-100";
 
 export interface TextHighlightProps {
-  index: string | number;
-  highlight: PartialHighlight;
+  rects: Rect[];
+  color?: HighlightColor;
   isScrolledTo: boolean;
-  toViewportRect: (rect: ScaledRect) => Rect;
 }
 
 export const TextHighlight: React.FC<TextHighlightProps> = ({
-  index,
-  highlight,
+  rects,
+  color,
   isScrolledTo,
-  toViewportRect,
 }) => {
-  const { location, color } = highlight;
-
   const colorClass = isScrolledTo
     ? scrolledToColorClass
     : colorToClass[color || defaultColor];
 
   return (
-    <div className={`absolute`} key={index}>
+    <div className={`absolute`}>
       <div className="opacity-100">
-        {location.rects.map((rect, index) => (
+        {rects.map((rect, index) => (
           <div
             key={index}
-            style={toViewportRect(rect)}
+            style={rect}
             className={`cursor-pointer absolute ${colorClass}`}
           />
         ))}

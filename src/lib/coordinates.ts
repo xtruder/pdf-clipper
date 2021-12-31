@@ -45,16 +45,16 @@ export const scaledRectToViewportRect = (
 };
 
 export const viewportRectToScaledPageRect = (
-  pageRect: PageRect,
+  rect: PageRect,
   viewport: Viewport
 ): ScaledPageRect => ({
-  left: pageRect.left,
-  top: pageRect.top,
-  width: pageRect.width,
-  height: pageRect.height,
+  left: rect.left,
+  top: rect.top,
+  width: rect.width,
+  height: rect.height,
   scaleX: viewport.width,
   scaleY: viewport.height,
-  pageNumber: pageRect.pageNumber,
+  pageNumber: rect.pageNumber,
 });
 
 export const getBoundingRect = (start: Point, end: Point): Rect => {

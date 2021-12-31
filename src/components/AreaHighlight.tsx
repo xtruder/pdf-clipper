@@ -1,7 +1,7 @@
 import React from "react";
 import { Rnd } from "react-rnd";
 
-import { PartialHighlight, ScaledRect, Rect, HighlightColor } from "~/types";
+import { Rect, HighlightColor } from "~/types";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200",
@@ -13,25 +13,41 @@ const colorToClass: Record<HighlightColor, string> = {
 const defaultColor = HighlightColor.YELLOW;
 
 export interface AreaHighlightProps {
-  highlight: PartialHighlight;
+  boundingRect: Rect;
+  color?: HighlightColor;
   isScrolledTo: boolean;
-  toViewportRect: (rect: ScaledRect) => Rect;
+
+  onChange?: (rect: Rect) => void;
 }
 
 export const AreaHighlight: React.FC<AreaHighlightProps> = ({
-  highlight,
-  toViewportRect,
+  color,
+  boundingRect,
+  onChange = () => null,
 }) => {
-  const rect = toViewportRect(highlight.location.boundingRect);
-
-  const colorClass = colorToClass[highlight.color || defaultColor];
+  const colorClass = colorToClass[color || defaultColor];
 
   return (
     <div className="border-solid opacity-100 mix-blend-multiply absolute">
       <Rnd
         className={`cursor-pointer transition-colors ${colorClass}`}
-        position={{ x: rect.left, y: rect.top }}
-        size={{ width: rect.width, height: rect.height }}
+        position={{ x: boundingRect.left, y: boundingRect.top }}
+        size={{ width: boundingRect.width, height: boundingRect.height }}
+        onResizeStop={(_mouseEvent, _direction, ref, _delta, position) =>
+          onChange({
+            top: position.y,
+            left: position.x,
+            width: ref.offsetWidth,
+            height: ref.offsetHeight,
+          })
+        }
+        onDragStop={(_, data) =>
+          onChange({
+            ...boundingRect,
+            top: data.y,
+            left: data.x,
+          })
+        }
       />
     </div>
   );

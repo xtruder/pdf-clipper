@@ -2,9 +2,9 @@ import { groupBy, unique } from "~/utils";
 import { PartialHighlight } from "~/types";
 
 // get highlights per page, that are on that page or have rects on page
-export const groupHighlightsByPage = (
-  highlights: PartialHighlight[]
-): Record<number, PartialHighlight[]> => {
+export const groupHighlightsByPage = <T extends PartialHighlight>(
+  highlights: T[]
+): Record<number, T[]> => {
   // get all rects from all highlights
   const allRects = highlights
     .map((highlight) =>

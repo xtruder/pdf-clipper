@@ -22,13 +22,15 @@ import {
 import {
   getBoundingRectForRects,
   getHighlightedRectsWithinPages,
+  scaledRectToViewportRect,
   viewportRectToScaledPageRect,
 } from "~/lib/coordinates";
 import { groupHighlightsByPage } from "~/lib/highlights";
-import { PdfHighlight } from "./PdfHighlight";
 
 import "./PdfReader.css";
 import { clearRangeSelection } from "~/lib/dom-util";
+import { TextHighlight } from "./TextHighlight";
+import { AreaHighlight } from "./AreaHighlight";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "textLayer__selection_red",
@@ -48,6 +50,7 @@ const defaultColor = HighlightColor.YELLOW;
 
 interface PDFReaderHandlers {
   onNewHighlight?: (highlight: NewHighlight) => void;
+  onHighlightUpdate?: (highlight: Highlight) => void;
 }
 
 export interface PDFReaderProps extends PDFReaderHandlers {
@@ -74,6 +77,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   selectionColor = defaultColor,
 
   onNewHighlight = () => null,
+  onHighlightUpdate = () => null,
 }) => {
   const [disableInteractions, setDisableInteractions] = useState(false);
   const [pdfDocument, setPDFDocument, pdfDocumentRef] =
@@ -184,8 +188,54 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     return !event.altKey;
   };
 
-  const renderPageLayers = (allHighlights: PartialHighlight[]): PageLayer[] => {
-    const highlightsByPage = groupHighlightsByPage(allHighlights);
+  const renderHighlight = (
+    key: any,
+    highlight: Highlight,
+    viewport: Viewport
+  ): JSX.Element => {
+    if (highlight.content?.text) {
+      return (
+        <TextHighlight
+          key={key}
+          rects={highlight.location.rects.map((r) =>
+            scaledRectToViewportRect(r, viewport)
+          )}
+          color={highlight.color}
+          isScrolledTo={false}
+        />
+      );
+    } else {
+      return (
+        <AreaHighlight
+          key={key}
+          boundingRect={scaledRectToViewportRect(
+            highlight.location.boundingRect,
+            viewport
+          )}
+          color={highlight.color}
+          isScrolledTo={false}
+          onChange={(boundingRect) => {
+            onHighlightUpdate({
+              ...highlight,
+              location: {
+                ...highlight.location,
+                boundingRect: viewportRectToScaledPageRect(
+                  {
+                    ...boundingRect,
+                    pageNumber: highlight.location.boundingRect.pageNumber,
+                  },
+                  viewport
+                ),
+              },
+            });
+          }}
+        />
+      );
+    }
+  };
+
+  const renderPageLayers = (highlights: Highlight[]): PageLayer[] => {
+    const highlightsByPage = groupHighlightsByPage(highlights);
 
     let highlightLayer: PageLayer = {
       name: "annotationLayer",
@@ -199,14 +249,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
       const element = (viewport: Viewport) => (
         <>
-          {pageHighlights.map((highlight, index) => (
-            <PdfHighlight
-              index={index}
-              highlight={highlight}
-              isScrolledTo={false}
-              viewport={viewport}
-            />
-          ))}
+          {pageHighlights.map((highlight, index) =>
+            renderHighlight(index, highlight, viewport)
+          )}
         </>
       );
 

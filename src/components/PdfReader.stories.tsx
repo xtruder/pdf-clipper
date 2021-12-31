@@ -30,6 +30,14 @@ export const ThePdfReader: Story = (args) => {
 
         setHighlights([...highlights, { ...highlight, id }]);
       }}
+      onHighlightUpdate={(highlight) => {
+        const newHighlights = [...highlights];
+        const idx = newHighlights.findIndex((h) => h.id === highlight.id);
+
+        newHighlights[idx] = highlight;
+
+        setHighlights(newHighlights);
+      }}
     ></PDFReader>
   );
 };
