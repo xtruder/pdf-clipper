@@ -10,12 +10,7 @@ import {
   PDFViewer as PDFJSViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import {
-  findOrCreateContainerLayer,
-  getPageFromElement,
-  getPagesFromRange,
-  getWindow,
-} from "~/lib/pdfjs-dom";
+import { findOrCreateContainerLayer, getWindow } from "~/lib/pdfjs-dom";
 import { PageView, Rect, Viewport } from "~/types";
 import { getCanvasAreaAsPNG } from "~/lib/dom-util";
 
@@ -36,13 +31,23 @@ export interface PageLayer {
   }[];
 }
 
-export interface PDFDocument {
+export interface PDFViewerUtils {
   pdfDocument: PDFDocumentProxy;
   getPageView(pageNumber: number): PageView | null;
   screenshotPageArea(pageNumber: number, area: Rect): string | null;
 }
 
-export interface PDFViewerProps {
+interface PDFViewerEvents {
+  onDocumentReady?: (viewer: PDFViewerUtils) => void;
+  onTextLayerRendered?: (event: { pageNumber: number }) => void;
+  onKeyDown?: (event: KeyboardEvent) => void;
+  onMouseDown?: (event: MouseEvent) => void;
+  onMouseUp?: (event: MouseEvent) => void;
+  onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
+  onPageScroll?: (position: ScrollPosition) => void;
+}
+
+export interface PDFViewerProps extends PDFViewerEvents {
   containerClassName?: string;
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
@@ -50,14 +55,6 @@ export interface PDFViewerProps {
   scrollTo?: ScrollPosition;
   disableInteractions?: boolean;
   pageLayers?: PageLayer[];
-
-  onDocumentReady?: (doc: PDFDocument) => void;
-  onTextLayerRendered?: (event: { pageNumber: number }) => void;
-  onKeyDown?: (event: KeyboardEvent) => void;
-  onMouseDown?: (event: MouseEvent) => void;
-  onMouseUp?: (event: MouseEvent) => void;
-  onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
-  onPageScroll?: (position: ScrollPosition) => void;
 }
 
 export const PDFViewer: React.FC<PDFViewerProps> = ({

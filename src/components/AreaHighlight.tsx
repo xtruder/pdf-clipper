@@ -26,6 +26,8 @@ export interface AreaHighlightProps {
 
   onChange?: (rect: Rect) => void;
   onClick?: (event: MouseEvent) => void;
+  onDragStart?: () => void;
+  onDragStop?: () => void;
 }
 
 export const AreaHighlight: React.FC<AreaHighlightProps> = ({
@@ -34,6 +36,8 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   isSelected,
   onChange = () => null,
   onClick = () => null,
+  onDragStart = () => null,
+  onDragStop = () => null,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
@@ -54,13 +58,15 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
             height: ref.offsetHeight,
           })
         }
-        onDragStop={(_, data) =>
+        onDragStart={() => onDragStart()}
+        onDragStop={(_, data) => {
+          onDragStop();
           onChange({
             ...boundingRect,
             top: data.y,
             left: data.x,
-          })
-        }
+          });
+        }}
       />
     </div>
   );
