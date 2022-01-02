@@ -1,7 +1,7 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { PDFViewer } from "./PdfViewer";
+import { PDFDisplay } from "./PdfDisplay";
 import { PDFLoader } from "./PdfLoader";
 
 export default {
@@ -13,7 +13,7 @@ export const ThePdfViewer: Story = (args) => {
     <PDFLoader
       url={args.url}
       showDocument={(document) => (
-        <PDFViewer
+        <PDFDisplay
           pdfDocument={document}
           pdfScaleValue={args.pdfScaleValue}
           disableInteractions={args.disableInteractions}

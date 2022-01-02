@@ -7,7 +7,7 @@ import {
   EventBus,
   NullL10n,
   PDFLinkService,
-  PDFViewer as PDFJSViewer,
+  PDFViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
 import { findOrCreateContainerLayer, getWindow } from "~/lib/pdfjs-dom";
@@ -15,7 +15,7 @@ import { PageView, Rect, Viewport } from "~/types";
 import { getCanvasAreaAsPNG } from "~/lib/dom-util";
 
 import "pdfjs-dist/web/pdf_viewer.css";
-import "./PdfViewer.css";
+import "./PdfDisplay.css";
 
 interface ScrollPosition {
   pageNumber: number;
@@ -31,14 +31,14 @@ export interface PageLayer {
   }[];
 }
 
-export interface PDFViewerUtils {
+export interface PDFViewerProxy {
   pdfDocument: PDFDocumentProxy;
   getPageView(pageNumber: number): PageView | null;
   screenshotPageArea(pageNumber: number, area: Rect): string | null;
 }
 
-interface PDFViewerEvents {
-  onDocumentReady?: (viewer: PDFViewerUtils) => void;
+interface PDFDisplayEvents {
+  onDocumentReady?: (viewer: PDFViewerProxy) => void;
   onTextLayerRendered?: (event: { pageNumber: number }) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
   onMouseDown?: (event: MouseEvent) => void;
@@ -47,7 +47,7 @@ interface PDFViewerEvents {
   onPageScroll?: (position: ScrollPosition) => void;
 }
 
-export interface PDFViewerProps extends PDFViewerEvents {
+export interface PDFDisplayProps extends PDFDisplayEvents {
   containerClassName?: string;
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
@@ -57,7 +57,7 @@ export interface PDFViewerProps extends PDFViewerEvents {
   pageLayers?: PageLayer[];
 }
 
-export const PDFViewer: React.FC<PDFViewerProps> = ({
+export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   containerClassName = "",
   pdfDocument,
   pdfScaleValue = "auto",
@@ -94,7 +94,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
         }),
       []
     ),
-    [pdfViewer, setPDFViewer] = useState<PDFJSViewer>();
+    [pdfViewer, setPDFViewer] = useState<PDFViewer>();
 
   // pdfjs container element ref
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -142,7 +142,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     onRangeSelection(selection.isCollapsed, range);
   };
 
-  const onScroll = (scroll: any) => {
+  const onScroll = (_scroll: any) => {
     if (!pdfViewer) return;
 
     onPageScroll({
@@ -224,7 +224,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({
     if (!containerRef.current) return;
     if (pdfDocument === currentPdfDocument) return;
 
-    const pdfViewer = new PDFJSViewer({
+    const pdfViewer = new PDFViewer({
       container: containerRef.current,
       eventBus,
       textLayerMode: 1,

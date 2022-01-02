@@ -25,10 +25,10 @@ import { groupHighlightsByPage } from "~/lib/highlights";
 
 import {
   PageLayer,
-  PDFViewerUtils,
-  PDFViewer,
-  PDFViewerProps,
-} from "./PdfViewer";
+  PDFViewerProxy,
+  PDFDisplay,
+  PDFDisplayProps,
+} from "./PdfDisplay";
 import { TextHighlight } from "./TextHighlight";
 import { AreaHighlight } from "./AreaHighlight";
 import { MouseSelection, Target } from "./MouseSelection";
@@ -63,7 +63,7 @@ interface PDFHighlighterEvents {
 }
 
 export interface PDFHighlighterProps
-  extends PDFViewerProps,
+  extends PDFDisplayProps,
     PDFHighlighterEvents {
   // list of existing highlights
   highlights?: Highlight[];
@@ -95,9 +95,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 }) => {
   const [disableInteractions, setDisableInteractions] = useState(false);
 
-  const [pdfUtils, setPDFUtils, pdfUtilsRef] = useState<PDFViewerUtils | null>(
-    null
-  );
+  const [pdfViewer, setPDFViewer, pdfViewerRef] =
+    useState<PDFViewerProxy | null>(null);
   const selectionColorRef = useRef(highlightColor);
   selectionColorRef.current = highlightColor;
 
@@ -110,10 +109,10 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
     if (!enableHighlightsRef.current) return;
 
-    const pdfUtils = pdfUtilsRef.current;
+    const pdfViewer = pdfViewerRef.current;
 
     if (isCollapsed || !range) return;
-    if (!pdfUtils) return;
+    if (!pdfViewer) return;
 
     // get pages from selected range
     const pages = getPagesFromRange(range);
@@ -127,7 +126,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const boundingRect = getBoundingRectForRects(rects);
 
     const pageNumber = pages[0].number;
-    const page = pdfUtils.getPageView(pageNumber)!;
+    const page = pdfViewer.getPageView(pageNumber)!;
 
     // create a new highlight
     const highlight: NewHighlight = {
@@ -148,13 +147,13 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     onHighlighting(highlight);
   };
 
-  const onMouseSelection = (start: Target, end: Target, boundingRect: Rect) => {
-    if (!pdfUtils) return;
+  const onMouseSelection = (start: Target, _: Target, boundingRect: Rect) => {
+    if (!pdfViewer) return;
 
     const page = getPageFromElement(start.target);
     if (!page) return;
 
-    const viewport = pdfUtils.getPageView(page.number)?.viewport;
+    const viewport = pdfViewer.getPageView(page.number)?.viewport;
     if (!viewport) return;
 
     const pageBoundingRect = {
@@ -165,7 +164,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     };
 
     // create image of selection
-    const image = pdfUtils.screenshotPageArea(page.number, pageBoundingRect);
+    const image = pdfViewer.screenshotPageArea(page.number, pageBoundingRect);
 
     if (!image) return;
 
@@ -288,11 +287,11 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   if (props.pageLayers) pageLayers.push(...props.pageLayers);
 
   return (
-    <PDFViewer
+    <PDFDisplay
       {...props}
       containerClassName={containerClassName}
       onDocumentReady={(viewer) => {
-        setPDFUtils(viewer);
+        setPDFViewer(viewer);
         props.onDocumentReady && props.onDocumentReady(viewer);
       }}
       disableInteractions={disableInteractions || props.disableInteractions}
@@ -319,6 +318,6 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         />
         {props.children}
       </>
-    </PDFViewer>
+    </PDFDisplay>
   );
 };
