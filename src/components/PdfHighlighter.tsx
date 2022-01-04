@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import useState from "react-usestateref";
 
 import {
@@ -79,6 +79,9 @@ export interface PDFHighlighterProps
 
   // whether to enable area selection
   enableAreaSelection?: boolean;
+
+  // Whther area selection is activated
+  areaSelectionActive?: boolean;
 }
 
 export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
@@ -87,6 +90,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   highlightColor = defaultColor,
   showHighlights = true,
   enableAreaSelection = true,
+  areaSelectionActive = false,
 
   onHighlighting = () => null,
   onHighlightUpdated = () => null,
@@ -186,19 +190,22 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     onHighlighting(highlight);
   };
 
-  const shouldStartAreaSelection = (event: MouseEvent): boolean => {
+  const shouldStartAreaSelection = (
+    event: MouseEvent | TouchEvent
+  ): boolean => {
     return (
       enableHighlightsRef.current &&
-      event.altKey &&
+      (event.altKey || areaSelectionActive) &&
       isHTMLElement(event.target) &&
       Boolean(asElement(event.target).closest(".page"))
     );
   };
 
   const shouldEndAreaSelection = (
-    event: MouseEvent | KeyboardEvent
+    event: MouseEvent | TouchEvent | KeyboardEvent
   ): boolean => {
     if (event.type === "keyup" && event.altKey) return true;
+    if (event.type === "mouseup" && areaSelectionActive) return true;
     return !event.altKey;
   };
 

@@ -7,7 +7,7 @@ import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
 
 export default {
-  title: "PdfHighlighter",
+  title: "PDFHighlighter",
 };
 
 let s4 = () => {
@@ -33,6 +33,7 @@ export const ThePDFHighlighter: Story = (args) => {
           highlightColor={args.highlightColor}
           selectedHighlight={selectedHighlight}
           showHighlights={args.showHighlights}
+          areaSelectionActive={args.areaSelectionActive}
           onHighlighting={(highlight) => {
             args.onHighlighting(highlight);
 
@@ -84,6 +85,7 @@ ThePDFHighlighter.args = {
   pageNumber: 1,
   scrollTop: 0,
   showHighlights: true,
+  areaSelectionActive: false,
 };
 
 ThePDFHighlighter.argTypes = {

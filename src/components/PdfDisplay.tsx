@@ -296,6 +296,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   useEffect(() => {
     pdfViewer?.viewer?.classList.toggle("select-none", disableInteractions);
+    pdfViewer?.viewer?.classList.toggle("touch-none", disableInteractions);
     pdfViewer?.viewer?.classList.toggle(
       "pointer-events-none",
       disableInteractions

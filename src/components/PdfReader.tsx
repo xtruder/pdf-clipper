@@ -95,7 +95,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
           enableAreaSelection={enableAreaSelection}
           onHighlighting={setInProgressHighlight}
           onHighlightUpdated={onHighlightUpdated}
-          onHighlightClicked={(highlight) => setSelectedHighlight(highlight.id)}
+          onHighlightClicked={(h) => setSelectedHighlight(h.id)}
           onKeyDown={onKeyDown}
         />
       )}

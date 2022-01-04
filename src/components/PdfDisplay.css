@@ -8,7 +8,7 @@
 }
 
 .textLayer ::selection {
-  @apply mix-blend-multiply;
+  @apply bg-yellow-400;
 }
 
 /* .annotationLayer {

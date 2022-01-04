@@ -22,7 +22,7 @@ export const ThePdfViewer: Story = (args) => {
             top: args.scrollTop,
           }}
           pageLayers={args.pageLayers}
-          containerClassName="textLayer__selection_red"
+          //containerClassName="textLayer__selection_red"
           // handlers
           onDocumentReady={args.onDocumentReady}
           onTextLayerRendered={args.onTextLayerRendered}
