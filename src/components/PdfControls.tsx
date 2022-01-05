@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { ReactComponent as MenuIcon } from "../assets/icons/menu-outline.svg";
 import { ReactComponent as PlusIcon } from "~/assets/icons/plus-outline.svg";
@@ -27,12 +27,22 @@ export const ActionButton: React.FC<{
   className?: string;
   bottom: number;
   right: number;
-}> = ({ className, bottom, right }) => {
+  onColorSelect?: (color: HighlightColor) => void;
+  onSelectMode?: (areaSelect: boolean) => void;
+}> = ({ className, bottom, right, onColorSelect, onSelectMode }) => {
   const [opened, setOpened] = useState(false);
-  const [areaSelectActive, setAreaSelectActive] = useState(true);
+  const [areaSelectActive, setAreaSelectActive] = useState(false);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
     HighlightColor.YELLOW
   );
+
+  useEffect(() => {
+    if (onColorSelect) onColorSelect(selectedColor);
+  }, [selectedColor]);
+
+  useEffect(() => {
+    if (onSelectMode) onSelectMode(areaSelectActive);
+  }, [areaSelectActive]);
 
   return (
     <>
@@ -51,7 +61,16 @@ export const ActionButton: React.FC<{
           className={`btn btn-primary btn-md ${
             areaSelectActive ? "btn-square" : "btn-circle"
           }`}
+          tabIndex={-1}
           onClick={() => setOpened(!opened)}
+          onFocus={(e) => {
+            e.preventDefault();
+            if (e.relatedTarget) {
+              (e.relatedTarget as any)?.focus();
+            } else {
+              e.currentTarget.blur();
+            }
+          }}
         >
           {!opened ? (
             <ChevronLeftIcon className="inline-block w-6 h-6 stroke-current" />

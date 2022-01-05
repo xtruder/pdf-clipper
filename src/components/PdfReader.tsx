@@ -1,11 +1,12 @@
 import React from "react";
 import useState from "react-usestateref";
 
-import { Highlight, NewHighlight } from "~/types";
+import { Highlight, HighlightColor, NewHighlight } from "~/types";
 import { clearRangeSelection } from "~/lib/dom-util";
 
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
+import { ActionButton } from "./PdfControls";
 
 let s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -24,6 +25,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<string>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
+  const [areaSelectActive, setAreaSelectActive] = useState<boolean>(false);
+  const [highlightColor, setHighlightColor] = useState<HighlightColor>(
+    HighlightColor.YELLOW
+  );
 
   const clearAreaSelection = () => {
     if (enableAreaSelection) {
@@ -70,6 +75,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
         clearSelection();
         break;
       case "Enter":
+        console.log("here");
         if (inProgressHighlightRef.current) {
           createHighlight(inProgressHighlightRef.current);
         }
@@ -93,11 +99,20 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
           highlights={highlights}
           selectedHighlight={selectedHighlight}
           enableAreaSelection={enableAreaSelection}
+          areaSelectionActive={areaSelectActive}
           onHighlighting={setInProgressHighlight}
           onHighlightUpdated={onHighlightUpdated}
           onHighlightClicked={(h) => setSelectedHighlight(h.id)}
           onKeyDown={onKeyDown}
-        />
+          highlightColor={highlightColor}
+        >
+          <ActionButton
+            bottom={20}
+            right={15}
+            onColorSelect={setHighlightColor}
+            onSelectMode={setAreaSelectActive}
+          />
+        </PDFHighlighter>
       )}
     />
   );

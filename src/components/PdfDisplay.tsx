@@ -52,6 +52,7 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
   children?: JSX.Element | null;
+  containerChildren?: JSX.Element | null;
   scrollTo?: ScrollPosition;
   disableInteractions?: boolean;
   pageLayers?: PageLayer[];
@@ -62,6 +63,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   pdfDocument,
   pdfScaleValue = "auto",
   children = null,
+  containerChildren = null,
   scrollTo,
   disableInteractions = false,
   pageLayers = [],
@@ -312,8 +314,10 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
         {/** React must not change this div, as it is being rendered by pdfjs */}
         <div className="pdfViewer" />
 
-        {children}
+        {containerChildren}
       </div>
+
+      {children}
     </div>
   );
 };

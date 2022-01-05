@@ -312,19 +312,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         const element = asElement(event.target);
       }}
       pageLayers={pageLayers}
+      containerChildren={
+        <>
+          <MouseSelection
+            className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[highlightColor]}`}
+            active={enableAreaSelection}
+            onDragStart={() => setDisableInteractions(true)}
+            onDragEnd={() => setDisableInteractions(false)}
+            shouldStart={shouldStartAreaSelection}
+            shouldEnd={shouldEndAreaSelection}
+            onSelection={onMouseSelection}
+          />
+
+          {props.containerChildren}
+        </>
+      }
     >
-      <>
-        <MouseSelection
-          className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[highlightColor]}`}
-          active={enableAreaSelection}
-          onDragStart={() => setDisableInteractions(true)}
-          onDragEnd={() => setDisableInteractions(false)}
-          shouldStart={shouldStartAreaSelection}
-          shouldEnd={shouldEndAreaSelection}
-          onSelection={onMouseSelection}
-        />
-        {props.children}
-      </>
+      <>{props.children}</>
     </PDFDisplay>
   );
 };
