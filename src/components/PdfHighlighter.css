@@ -13,5 +13,3 @@
 .textLayer__selection_blue .textLayer ::selection {
   @apply bg-blue-100;
 }
-
-
