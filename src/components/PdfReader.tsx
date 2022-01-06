@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import useState from "react-usestateref";
 
 import { Highlight, HighlightColor, NewHighlight } from "~/types";
@@ -6,7 +6,7 @@ import { clearRangeSelection } from "~/lib/dom-util";
 
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
-import { ActionButton } from "./PdfControls";
+import { ActionButton, ExpandButton, SidebarContent } from "./PdfControls";
 import { PDFViewerProxy } from "./PdfDisplay";
 
 let s4 = () => {
@@ -16,10 +16,14 @@ let s4 = () => {
 };
 
 export interface PDFReaderProps {
+  className?: string;
   url: string;
 }
 
-export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
+export const PDFReader: React.FC<PDFReaderProps> = ({
+  className = "",
+  url,
+}) => {
   const [highlights, setHighlights, highlightsRef] = useState<Highlight[]>([]);
   const [_, setInProgressHighlight, inProgressHighlightRef] =
     useState<NewHighlight | null>(null);
@@ -33,6 +37,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
   const [pdfViewer, setPdfViewer] = useState<PDFViewerProxy | null>(null);
   const [scale, setScale] = useState<number>();
+  const [showSidebar, setShowSidebar] = useState(false);
 
   const clearAreaSelection = () => {
     if (enableAreaSelection) {
@@ -94,40 +99,51 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
     }
   };
 
-  const onScaleChanging = (event: { scale: number; presetValue: string }) => {
-    console.log("here", event.scale, event.presetValue);
-    setScale(event.scale);
-  };
-
   return (
-    <PDFLoader
-      url={url}
-      showDocument={(document) => (
-        <PDFHighlighter
-          pdfDocument={document}
-          highlights={highlights}
-          selectedHighlight={selectedHighlight}
-          enableAreaSelection={enableAreaSelection}
-          areaSelectionActive={areaSelectActive}
-          pdfScaleValue={pdfScaleValue}
-          onHighlighting={setInProgressHighlight}
-          onHighlightUpdated={onHighlightUpdated}
-          onHighlightClicked={(h) => setSelectedHighlight(h.id)}
-          onDocumentReady={setPdfViewer}
-          onKeyDown={onKeyDown}
-          onScaleChanging={onScaleChanging}
-          highlightColor={highlightColor}
-        >
-          <ActionButton
-            bottom={20}
-            right={25}
-            onColorSelect={setHighlightColor}
-            onSelectMode={setAreaSelectActive}
-            onScaleValueChange={setPdfScaleValue}
-            scale={scale}
-          />
-        </PDFHighlighter>
-      )}
-    />
+    <div className={className}>
+      <SidebarContent
+        sidebar={
+          <ul className="menu p-2 overflow-y-auto w-60 bg-base-100 text-base-content">
+            <li>
+              <a>Menu Item</a>
+            </li>
+            <li>
+              <a>Menu Item</a>
+            </li>
+          </ul>
+        }
+      >
+        <ActionButton
+          bottom={20}
+          right={25}
+          onColorSelect={setHighlightColor}
+          onSelectMode={setAreaSelectActive}
+          onScaleValueChange={setPdfScaleValue}
+          scale={scale}
+        />
+
+        <PDFLoader
+          url={url}
+          showDocument={(document) => (
+            <PDFHighlighter
+              pdfDocument={document}
+              highlights={highlights}
+              selectedHighlight={selectedHighlight}
+              enableAreaSelection={enableAreaSelection}
+              areaSelectionActive={areaSelectActive}
+              pdfScaleValue={pdfScaleValue}
+              highlightColor={highlightColor}
+              // event handlers
+              onHighlighting={setInProgressHighlight}
+              onHighlightUpdated={onHighlightUpdated}
+              onHighlightClicked={(h) => setSelectedHighlight(h.id)}
+              onDocumentReady={setPdfViewer}
+              onKeyDown={onKeyDown}
+              onScaleChanging={(e) => setScale(e.scale)}
+            />
+          )}
+        />
+      </SidebarContent>
+    </div>
   );
 };

@@ -328,7 +328,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         </>
       }
     >
-      <>{props.children}</>
+      {props.children}
     </PDFDisplay>
   );
 };

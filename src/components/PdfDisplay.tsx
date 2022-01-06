@@ -50,6 +50,7 @@ interface PDFDisplayEvents {
 }
 
 export interface PDFDisplayProps extends PDFDisplayEvents {
+  className?: string;
   containerClassName?: string;
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
@@ -61,6 +62,7 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
 }
 
 export const PDFDisplay: React.FC<PDFDisplayProps> = ({
+  className = "",
   containerClassName = "",
   pdfDocument,
   pdfScaleValue = "auto",
@@ -317,7 +319,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   }, [disableInteractions, pdfViewer]);
 
   return (
-    <div onPointerDown={onMouseDown} onPointerUp={onMouseUp}>
+    <div
+      onPointerDown={onMouseDown}
+      onPointerUp={onMouseUp}
+      className={className}
+    >
       <div
         ref={containerRef}
         className={`absolute overflow-auto w-full h-full ${containerClassName}`}

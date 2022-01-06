@@ -8,7 +8,7 @@ export default {
 };
 
 export const ThePDFReader: Story = (args) => {
-  return <PDFReader url={args.url} />;
+  return <PDFReader url={args.url} className="h-screen w-screen" />;
 };
 
 ThePDFReader.args = {

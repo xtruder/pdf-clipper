@@ -8,6 +8,9 @@ import { ReactComponent as ChevronLeftIcon } from "~/assets/icons/chevron-left-o
 import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 import { ReactComponent as DocumentTextIcon } from "~/assets/icons/document-text-outline.svg";
+import { ReactComponent as ChevronDoubleRightIcon } from "~/assets/icons/chevron-double-right-outline.svg";
+import { ReactComponent as ChevronDoubleLeftIcon } from "~/assets/icons/chevron-double-left-outline.svg";
+
 import { HighlightColor } from "~/types";
 
 const preventFocus = (e: React.FocusEvent) => {
@@ -195,6 +198,64 @@ export const ActionButton: React.FC<{
         </button>
       </div>
     </>
+  );
+};
+
+export const ExpandButton: React.FC<{
+  className?: string;
+  expanded?: boolean;
+  onClick?: (expand: boolean) => void;
+}> = ({ className = "", expanded = false, onClick = () => null }) => {
+  return (
+    <div className={`absolute ${className}`}>
+      <button
+        className="btn btn-secondary btn-xs rounded-l-none"
+        tabIndex={-1}
+        onClick={() => onClick(!expanded)}
+      >
+        {!expanded ? (
+          <ChevronDoubleRightIcon className="inline-block w-4 h-4 stroke-current" />
+        ) : (
+          <ChevronDoubleLeftIcon className="inline-block w-4 h-4 stroke-current" />
+        )}
+      </button>
+    </div>
+  );
+};
+
+export const SidebarContent: React.FC<{
+  className?: string;
+  sidebar: JSX.Element;
+}> = ({ className = "", sidebar, children }) => {
+  const [showSidebar, setShowSidebar] = useState(false);
+
+  return (
+    <div
+      className={`rounded-lg shadow bg-base-200 drawer drawer-mobile h-full ${className}`}
+    >
+      <input type="checkbox" className="drawer-toggle" checked={showSidebar} />
+      <div className="flex flex-col drawer-content relative">
+        <ExpandButton
+          className={`top-4 left-0 z-20`}
+          expanded={showSidebar}
+          onClick={() => setShowSidebar(!showSidebar)}
+        />
+
+        {children}
+      </div>
+      <div
+        className="drawer-side"
+        style={{
+          ...(!showSidebar && { visibility: "hidden", maxWidth: 0 }),
+        }}
+      >
+        <label
+          className="drawer-overlay"
+          onClick={() => setShowSidebar(!showSidebar)}
+        />
+        {sidebar}
+      </div>
+    </div>
   );
 };
 
