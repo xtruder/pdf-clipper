@@ -7,6 +7,7 @@ import { clearRangeSelection } from "~/lib/dom-util";
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
 import { ActionButton } from "./PdfControls";
+import { PDFViewerProxy } from "./PdfDisplay";
 
 let s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -29,6 +30,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
   const [highlightColor, setHighlightColor] = useState<HighlightColor>(
     HighlightColor.YELLOW
   );
+  const [pdfScaleValue, setPdfScaleValue] = useState("auto");
+  const [pdfViewer, setPdfViewer] = useState<PDFViewerProxy | null>(null);
+  const [scale, setScale] = useState<number>();
 
   const clearAreaSelection = () => {
     if (enableAreaSelection) {
@@ -90,6 +94,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
     }
   };
 
+  const onScaleChanging = (event: { scale: number; presetValue: string }) => {
+    console.log("here", event.scale, event.presetValue);
+    setScale(event.scale);
+  };
+
   return (
     <PDFLoader
       url={url}
@@ -100,17 +109,22 @@ export const PDFReader: React.FC<PDFReaderProps> = ({ url }) => {
           selectedHighlight={selectedHighlight}
           enableAreaSelection={enableAreaSelection}
           areaSelectionActive={areaSelectActive}
+          pdfScaleValue={pdfScaleValue}
           onHighlighting={setInProgressHighlight}
           onHighlightUpdated={onHighlightUpdated}
           onHighlightClicked={(h) => setSelectedHighlight(h.id)}
+          onDocumentReady={setPdfViewer}
           onKeyDown={onKeyDown}
+          onScaleChanging={onScaleChanging}
           highlightColor={highlightColor}
         >
           <ActionButton
             bottom={20}
-            right={15}
+            right={25}
             onColorSelect={setHighlightColor}
             onSelectMode={setAreaSelectActive}
+            onScaleValueChange={setPdfScaleValue}
+            scale={scale}
           />
         </PDFHighlighter>
       )}

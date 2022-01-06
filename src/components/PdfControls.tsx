@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
+import useState from "react-usestateref";
 
 import { ReactComponent as MenuIcon } from "../assets/icons/menu-outline.svg";
 import { ReactComponent as PlusIcon } from "~/assets/icons/plus-outline.svg";
@@ -8,6 +9,21 @@ import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 import { ReactComponent as DocumentTextIcon } from "~/assets/icons/document-text-outline.svg";
 import { HighlightColor } from "~/types";
+
+const preventFocus = (e: React.FocusEvent) => {
+  e.preventDefault();
+
+  if (e.relatedTarget) {
+    (e.relatedTarget as any)?.focus();
+  } else {
+    (e.currentTarget as any)?.blur();
+  }
+};
+
+const roundPlaces = (value: number, places: number): number => {
+  const exp = Math.pow(10, places);
+  return Math.round(value * exp) / exp;
+};
 
 const highlightColors = [
   HighlightColor.RED,
@@ -27,14 +43,29 @@ export const ActionButton: React.FC<{
   className?: string;
   bottom: number;
   right: number;
+  scale?: number;
   onColorSelect?: (color: HighlightColor) => void;
   onSelectMode?: (areaSelect: boolean) => void;
-}> = ({ className, bottom, right, onColorSelect, onSelectMode }) => {
+  onScaleValueChange?: (value: string) => void;
+}> = ({
+  className,
+  bottom,
+  right,
+  scale = 1,
+  onColorSelect,
+  onSelectMode,
+  onScaleValueChange,
+}) => {
   const [opened, setOpened] = useState(false);
   const [areaSelectActive, setAreaSelectActive] = useState(false);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
     HighlightColor.YELLOW
   );
+  const [selectedScaleValue, setSelectedScaleValue] = useState("auto");
+  const [currentScale, setCurrentScale] = useState(scale);
+
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
 
   useEffect(() => {
     if (onColorSelect) onColorSelect(selectedColor);
@@ -44,33 +75,117 @@ export const ActionButton: React.FC<{
     if (onSelectMode) onSelectMode(areaSelectActive);
   }, [areaSelectActive]);
 
+  useEffect(() => {
+    if (onScaleValueChange) {
+      if (selectedScaleValue === "custom") {
+        onScaleValueChange(currentScale + "");
+      } else {
+        onScaleValueChange(selectedScaleValue);
+        setTimeout(() => {
+          console.log(scaleRef.current);
+          setCurrentScale(scaleRef.current);
+        }, 100);
+      }
+    }
+  }, [selectedScaleValue, currentScale]);
+
+  useEffect(() => {
+    if (scale !== currentScale) setCurrentScale(scale);
+  }, [scale]);
+
+  const changeScaleValue = (change: number) => {
+    let value = roundPlaces(currentScale + change, 1);
+    if (value < 0.2) return;
+
+    setCurrentScale(value);
+    setSelectedScaleValue("custom");
+  };
+
   return (
     <>
-      <ActionBar
-        bottom={bottom}
-        right={right + 50}
-        className={`${!opened ? "hidden" : ""} animate-bounce-in`}
-      />
       <div
         className={`absolute z-50 dropdown dropdown-top dropdown-end ${
           opened && "dropdown-open"
         } ${className}`}
         style={{ bottom, right }}
       >
+        {opened && (
+          <>
+            <ul className="shadow menu compact dropdown-content bg-base-100 rounded-box w-16 mb-2 -mr-2 animate-bounce-in">
+              {highlightColors.map((color) => {
+                const selectedCls =
+                  selectedColor === color ? "bg-primary-focus" : "";
+
+                return (
+                  <li key={color} className={`${selectedCls}`}>
+                    <a onClick={() => setSelectedColor(color)}>
+                      <div
+                        className={`rounded-full w-6 h-6 ${colorToClass[color]}`}
+                      />
+                    </a>
+                  </li>
+                );
+              })}
+              <li>
+                <a onClick={() => setAreaSelectActive(!areaSelectActive)}>
+                  {areaSelectActive ? (
+                    <DocumentTextIcon />
+                  ) : (
+                    <div className="w-6 h-6 border-base-content border-width-2"></div>
+                  )}{" "}
+                </a>
+              </li>
+            </ul>
+            <ul className="shadow menu items-stretch px-1 horizontal bg-base-100 rounded-box min-h-12 mr-2 animate-bounce-in">
+              <li>
+                <div className="flex justify-center flex-1 px-2">
+                  <div className="flex items-stretch self-center">
+                    <button
+                      className="btn btn-circle btn-xs"
+                      onClick={() => changeScaleValue(-0.1)}
+                    >
+                      <MinusIcon />
+                    </button>
+                    <button
+                      className="btn btn-circle btn-xs ml-1"
+                      onClick={() => changeScaleValue(+0.1)}
+                    >
+                      <PlusIcon />
+                    </button>
+                    <select
+                      className="select select-bordered select-xs max-w-xs ml-2"
+                      onChange={(e) => setSelectedScaleValue(e.target.value)}
+                      value={selectedScaleValue}
+                    >
+                      <option disabled={true} selected={true} value="custom">
+                        {roundPlaces(currentScale * 100, 2)}%
+                      </option>
+                      <option value="auto">Automatic zoom</option>
+                      <option value="page-actual">Actual size</option>
+                      <option value="page-fit">Page Fit</option>
+                      <option value="page-width">Page Width</option>
+                      <option value="0.5">50%</option>
+                      <option value="0.75">75%</option>
+                      <option value="1">100%</option>
+                      <option value="1.25">125%</option>
+                      <option value="1.5">150%</option>
+                      <option value="1.75">175%</option>
+                      <option value="2.0">200%</option>
+                    </select>
+                  </div>
+                </div>
+              </li>
+              <li></li>
+            </ul>
+          </>
+        )}
         <button
           className={`btn btn-primary btn-md ${
             areaSelectActive ? "btn-square" : "btn-circle"
           }`}
           tabIndex={-1}
           onClick={() => setOpened(!opened)}
-          onFocus={(e) => {
-            e.preventDefault();
-            if (e.relatedTarget) {
-              (e.relatedTarget as any)?.focus();
-            } else {
-              e.currentTarget.blur();
-            }
-          }}
+          onFocus={preventFocus}
         >
           {!opened ? (
             <ChevronLeftIcon className="inline-block w-6 h-6 stroke-current" />
@@ -78,77 +193,8 @@ export const ActionButton: React.FC<{
             <CloseIcon className="inline-block w-6 h-6 stroke-current" />
           )}
         </button>
-        {opened && (
-          <ul className="shadow menu compact dropdown-content bg-base-100 rounded-box w-16 mb-2 -mr-2 animate-bounce-in">
-            {highlightColors.map((color) => {
-              const selectedCls =
-                selectedColor === color ? "bg-primary-focus" : "";
-
-              return (
-                <li key={color} className={`${selectedCls}`}>
-                  <a onClick={() => setSelectedColor(color)}>
-                    <div
-                      className={`rounded-full w-6 h-6 ${colorToClass[color]}`}
-                    />
-                  </a>
-                </li>
-              );
-            })}
-            <li>
-              <a onClick={() => setAreaSelectActive(!areaSelectActive)}>
-                {areaSelectActive ? (
-                  <DocumentTextIcon />
-                ) : (
-                  <div className="w-6 h-6 border-base-content border-width-2"></div>
-                )}{" "}
-              </a>
-            </li>
-          </ul>
-        )}
       </div>
     </>
-  );
-};
-
-export const ActionBar: React.FC<{
-  className?: string;
-  right: number;
-  bottom: number;
-}> = ({ className, right, bottom }) => {
-  return (
-    <div className={`absolute ${className}`} style={{ right, bottom }}>
-      <ul className="menu items-stretch px-1 shadow-lg horizontal rounded-box min-h-10">
-        <li>
-          <div className="flex justify-center flex-1 px-2">
-            <div className="flex items-stretch self-center">
-              <button className="btn btn-circle btn-xs no-animation">
-                <MinusIcon />
-              </button>
-              <button className="btn btn-circle btn-xs no-animation ml-1">
-                <PlusIcon />
-              </button>
-              <select className="select select-bordered select-xs max-w-xs ml-2">
-                <option disabled={true} selected={true}>
-                  Zoom: 120%
-                </option>
-                <option>Automatic zoom</option>
-                <option>Actual size</option>
-                <option>Page Fit</option>
-                <option>Page Width</option>
-                <option>50%</option>
-                <option>75%</option>
-                <option>100%</option>
-                <option>125%</option>
-                <option>150%</option>
-                <option>175%</option>
-                <option>200%</option>
-              </select>
-            </div>
-          </div>
-        </li>
-        <li></li>
-      </ul>
-    </div>
   );
 };
 

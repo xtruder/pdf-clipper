@@ -33,6 +33,7 @@ export interface PageLayer {
 
 export interface PDFViewerProxy {
   pdfDocument: PDFDocumentProxy;
+  currentScale: number;
   getPageView(pageNumber: number): PageView | null;
   screenshotPageArea(pageNumber: number, area: Rect): string | null;
 }
@@ -45,6 +46,7 @@ interface PDFDisplayEvents {
   onMouseUp?: (event: MouseEvent) => void;
   onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
   onPageScroll?: (position: ScrollPosition) => void;
+  onScaleChanging?: (event: { scale: number; presetValue: string }) => void;
 }
 
 export interface PDFDisplayProps extends PDFDisplayEvents {
@@ -75,6 +77,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   onMouseDown = () => null,
   onRangeSelection = () => null,
   onPageScroll = () => null,
+  onScaleChanging = () => null,
 }) => {
   // current pdf document that we are displaying
   const [currentPdfDocument, setCurrentPdfDocument] =
@@ -103,7 +106,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   const handleScaledValue = debounce(() => {
     if (!pdfViewer) return;
-    if (isNaN(parseFloat(pdfScaleValue)) && pdfScaleValue !== "auto") return;
 
     pdfViewer.currentScaleValue = pdfScaleValue;
   }, 500);
@@ -154,7 +156,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   const onPagesInit = () => {
-    onDocumentReady({ getPageView, screenshotPageArea, pdfDocument });
+    onDocumentReady({
+      getPageView,
+      screenshotPageArea,
+      pdfDocument,
+      get currentScale(): number {
+        return pdfViewer!.currentScale;
+      },
+    });
 
     if (scrollTo) doScroll(scrollTo);
   };
@@ -254,6 +263,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
     eventBus.on("textlayerrendered", textLayerRendered);
     eventBus.on("pagesinit", onPagesInit);
+    eventBus.on("scalechanging", onScaleChanging);
 
     doc.addEventListener("selectionchange", onSelectionChanged);
     doc.addEventListener("keydown", onKeyDown);
@@ -264,6 +274,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     return () => {
       eventBus.off("pagesinit", onPagesInit);
       eventBus.off("textlayerrendered", onTextLayerRendered);
+      eventBus.off("scalechanging", onScaleChanging);
 
       doc.removeEventListener("selectionchange", onSelectionChanged);
       doc.removeEventListener("keydown", onKeyDown);

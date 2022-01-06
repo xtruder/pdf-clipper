@@ -10,9 +10,11 @@ export default {
 export const TheActionBar: Story = (args) => {
   return (
     <div className="w-full h-full">
-      <ActionButton bottom={20} right={15} />
+      <ActionButton bottom={20} right={15} scale={args.scale} />
     </div>
   );
 };
 
-TheActionBar.args = {};
+TheActionBar.args = {
+  scale: 1,
+};
