@@ -17,7 +17,7 @@ import { getCanvasAreaAsPNG } from "~/lib/dom-util";
 import "pdfjs-dist/web/pdf_viewer.css";
 import "./PdfDisplay.css";
 
-interface ScrollPosition {
+export interface ScrollPosition {
   pageNumber: number;
   top?: number;
 }

@@ -28,6 +28,7 @@ import {
   PDFViewerProxy,
   PDFDisplay,
   PDFDisplayProps,
+  ScrollPosition,
 } from "./PdfDisplay";
 import { TextHighlight } from "./TextHighlight";
 import { AreaHighlight } from "./AreaHighlight";
@@ -71,6 +72,9 @@ export interface PDFHighlighterProps
   // id of currently selected highlight
   selectedHighlight?: string;
 
+  // id of highlight we should scroll to
+  scrollToHighlight?: string;
+
   // color to use for highlight selection
   highlightColor?: HighlightColor;
 
@@ -87,6 +91,7 @@ export interface PDFHighlighterProps
 export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   highlights = [],
   selectedHighlight,
+  scrollToHighlight,
   highlightColor = defaultColor,
   showHighlights = true,
   enableAreaSelection = true,
@@ -101,6 +106,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
   const [pdfViewer, setPDFViewer, pdfViewerRef] =
     useState<PDFViewerProxy | null>(null);
+
   const selectionColorRef = useRef(highlightColor);
   selectionColorRef.current = highlightColor;
 
@@ -209,6 +215,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     return !event.altKey;
   };
 
+  const scrollPositionForHighligt = (
+    highlight: Highlight | undefined
+  ): ScrollPosition | undefined => {
+    if (!highlight || !pdfViewer) return;
+
+    const page = pdfViewer.getPageView(highlight.location.pageNumber)!;
+
+    const scrollPosition = {
+      pageNumber: highlight.location.pageNumber,
+      top:
+        scaledRectToViewportRect(highlight.location.boundingRect, page.viewport)
+          .top - 10,
+    };
+
+    return scrollPosition;
+  };
+
   const renderHighlight = (
     key: any,
     highlight: Highlight,
@@ -293,6 +316,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   const pageLayers = renderPageLayers(showHighlights ? highlights : []);
   if (props.pageLayers) pageLayers.push(...props.pageLayers);
 
+  let scrolledHighlight = highlights.find((h) => h.id == scrollToHighlight);
+
   return (
     <PDFDisplay
       {...props}
@@ -311,6 +336,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
         const element = asElement(event.target);
       }}
+      scrollTo={props.scrollTo || scrollPositionForHighligt(scrolledHighlight)}
       pageLayers={pageLayers}
       containerChildren={
         <>
