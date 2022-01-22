@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import useState from "react-usestateref";
 
 import { Highlight, HighlightColor, NewHighlight } from "~/types";
@@ -6,8 +6,10 @@ import { clearRangeSelection } from "~/lib/dom-util";
 
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
-import { ActionButton, ExpandButton, SidebarContent } from "./PdfControls";
+import { ActionButton, Sidebar, SidebarContent } from "./PdfControls";
 import { PDFViewerProxy } from "./PdfDisplay";
+import { HighlightListView } from "./HighlightListView";
+import { useEffect } from "react";
 
 let s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -29,6 +31,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     useState<NewHighlight | null>(null);
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<string>();
+  const [scrollToHighlight, setScrollToHighlight] = useState<string>();
+  const [scrollToPage, setScrollToPage] = useState<number>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
   const [areaSelectActive, setAreaSelectActive] = useState<boolean>(false);
   const [highlightColor, setHighlightColor] = useState<HighlightColor>(
@@ -99,20 +103,41 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (scrollToPage) setScrollToHighlight(undefined);
+  }, [scrollToPage]);
+
+  useEffect(() => {
+    if (scrollToHighlight) setScrollToPage(undefined);
+  }, [scrollToHighlight]);
+
+  const sidebar = (
+    <Sidebar
+      content={{
+        annotations: (
+          <HighlightListView
+            highlights={highlights}
+            onHighlightClicked={(h) => {
+              setScrollToHighlight(h.id);
+            }}
+            onHighlightDeleteClicked={(h) => deleteHighlight(h.id)}
+            onHighlightEditClicked={(h) => {
+              setScrollToHighlight(h.id);
+              setSelectedHighlight(h.id);
+            }}
+            onHighlightPageClicked={(h) => {
+              console.log("page clicked");
+              setScrollToPage(h.location.pageNumber);
+            }}
+          />
+        ),
+      }}
+    />
+  );
+
   return (
     <div className={className}>
-      <SidebarContent
-        sidebar={
-          <ul className="menu p-2 overflow-y-auto w-60 bg-base-100 text-base-content">
-            <li>
-              <a>Menu Item</a>
-            </li>
-            <li>
-              <a>Menu Item</a>
-            </li>
-          </ul>
-        }
-      >
+      <SidebarContent sidebar={sidebar}>
         <ActionButton
           bottom={20}
           right={25}
@@ -129,6 +154,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               pdfDocument={document}
               highlights={highlights}
               selectedHighlight={selectedHighlight}
+              scrollTo={scrollToPage ? { pageNumber: scrollToPage } : undefined}
+              scrollToHighlight={scrollToHighlight}
               enableAreaSelection={enableAreaSelection}
               areaSelectionActive={areaSelectActive}
               pdfScaleValue={pdfScaleValue}

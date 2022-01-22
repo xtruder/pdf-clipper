@@ -1,15 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import useState from "react-usestateref";
 
-import { ReactComponent as MenuIcon } from "../assets/icons/menu-outline.svg";
 import { ReactComponent as PlusIcon } from "~/assets/icons/plus-outline.svg";
 import { ReactComponent as MinusIcon } from "~/assets/icons/minus-outline.svg";
 import { ReactComponent as ChevronLeftIcon } from "~/assets/icons/chevron-left-outline.svg";
 import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
-import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 import { ReactComponent as DocumentTextIcon } from "~/assets/icons/document-text-outline.svg";
 import { ReactComponent as ChevronDoubleRightIcon } from "~/assets/icons/chevron-double-right-outline.svg";
 import { ReactComponent as ChevronDoubleLeftIcon } from "~/assets/icons/chevron-double-left-outline.svg";
+import { ReactComponent as CollectionIcon } from "~/assets/icons/collections-outline.svg";
+import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outline.svg";
+import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
 
 import { HighlightColor } from "~/types";
 
@@ -223,6 +224,82 @@ export const ExpandButton: React.FC<{
   );
 };
 
+export type SidebarTabNames = "pages" | "outline" | "annotations" | "bookmarks";
+
+export const SidebarTabs: React.FC<{
+  className?: string;
+  selectedTab?: SidebarTabNames;
+  onChange?: (tab: SidebarTabNames) => void;
+}> = ({ className = "", selectedTab, onChange = () => null }) => {
+  const tabs: {
+    tab: SidebarTabNames;
+    title: string;
+    Icon: React.FunctionComponent<
+      React.SVGProps<SVGSVGElement> & { title?: string }
+    >;
+  }[] = [
+    {
+      tab: "pages",
+      title: "Pages",
+      Icon: CollectionIcon,
+    },
+    {
+      tab: "outline",
+      title: "Outline",
+      Icon: DocumentTextIcon,
+    },
+    {
+      tab: "annotations",
+      title: "Annotations",
+      Icon: AnnotationIcon,
+    },
+    {
+      tab: "bookmarks",
+      title: "Bookmarks",
+      Icon: BookmarkIcon,
+    },
+  ];
+
+  return (
+    <div className={`tabs tabs-boxed justify-center ${className}`}>
+      {tabs.map((tab) => (
+        <a
+          key={tab.tab}
+          className={`tab ${selectedTab === tab.tab ? "tab-active" : ""}`}
+          title={tab.title}
+          onClick={() => onChange(tab.tab)}
+        >
+          <tab.Icon className="inline-block w-4 h-4 stroke-current" />
+        </a>
+      ))}
+    </div>
+  );
+};
+
+export const Sidebar: React.FC<{
+  selectedTab?: SidebarTabNames;
+  content?: {
+    annotations?: JSX.Element;
+  };
+}> = ({ selectedTab = "annotations", content = {} }) => {
+  const [currentSelectedTab, setCurrentSelectedTab] =
+    useState<SidebarTabNames>(selectedTab);
+
+  useEffect(() => setCurrentSelectedTab(selectedTab), [selectedTab]);
+
+  return (
+    <div className="flex flex-col overflow-hidden p-2 w-3/4 md:w-90 bg-base-100 text-base-content h-full">
+      <SidebarTabs
+        selectedTab={currentSelectedTab}
+        onChange={setCurrentSelectedTab}
+      />
+      <div className="mt-2 flex-1 bg-base-200 rounded-lg p-2 overflow-y-auto">
+        {currentSelectedTab === "annotations" && content.annotations}
+      </div>
+    </div>
+  );
+};
+
 export const SidebarContent: React.FC<{
   className?: string;
   sidebar: JSX.Element;
@@ -231,12 +308,12 @@ export const SidebarContent: React.FC<{
 
   return (
     <div
-      className={`rounded-lg shadow bg-base-200 drawer drawer-mobile h-full ${className}`}
+      className={`rounded-lg shadow bg-base-100 drawer drawer-mobile h-full ${className}`}
     >
       <input type="checkbox" className="drawer-toggle" checked={showSidebar} />
       <div className="flex flex-col drawer-content relative">
         <ExpandButton
-          className={`top-4 left-0 z-20`}
+          className="top-4 -left-1 z-20"
           expanded={showSidebar}
           onClick={() => setShowSidebar(!showSidebar)}
         />
