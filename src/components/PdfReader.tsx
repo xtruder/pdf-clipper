@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import useState from "react-usestateref";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
@@ -11,7 +11,7 @@ import { PDFHighlighter } from "./PdfHighlighter";
 import { ActionButton, Sidebar, SidebarContent } from "./PdfControls";
 import { PDFViewerProxy } from "./PdfDisplay";
 import { HighlightListView } from "./HighlightListView";
-import { useEffect } from "react";
+import { PdfPageThumbnails } from "./PdfPageThumbnails";
 
 let s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -43,9 +43,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     HighlightColor.YELLOW
   );
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
-  const [pdfViewer, setPdfViewer] = useState<PDFViewerProxy | null>(null);
+  const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
+  const [_pdfViewer, setPdfViewer] = useState<PDFViewerProxy | null>(null);
   const [scale, setScale] = useState<number>();
-  const [showSidebar, setShowSidebar] = useState(false);
 
   const clearAreaSelection = () => {
     if (enableAreaSelection) {
@@ -128,6 +128,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         }
       }}
       content={{
+        pages: pdfDocument && (
+          <PdfPageThumbnails
+            pdfDocument={pdfDocument}
+            onPageClick={setScrollToPage}
+          />
+        ),
         annotations: (
           <HighlightListView
             highlights={highlights}
@@ -147,6 +153,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
             }}
           />
         ),
+        bookmarks: <></>,
+        outline: <></>,
       }}
     />
   );
@@ -165,6 +173,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
         <PDFLoader
           url={url}
+          onDocument={setPdfDocument}
           showDocument={(document) => (
             <PDFHighlighter
               pdfDocument={document}

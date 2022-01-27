@@ -12,6 +12,7 @@ export type PDFLoaderArgs = {
   showDocument: (pdfDocument: PDFDocumentProxy) => JSX.Element;
   showError?: (err: Error) => JSX.Element;
   showLoader?: () => JSX.Element;
+  onDocument?: (document: PDFDocumentProxy) => void;
   onError?: (error: Error) => void;
 };
 
@@ -20,6 +21,7 @@ export const PDFLoader: React.FC<PDFLoaderArgs> = ({
   showDocument,
   showLoader = () => <a>Loading...</a>,
   showError = (err: Error) => <p>Error loading PDF: {err.message}</p>,
+  onDocument = () => null,
   onError = (err: Error) => console.log("Pdf loader error", err),
 }) => {
   const documentRef = useRef<HTMLElement>(null);
@@ -51,6 +53,7 @@ export const PDFLoader: React.FC<PDFLoaderArgs> = ({
 
       const loadedPDFDocument = await loadingTask.promise;
       setPDFDocument(loadedPDFDocument);
+      onDocument(loadedPDFDocument);
     } catch (err) {
       setError(err as Error);
     }
