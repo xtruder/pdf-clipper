@@ -4,6 +4,8 @@ import { HighlightCard } from "./HighlightCard";
 
 export interface HighlightListViewProps {
   highlights: Highlight[];
+  scrollToHighlight?: string;
+  selectedHighlight?: string;
   onHighlightClicked?: (h: Highlight) => void;
   onHighlightDeleteClicked?: (h: Highlight) => void;
   onHighlightEditClicked?: (h: Highlight) => void;
@@ -12,6 +14,8 @@ export interface HighlightListViewProps {
 
 export const HighlightListView: React.FC<HighlightListViewProps> = ({
   highlights,
+  scrollToHighlight,
+  selectedHighlight,
   onHighlightClicked = () => null,
   onHighlightDeleteClicked = () => null,
   onHighlightEditClicked = () => null,
@@ -25,6 +29,9 @@ export const HighlightListView: React.FC<HighlightListViewProps> = ({
   return (
     <ul>
       {sortedHighlights.map((h) => {
+        const selected = h.id === selectedHighlight;
+        const scrollIntoView = h.id === scrollToHighlight;
+
         return (
           <li key={h.id} className="mt-2">
             <HighlightCard
@@ -32,6 +39,8 @@ export const HighlightListView: React.FC<HighlightListViewProps> = ({
               image={h.content.image}
               color={h.color}
               pageNumber={h.location.pageNumber}
+              selected={selected}
+              scrollIntoView={scrollIntoView}
               onClicked={() => onHighlightClicked(h)}
               onDeleteClicked={() => onHighlightDeleteClicked(h)}
               onEditClicked={() => onHighlightEditClicked(h)}

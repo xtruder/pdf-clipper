@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { HighlightColor } from "~/types";
 
@@ -6,6 +6,7 @@ import { ReactComponent as PencilAltIcon } from "../assets/icons/pencil-alt-outl
 import { ReactComponent as TrashIcon } from "../assets/icons/trash-outline.svg";
 import { ReactComponent as ChevronDoubleDownIcon } from "../assets/icons/chevron-double-down-outline.svg";
 import { ReactComponent as ChevronDoubleUpIcon } from "../assets/icons/chevron-double-up-outline.svg";
+import { useInView } from "react-intersection-observer";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200",
@@ -20,6 +21,8 @@ export interface HighlightCardProps {
   color?: HighlightColor;
   pageNumber: number;
   maxLength?: number;
+  scrollIntoView?: boolean;
+  selected?: boolean;
   onClicked?: () => void;
   onDeleteClicked?: () => void;
   onEditClicked?: () => void;
@@ -32,12 +35,15 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
   pageNumber,
   color,
   maxLength = 100,
+  scrollIntoView = false,
+  selected = false,
   onClicked = () => null,
   onDeleteClicked = () => null,
   onEditClicked = () => null,
   onPageClicked = () => null,
 }) => {
   const [showMore, setShowMore] = useState(false);
+  const { ref, inView, entry } = useInView({ threshold: 1 });
 
   const colorCls = colorToClass[color || HighlightColor.YELLOW];
 
@@ -82,9 +88,22 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
     );
   }
 
+  // scroll card into view
+  useEffect(() => {
+    if (scrollIntoView && entry && !inView) {
+      entry.target.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [scrollIntoView]);
+
+  const borderColor = selected ? "border-error" : "border-neutral";
+
   return (
     <div
-      className={`rounded-md border-2 border-neutral flex-col p-2 ${colorCls}`}
+      className={`rounded-md border-2 ${borderColor} flex-col p-2 ${colorCls}`}
+      ref={ref}
     >
       <div className="flex">
         <div className="flex flex-grow">{highlight}</div>

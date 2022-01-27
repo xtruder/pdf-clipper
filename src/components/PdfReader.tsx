@@ -32,6 +32,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<string>();
   const [scrollToHighlight, setScrollToHighlight] = useState<string>();
+  const [scrollToListViewHighlight, setScrollToListViewHighlight] =
+    useState<string>();
   const [scrollToPage, setScrollToPage] = useState<number>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
   const [areaSelectActive, setAreaSelectActive] = useState<boolean>(false);
@@ -111,12 +113,24 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     if (scrollToHighlight) setScrollToPage(undefined);
   }, [scrollToHighlight]);
 
+  useEffect(() => {
+    if (selectedHighlight) setScrollToListViewHighlight(selectedHighlight);
+  }, [selectedHighlight]);
+
   const sidebar = (
     <Sidebar
+      onTabChange={() => {
+        if (selectedHighlight) {
+          setScrollToListViewHighlight(undefined);
+          setTimeout(() => setScrollToListViewHighlight(selectedHighlight), 0);
+        }
+      }}
       content={{
         annotations: (
           <HighlightListView
             highlights={highlights}
+            scrollToHighlight={scrollToListViewHighlight}
+            selectedHighlight={selectedHighlight}
             onHighlightClicked={(h) => {
               setScrollToHighlight(h.id);
             }}

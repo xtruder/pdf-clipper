@@ -11,12 +11,16 @@ export default {
 export const TheHighlightListView: Story = (args) => {
   return (
     <div className="w-100 h-full p-5">
-      <HighlightListView highlights={args.highlights} />{" "}
+      <HighlightListView
+        highlights={args.highlights}
+        scrollToHighlight={args.scrollToHighlight}
+      />{" "}
     </div>
   );
 };
 
 TheHighlightListView.args = {
+  scrollToHighlight: "unknown",
   highlights: [
     {
       id: "h1",
@@ -44,6 +48,42 @@ TheHighlightListView.args = {
     },
     {
       id: "h3",
+      color: HighlightColor.RED,
+      content: {
+        image: "https://i.stack.imgur.com/P8iKH.png",
+      },
+      location: {
+        pageNumber: 3,
+        boundingRect: {} as any,
+        rects: [],
+      },
+    },
+    {
+      id: "h4",
+      color: HighlightColor.RED,
+      content: {
+        image: "https://i.stack.imgur.com/P8iKH.png",
+      },
+      location: {
+        pageNumber: 3,
+        boundingRect: {} as any,
+        rects: [],
+      },
+    },
+    {
+      id: "h5",
+      color: HighlightColor.RED,
+      content: {
+        image: "https://i.stack.imgur.com/P8iKH.png",
+      },
+      location: {
+        pageNumber: 3,
+        boundingRect: {} as any,
+        rects: [],
+      },
+    },
+    {
+      id: "h6",
       color: HighlightColor.RED,
       content: {
         image: "https://i.stack.imgur.com/P8iKH.png",
