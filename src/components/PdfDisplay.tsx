@@ -128,7 +128,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     area: Rect
   ): string | null => {
     const page = getPageView(pageNumber);
-    if (!page) return null;
+    if (!page || !page.canvas) return null;
 
     return getCanvasAreaAsPNG(page.canvas, area);
   };
