@@ -256,8 +256,17 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         isSelected={isSelected}
         onClick={() => onHighlightClicked(highlight)}
         onChange={(boundingRect) => {
-          const newHighlight = {
+          if (!pdfViewer) return;
+
+          const image = pdfViewer.screenshotPageArea(
+            highlight.location.pageNumber,
+            boundingRect
+          );
+          if (!image) return;
+
+          const newHighlight: Highlight = {
             ...highlight,
+            content: { image },
             location: {
               ...highlight.location,
               boundingRect: viewportRectToScaledPageRect(
