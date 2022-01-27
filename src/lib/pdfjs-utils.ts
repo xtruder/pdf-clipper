@@ -1,18 +1,14 @@
-import { PageElement } from "~/types";
+import { PDFPageProxy } from "pdfjs-dist";
+import { PageElement, PageView } from "~/types";
 
-export const getDocument = (elm: any): Document =>
-  (elm || {}).ownerDocument || document;
-export const getWindow = (elm: any): typeof window =>
-  (getDocument(elm) || {}).defaultView || window;
-export const isHTMLElement = (elm: any) =>
-  elm instanceof HTMLElement || elm instanceof getWindow(elm).HTMLElement;
-export const isHTMLCanvasElement = (elm: any) =>
-  elm instanceof HTMLCanvasElement ||
-  elm instanceof getWindow(elm).HTMLCanvasElement;
+import {
+  asElement,
+  getCanvasAreaAsPNG,
+  getDocument,
+  isHTMLElement,
+} from "./dom-utils";
 
-export const asElement = (x: any): HTMLElement => x;
-
-export const getPageFromElement = (target: HTMLElement): PageElement | null => {
+export function getPageFromElement(target: HTMLElement): PageElement | null {
   const node = asElement(target.closest(".page"));
 
   if (!node || !isHTMLElement(node)) {
@@ -22,9 +18,9 @@ export const getPageFromElement = (target: HTMLElement): PageElement | null => {
   const number = Number(asElement(node).dataset.pageNumber);
 
   return { node, number };
-};
+}
 
-export const getPagesFromRange = (range: Range): PageElement[] => {
+export function getPagesFromRange(range: Range): PageElement[] {
   const startParentElement = range.startContainer.parentElement;
   const endParentElement = range.endContainer.parentElement;
 
@@ -65,13 +61,13 @@ export const getPagesFromRange = (range: Range): PageElement[] => {
   }
 
   return pages;
-};
+}
 
 // find existing container div, or creates a new container div
-export const findOrCreateContainerLayer = <T = Element>(
+export function findOrCreateContainerLayer<T = Element>(
   container: HTMLElement,
   className: string
-): T | null => {
+): T | null {
   const doc = getDocument(container);
   let layer = container.querySelector(`.${className}`);
 
@@ -82,4 +78,39 @@ export const findOrCreateContainerLayer = <T = Element>(
   }
 
   return layer as unknown as T | null;
-};
+}
+
+// gets pdf page height by providing page width
+export function getPageHeight(page: PDFPageProxy, width: number): number {
+  const viewport = page.getViewport({ scale: 1 });
+
+  const scale = width / viewport.width;
+  const height = viewport.height * scale;
+
+  return height;
+}
+
+// creates screenshot of a page with selected width by rendering page in canvas
+// and converting canvas to png image
+export async function screenshotPage(
+  page: PDFPageProxy,
+  width: number
+): Promise<string | null> {
+  const viewport = page.getViewport({ scale: 1 });
+  const canvas = document.createElement("canvas");
+
+  canvas.width = width;
+
+  const scale = width / viewport.width;
+  canvas.height = viewport.height * scale;
+
+  const canvasContext = canvas.getContext("2d");
+  if (!canvasContext) return null;
+
+  await page.render({
+    canvasContext,
+    viewport: page.getViewport({ scale }),
+  }).promise;
+
+  return getCanvasAreaAsPNG(canvas);
+}

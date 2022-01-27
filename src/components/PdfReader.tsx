@@ -1,8 +1,10 @@
 import React from "react";
 import useState from "react-usestateref";
 
+import { PDFDocumentProxy } from "pdfjs-dist";
+
 import { Highlight, HighlightColor, NewHighlight } from "~/types";
-import { clearRangeSelection } from "~/lib/dom-util";
+import { clearRangeSelection } from "~/lib/dom-utils";
 
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";

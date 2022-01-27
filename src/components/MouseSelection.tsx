@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { Rect, Point } from "~/types";
 import { getBoundingRect } from "~/lib/coordinates";
-import { asElement, isHTMLElement } from "~/lib/pdfjs-dom";
+import { asElement, isHTMLElement } from "~/lib/dom-utils";
 
 const touchPoint = (event: MouseEvent | TouchEvent) => {
   if ("changedTouches" in event && event["changedTouches"].length > 0) {

@@ -15,12 +15,8 @@ import {
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
 } from "~/lib/coordinates";
-import {
-  asElement,
-  getPageFromElement,
-  getPagesFromRange,
-  isHTMLElement,
-} from "~/lib/pdfjs-dom";
+import { getPageFromElement, getPagesFromRange } from "~/lib/pdfjs-utils";
+import { asElement, isHTMLElement } from "~/lib/dom-utils";
 import { groupHighlightsByPage } from "~/lib/highlights";
 
 import {

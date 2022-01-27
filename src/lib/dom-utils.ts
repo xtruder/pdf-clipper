@@ -1,10 +1,28 @@
 import { Rect } from "~/types";
 
+export const getDocument = (elm: any): Document =>
+  (elm || {}).ownerDocument || document;
+export const getWindow = (elm: any): typeof window =>
+  (getDocument(elm) || {}).defaultView || window;
+export const isHTMLElement = (elm: any) =>
+  elm instanceof HTMLElement || elm instanceof getWindow(elm).HTMLElement;
+export const isHTMLCanvasElement = (elm: any) =>
+  elm instanceof HTMLCanvasElement ||
+  elm instanceof getWindow(elm).HTMLCanvasElement;
+
+export const asElement = (x: any): HTMLElement => x;
+
 // gets canvas area as png data url
 export const getCanvasAreaAsPNG = (
   canvas: HTMLCanvasElement,
-  { left, top, width, height }: Rect
+  rect?: Rect
 ): string => {
+  // if no rect provided, capture whole canvas area as image/png
+  if (!rect) {
+    return canvas.toDataURL("image/png");
+  }
+
+  const { left, top, width, height } = rect;
   const doc = canvas.ownerDocument;
 
   // creates a new canvas to draw image to
