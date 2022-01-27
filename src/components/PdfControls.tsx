@@ -226,48 +226,48 @@ export const ExpandButton: React.FC<{
 
 export type SidebarTabNames = "pages" | "outline" | "annotations" | "bookmarks";
 
-export const SidebarTabs: React.FC<{
+const sidebarTabs: {
+  name: SidebarTabNames;
+  title: string;
+  Icon: React.FunctionComponent<
+    React.SVGProps<SVGSVGElement> & { title?: string }
+  >;
+}[] = [
+  {
+    name: "pages",
+    title: "Pages",
+    Icon: CollectionIcon,
+  },
+  {
+    name: "outline",
+    title: "Outline",
+    Icon: DocumentTextIcon,
+  },
+  {
+    name: "annotations",
+    title: "Annotations",
+    Icon: AnnotationIcon,
+  },
+  {
+    name: "bookmarks",
+    title: "Bookmarks",
+    Icon: BookmarkIcon,
+  },
+];
+
+export const SidebarTabSelector: React.FC<{
   className?: string;
   selectedTab?: SidebarTabNames;
   onChange?: (tab: SidebarTabNames) => void;
 }> = ({ className = "", selectedTab, onChange = () => null }) => {
-  const tabs: {
-    tab: SidebarTabNames;
-    title: string;
-    Icon: React.FunctionComponent<
-      React.SVGProps<SVGSVGElement> & { title?: string }
-    >;
-  }[] = [
-    {
-      tab: "pages",
-      title: "Pages",
-      Icon: CollectionIcon,
-    },
-    {
-      tab: "outline",
-      title: "Outline",
-      Icon: DocumentTextIcon,
-    },
-    {
-      tab: "annotations",
-      title: "Annotations",
-      Icon: AnnotationIcon,
-    },
-    {
-      tab: "bookmarks",
-      title: "Bookmarks",
-      Icon: BookmarkIcon,
-    },
-  ];
-
   return (
     <div className={`tabs tabs-boxed justify-center ${className}`}>
-      {tabs.map((tab) => (
+      {sidebarTabs.map((tab) => (
         <a
-          key={tab.tab}
-          className={`tab ${selectedTab === tab.tab ? "tab-active" : ""}`}
+          key={tab.name}
+          className={`tab ${selectedTab === tab.name ? "tab-active" : ""}`}
           title={tab.title}
-          onClick={() => onChange(tab.tab)}
+          onClick={() => onChange(tab.name)}
         >
           <tab.Icon className="inline-block w-4 h-4 stroke-current" />
         </a>
@@ -278,23 +278,34 @@ export const SidebarTabs: React.FC<{
 
 export const Sidebar: React.FC<{
   selectedTab?: SidebarTabNames;
-  content?: {
-    annotations?: JSX.Element;
-  };
-}> = ({ selectedTab = "annotations", content = {} }) => {
+  content?: Record<SidebarTabNames, JSX.Element | null>;
+  onTabChange?: (name: SidebarTabNames) => void;
+}> = ({ selectedTab = "annotations", content, onTabChange = () => null }) => {
   const [currentSelectedTab, setCurrentSelectedTab] =
     useState<SidebarTabNames>(selectedTab);
 
   useEffect(() => setCurrentSelectedTab(selectedTab), [selectedTab]);
 
   return (
-    <div className="flex flex-col overflow-hidden p-2 w-3/4 md:w-90 bg-base-100 text-base-content h-full">
-      <SidebarTabs
+    <div className="flex flex-col overflow-hidden p-2 w-3/4 sm:w-90 md:w-90 bg-base-100 text-base-content h-full">
+      <SidebarTabSelector
         selectedTab={currentSelectedTab}
-        onChange={setCurrentSelectedTab}
+        onChange={(tab) => {
+          setCurrentSelectedTab(tab);
+          onTabChange(tab);
+        }}
       />
       <div className="mt-2 flex-1 bg-base-200 rounded-lg p-2 overflow-y-auto">
-        {currentSelectedTab === "annotations" && content.annotations}
+        {sidebarTabs.map((tab, i) => (
+          <div
+            key={i}
+            style={{
+              display: currentSelectedTab === tab.name ? "block" : "none",
+            }}
+          >
+            {content?.[tab.name]}
+          </div>
+        ))}
       </div>
     </div>
   );
