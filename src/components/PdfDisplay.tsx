@@ -20,6 +20,7 @@ import "./PdfDisplay.css";
 export interface ScrollPosition {
   pageNumber: number;
   top?: number;
+  destArray?: any[];
 }
 
 export interface PageLayer {
@@ -178,16 +179,22 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   const doScroll = (position: ScrollPosition) => {
     if (!pdfViewer || !pdfViewer.container) return;
 
-    const page = getPageView(position.pageNumber);
-    if (!page) return;
+    let destArray = position.destArray;
 
-    pdfViewer.scrollPageIntoView({
-      pageNumber: position.pageNumber,
-      destArray: [
+    if (!destArray && position.top) {
+      const page = getPageView(position.pageNumber);
+      if (!page) return;
+
+      destArray = [
         {},
         { name: "XYZ" },
         ...page.viewport.convertToPdfPoint(0, position.top || 0),
-      ],
+      ];
+    }
+
+    pdfViewer.scrollPageIntoView({
+      pageNumber: position.pageNumber,
+      destArray,
     });
 
     setScrolledTo(position);
@@ -290,7 +297,8 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     if (
       scrollTo &&
       (scrollTo.pageNumber !== scrolledTo?.pageNumber ||
-        scrollTo.top !== scrolledTo?.top)
+        scrollTo.top !== scrolledTo?.top ||
+        scrollTo.destArray !== scrolledTo.destArray)
     ) {
       doScroll(scrollTo);
     }

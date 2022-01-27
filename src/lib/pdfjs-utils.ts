@@ -1,4 +1,4 @@
-import { PDFPageProxy } from "pdfjs-dist";
+import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { PageElement, PageView } from "~/types";
 
 import {
@@ -113,4 +113,42 @@ export async function screenshotPage(
   }).promise;
 
   return getCanvasAreaAsPNG(canvas);
+}
+
+type _OutlineNode = Awaited<ReturnType<PDFDocumentProxy["getOutline"]>>[number];
+export type OutlineNode = Omit<_OutlineNode, "items"> & {
+  items: OutlineNode[];
+  pageNumber?: number;
+  top?: number;
+};
+
+export async function getDocumentOutline(
+  document: PDFDocumentProxy
+): Promise<OutlineNode[]> {
+  const outline: OutlineNode[] = await document.getOutline();
+
+  const mapOutlineNodes = async (
+    nodes: OutlineNode[]
+  ): Promise<OutlineNode[]> =>
+    await Promise.all(
+      nodes.map(async (node) => {
+        const items = await mapOutlineNodes(node.items);
+
+        if (!node.dest) return { ...node, items };
+
+        let dest: any[] | null =
+          typeof node.dest === "string"
+            ? await document.getDestination(node.dest)
+            : node.dest;
+
+        if (!dest) return { ...node, items };
+
+        const ref = dest[0];
+        const id = await document.getPageIndex(ref);
+
+        return { ...node, items, dest, pageNumber: id + 1, top: dest[2] };
+      })
+    );
+
+  return mapOutlineNodes(outline);
 }

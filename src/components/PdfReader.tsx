@@ -9,9 +9,10 @@ import { clearRangeSelection } from "~/lib/dom-utils";
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
 import { ActionButton, Sidebar, SidebarContent } from "./PdfControls";
-import { PDFViewerProxy } from "./PdfDisplay";
+import { PDFViewerProxy, ScrollPosition } from "./PdfDisplay";
 import { HighlightListView } from "./HighlightListView";
 import { PdfPageThumbnails } from "./PdfPageThumbnails";
+import { PdfOutlineListView } from "./PdfOutlineListView";
 
 let s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
@@ -37,6 +38,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [scrollToListViewHighlight, setScrollToListViewHighlight] =
     useState<string>();
   const [scrollToPage, setScrollToPage] = useState<number>();
+  const [scrollToPosition, setScrollToPosition] = useState<ScrollPosition>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
   const [areaSelectActive, setAreaSelectActive] = useState<boolean>(false);
   const [highlightColor, setHighlightColor] = useState<HighlightColor>(
@@ -108,11 +110,17 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   };
 
   useEffect(() => {
-    if (scrollToPage) setScrollToHighlight(undefined);
+    if (scrollToPage) {
+      setScrollToHighlight(undefined);
+      setScrollToPosition({ pageNumber: scrollToPage });
+    }
   }, [scrollToPage]);
 
   useEffect(() => {
-    if (scrollToHighlight) setScrollToPage(undefined);
+    if (scrollToHighlight) {
+      setScrollToPage(undefined);
+      setScrollToPosition(undefined);
+    }
   }, [scrollToHighlight]);
 
   useEffect(() => {
@@ -148,13 +156,17 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               setSelectedHighlight(h.id);
             }}
             onHighlightPageClicked={(h) => {
-              console.log("page clicked");
               setScrollToPage(h.location.pageNumber);
             }}
           />
         ),
         bookmarks: <></>,
-        outline: <></>,
+        outline: pdfDocument && (
+          <PdfOutlineListView
+            document={pdfDocument}
+            onOutlineNodeClicked={setScrollToPosition}
+          />
+        ),
       }}
     />
   );
@@ -179,7 +191,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               pdfDocument={document}
               highlights={highlights}
               selectedHighlight={selectedHighlight}
-              scrollTo={scrollToPage ? { pageNumber: scrollToPage } : undefined}
+              scrollTo={scrollToPosition}
               scrollToHighlight={scrollToHighlight}
               enableAreaSelection={enableAreaSelection}
               areaSelectionActive={areaSelectActive}
