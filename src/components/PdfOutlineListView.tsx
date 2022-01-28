@@ -32,11 +32,17 @@ const PdfOutlineItem: React.FC<{
   return (
     <li key={key}>
       <div
-        onMouseOver={() => setMouseOver(true)}
-        onMouseOut={() => setMouseOver(false)}
+        onMouseEnter={() => setMouseOver(true)}
+        onMouseLeave={() => setMouseOver(false)}
       >
         <div className="rounded-lg inline-block m-0.5">
-          <span className="cursor-pointer" onClick={onClick}>
+          <span
+            className="cursor-pointer"
+            onClick={(e) => {
+              onClick();
+              e.stopPropagation();
+            }}
+          >
             {mouseOver ? <b>{node.title}</b> : node.title}
           </span>
           {children && (
