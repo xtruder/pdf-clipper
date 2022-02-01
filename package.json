@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/xtruder/pdf-clipper#readme",
   "dependencies": {
+    "@syncedstore/core": "^0.3.7",
+    "@syncedstore/react": "^0.3.5",
     "@types/react-dropzone": "^5.1.0",
     "@types/react-helmet": "^6.1.4",
     "lodash.debounce": "^4.0.8",
@@ -31,7 +33,10 @@
     "react-intersection-observer": "^8.33.1",
     "react-rnd": "^10.3.5",
     "react-router-dom": "^6.0.2",
-    "react-usestateref": "^1.0.8"
+    "react-usestateref": "^1.0.8",
+    "y-indexeddb": "^9.0.7",
+    "y-webrtc": "^10.2.2",
+    "yjs": "^13.5.24"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^6.4.8",

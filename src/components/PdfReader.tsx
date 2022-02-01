@@ -1,10 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import useState from "react-usestateref";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
+import { useSyncedStore } from "@syncedstore/react";
 
-import { Highlight, HighlightColor, NewHighlight } from "~/types";
-import { clearRangeSelection } from "~/lib/dom-utils";
+import {
+  Highlight,
+  HighlightColor,
+  NewHighlight,
+} from "~/lib/highlights/types";
+import { clearRangeSelection } from "~/lib/dom";
 import { highlightSyncedStore } from "~/lib/persistence";
 
 import { PDFLoader } from "./PdfLoader";
@@ -30,7 +35,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   className = "",
   url,
 }) => {
-  const [highlights, setHighlights, highlightsRef] = useState<Highlight[]>([]);
+  const highlightStore = useMemo(
+    () => highlightSyncedStore(`pdf-document-${url}`),
+    []
+  );
+  const state = useSyncedStore(highlightStore.store);
+
+  //const [highlights, setHighlights, highlightsRef] = useState<Highlight[]>([]);
   const [_, setInProgressHighlight, inProgressHighlightRef] =
     useState<NewHighlight | null>(null);
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
