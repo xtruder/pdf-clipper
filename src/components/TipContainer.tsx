@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-import { Rect, Size } from "~/types";
+import { Rect, Size } from "~/lib/dom";
 
 // clamp value from left to right
 const clamp = (value: number, left: number, right: number) =>

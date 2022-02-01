@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { HighlightColor } from "~/types";
+import { HighlightColor } from "~/lib/highlights/types";
 
 import { ReactComponent as PencilAltIcon } from "../assets/icons/pencil-alt-outline.svg";
 import { ReactComponent as TrashIcon } from "../assets/icons/trash-outline.svg";

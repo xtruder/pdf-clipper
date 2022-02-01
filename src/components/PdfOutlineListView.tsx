@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
-import { getDocumentOutline, OutlineNode } from "~/lib/pdfjs-utils";
+import { getDocumentOutline, OutlineNode } from "~/lib/pdfjs";
 
 import { ReactComponent as ChevronUpIcon } from "~/assets/icons/chevron-up-outline.svg";
 import { ReactComponent as ChevronDownIcon } from "~/assets/icons/chevron-down-outline.svg";

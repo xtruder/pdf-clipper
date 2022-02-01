@@ -5,6 +5,7 @@ import { PDFDocumentProxy } from "pdfjs-dist";
 
 import { Highlight, HighlightColor, NewHighlight } from "~/types";
 import { clearRangeSelection } from "~/lib/dom-utils";
+import { highlightSyncedStore } from "~/lib/persistence";
 
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
@@ -65,27 +66,25 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     highlight.id = s4();
 
     setSelectedHighlight(highlight.id);
-    setHighlights([...highlightsRef.current, highlight as Highlight]);
+    state.highlights.push(highlight as Highlight);
 
     clearSelection();
     setInProgressHighlight(null);
   };
 
   const deleteHighlight = (id: string): void => {
-    const newHighlights = highlightsRef.current.filter((h) => h.id !== id);
+    const delHighlight = state.highlights.findIndex((h) => h.id === id);
+    state.highlights.splice(delHighlight, 1);
 
     setSelectedHighlight(undefined);
-    setHighlights(newHighlights);
   };
 
   const onHighlightUpdated = (highlight: Highlight): void => {
-    const newHighlights = [...highlights];
-    const idx = newHighlights.findIndex((h) => h.id === highlight.id);
+    const idx = state.highlights.findIndex((h) => h.id === highlight.id);
 
-    newHighlights[idx] = highlight;
+    state.highlights[idx] = highlight;
 
     setSelectedHighlight(highlight.id);
-    setHighlights(newHighlights);
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -144,7 +143,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         ),
         annotations: (
           <HighlightListView
-            highlights={highlights}
+            highlights={state.highlights}
             scrollToHighlight={scrollToListViewHighlight}
             selectedHighlight={selectedHighlight}
             onHighlightClicked={(h) => {
@@ -189,7 +188,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           showDocument={(document) => (
             <PDFHighlighter
               pdfDocument={document}
-              highlights={highlights}
+              highlights={state.highlights}
               selectedHighlight={selectedHighlight}
               scrollTo={scrollToPosition}
               scrollToHighlight={scrollToHighlight}

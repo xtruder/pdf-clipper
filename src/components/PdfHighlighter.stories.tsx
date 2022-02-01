@@ -2,7 +2,7 @@ import React from "react";
 import useState from "react-usestateref";
 import { Story } from "@storybook/react";
 
-import { Highlight, NewHighlight } from "~/types";
+import { Highlight, NewHighlight } from "~/lib/highlights/types";
 import { PDFLoader } from "./PdfLoader";
 import { PDFHighlighter } from "./PdfHighlighter";
 

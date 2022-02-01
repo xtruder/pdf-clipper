@@ -10,9 +10,8 @@ import {
   PDFViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import { PageView, Rect, Viewport } from "~/types";
-import { findOrCreateContainerLayer } from "~/lib/pdfjs-utils";
-import { getWindow, getCanvasAreaAsPNG } from "~/lib/dom-utils";
+import { Rect, getWindow, getCanvasAreaAsPNG } from "~/lib/dom";
+import { PageView, Viewport, findOrCreateContainerLayer } from "~/lib/pdfjs";
 
 import "pdfjs-dist/web/pdf_viewer.css";
 import "./PdfDisplay.css";

@@ -1,12 +1,32 @@
 import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
-import { PageElement, PageView } from "~/types";
 
 import {
   asElement,
   getCanvasAreaAsPNG,
   getDocument,
   isHTMLElement,
-} from "./dom-utils";
+} from "./dom";
+
+export interface PageView {
+  viewport: Viewport;
+  canvas: HTMLCanvasElement;
+  textLayer?: {
+    textLayerDiv: HTMLDivElement;
+  };
+  div: HTMLDivElement;
+}
+
+export interface Viewport {
+  convertToPdfPoint: (x: number, y: number) => Array<number>;
+  convertToViewportRectangle: (pdfRectangle: Array<number>) => Array<number>;
+  width: number;
+  height: number;
+}
+
+export interface PageElement {
+  number: number;
+  node: HTMLElement;
+}
 
 export function getPageFromElement(target: HTMLElement): PageElement | null {
   const node = asElement(target.closest(".page"));

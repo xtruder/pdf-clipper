@@ -8,35 +8,39 @@ export interface DocumentDropZoneProps {}
 
 export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({}) => {
   const [readerErrorStr, setReaderErrorStr] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) =>
-      acceptedFiles.forEach((file) => {
-        const reader = new FileReader();
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
 
-        reader.onabort = () => setReaderErrorStr("file reading was aborted");
-        reader.onerror = () => setReaderErrorStr("error reading files");
-        reader.onload = () => {
-          const binaryStr = reader.result;
+    const reader = new FileReader();
 
-          setReaderErrorStr(null);
-        };
+    reader.onabort = () => setReaderErrorStr("file reading was aborted");
+    reader.onerror = () => setReaderErrorStr("error reading files");
+    reader.onload = () => {
+      const binaryStr = reader.result;
 
-        reader.readAsArrayBuffer(file);
-      }),
-    []
-  );
+      setReaderErrorStr(null);
+    };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+    reader.readAsArrayBuffer(file);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: false, // only one file for now
+    maxSize: 100 * 100000, // 100 MB for now, so we don't eat all memory
+    accept: "application/pdf", // accept only pdf for now
+  });
 
   const Icon = readerErrorStr ? ExclamationCircleIcon : ExclamationCircleIcon;
 
   const text = readerErrorStr ? (
     <>{readerErrorStr}</>
   ) : isDragActive ? (
-    <>Drop the files here ...</>
+    <>Drop your document here ...</>
   ) : (
-    <>Drag 'n' drop documents here, or click to select files</>
+    <>Drag 'n' drop pdf document here, or click to select file</>
   );
 
   return (

@@ -12,7 +12,7 @@ import { ReactComponent as CollectionIcon } from "~/assets/icons/collections-out
 import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outline.svg";
 import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
 
-import { HighlightColor } from "~/types";
+import { HighlightColor } from "~/lib/highlights/types";
 
 const preventFocus = (e: React.FocusEvent) => {
   e.preventDefault();
@@ -248,11 +248,6 @@ const sidebarTabs: {
     title: "Annotations",
     Icon: AnnotationIcon,
   },
-  {
-    name: "bookmarks",
-    title: "Bookmarks",
-    Icon: BookmarkIcon,
-  },
 ];
 
 export const SidebarTabSelector: React.FC<{
@@ -280,7 +275,7 @@ export const Sidebar: React.FC<{
   selectedTab?: SidebarTabNames;
   content?: Record<SidebarTabNames, JSX.Element | null>;
   onTabChange?: (name: SidebarTabNames) => void;
-}> = ({ selectedTab = "annotations", content, onTabChange = () => null }) => {
+}> = ({ selectedTab = "outline", content, onTabChange = () => null }) => {
   const [currentSelectedTab, setCurrentSelectedTab] =
     useState<SidebarTabNames>(selectedTab);
 

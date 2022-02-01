@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
-import { Rect, Point } from "~/types";
-import { getBoundingRect } from "~/lib/coordinates";
-import { asElement, isHTMLElement } from "~/lib/dom-utils";
+import { Rect, Point, asElement, isHTMLElement } from "~/lib/dom";
+import { getBoundingRect } from "~/lib/highlights/coordinates";
 
 const touchPoint = (event: MouseEvent | TouchEvent) => {
   if ("changedTouches" in event && event["changedTouches"].length > 0) {

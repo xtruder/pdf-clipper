@@ -2,7 +2,7 @@ import React from "react";
 import { Story } from "@storybook/react";
 
 import { HighlightListView } from "./HighlightListView";
-import { Highlight, HighlightColor } from "~/types";
+import { Highlight, HighlightColor } from "~/lib/highlights/types";
 
 export default {
   title: "HighlightListView",

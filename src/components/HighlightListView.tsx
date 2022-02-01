@@ -1,5 +1,5 @@
 import React from "react";
-import { Highlight } from "~/types";
+import { Highlight } from "~/lib/highlights/types";
 import { HighlightCard } from "./HighlightCard";
 
 export interface HighlightListViewProps {

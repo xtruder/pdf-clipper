@@ -1,5 +1,6 @@
-import { groupBy, unique } from "~/utils";
-import { PartialHighlight } from "~/types";
+import { groupBy, unique } from "~/lib/utils";
+
+import { PartialHighlight } from "./types";
 
 // get highlights per page, that are on that page or have rects on page
 export const groupHighlightsByPage = <T extends PartialHighlight>(

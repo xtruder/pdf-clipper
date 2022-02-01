@@ -1,12 +1,7 @@
-import {
-  Rect,
-  PageRect,
-  PageElement,
-  Point,
-  Viewport,
-  ScaledRect,
-  ScaledPageRect,
-} from "~/types";
+import { PageRect, ScaledRect, ScaledPageRect } from "./types";
+
+import { Rect, Point } from "~/lib/dom";
+import { PageElement, Viewport } from "~/lib/pdfjs";
 
 const pdfToViewport = (rect: Rect, viewport: Viewport): Rect => {
   const [x1, y1, x2, y2] = viewport.convertToViewportRectangle([

@@ -3,7 +3,7 @@ import { useInView } from "react-intersection-observer";
 
 import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 
-import { getPageHeight, screenshotPage } from "~/lib/pdfjs-utils";
+import { getPageHeight, screenshotPage } from "~/lib/pdfjs";
 
 const PdfPageThumbnail: React.FC<{
   page: PDFPageProxy;

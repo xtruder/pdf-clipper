@@ -5,19 +5,17 @@ import {
   Highlight,
   HighlightColor,
   NewHighlight,
-  Rect,
-  Viewport,
-} from "~/types";
-
+} from "~/lib/highlights/types";
+import { groupHighlightsByPage } from "~/lib/highlights/utils";
 import {
   getHighlightedRectsWithinPages,
   getBoundingRectForRects,
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
-} from "~/lib/coordinates";
-import { getPageFromElement, getPagesFromRange } from "~/lib/pdfjs-utils";
-import { asElement, isHTMLElement } from "~/lib/dom-utils";
-import { groupHighlightsByPage } from "~/lib/highlights";
+} from "~/lib/highlights/coordinates";
+
+import { Rect, asElement, isHTMLElement } from "~/lib/dom";
+import { getPageFromElement, getPagesFromRange, Viewport } from "~/lib/pdfjs";
 
 import {
   PageLayer,
@@ -288,7 +286,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   };
 
   const renderPageLayers = (highlights: Highlight[]): PageLayer[] => {
-    const highlightsByPage = groupHighlightsByPage(highlights);
+    const highlightsByPage = groupHighlightsByPage([...highlights]);
 
     let highlightLayer: PageLayer = {
       name: "annotationLayer",

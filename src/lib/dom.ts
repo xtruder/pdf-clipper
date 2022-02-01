@@ -1,4 +1,23 @@
-import { Rect } from "~/types";
+// Point defines a point in 2D space
+export interface Point {
+  x: number;
+  y: number;
+}
+// Offset defines offset from top left
+
+export interface Offset {
+  left: number;
+  top: number;
+}
+// Size defines width x height of something
+
+export interface Size {
+  width: number;
+  height: number;
+}
+// Rect defined rectangle as left, top, width and height
+
+export interface Rect extends Offset, Size {}
 
 export const getDocument = (elm: any): Document =>
   (elm || {}).ownerDocument || document;
