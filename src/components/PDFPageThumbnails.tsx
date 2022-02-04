@@ -5,7 +5,7 @@ import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 
 import { getPageHeight, screenshotPage } from "~/lib/pdfjs";
 
-const PdfPageThumbnail: React.FC<{
+const PDFPageThumbnail: React.FC<{
   page: PDFPageProxy;
   width: number;
   onClick: () => void;
@@ -44,12 +44,12 @@ const PdfPageThumbnail: React.FC<{
   );
 };
 
-export interface PdfPageThumbnailsProps {
+export interface PDFPageThumbnailsProps {
   pdfDocument: PDFDocumentProxy;
   onPageClick: (pageNumber?: number) => void;
 }
 
-export const PdfPageThumbnails: React.FC<PdfPageThumbnailsProps> = ({
+export const PDFPageThumbnails: React.FC<PDFPageThumbnailsProps> = ({
   pdfDocument,
   onPageClick = () => null,
 }) => {
@@ -73,7 +73,7 @@ export const PdfPageThumbnails: React.FC<PdfPageThumbnailsProps> = ({
       {pages ? (
         pages.map((page) => (
           <li key={page.pageNumber} className="flex justify-center relative">
-            <PdfPageThumbnail
+            <PDFPageThumbnail
               page={page}
               width={300}
               onClick={() => onPageClick(page.pageNumber)}

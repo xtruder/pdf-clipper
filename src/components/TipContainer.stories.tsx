@@ -20,7 +20,7 @@ export const TheTipContainer: Story = (args) => {
       <TipContainer
         scrollTop={10}
         style={{ top: 0, left: 50, bottom: 20 }}
-        pageBoundingRect={page}
+        boundingRect={page}
       >
         <div className="bg-yellow-400">
           <a>this is a left top tip</a>
@@ -40,7 +40,7 @@ export const TheTipContainer: Story = (args) => {
       <TipContainer
         scrollTop={10}
         style={{ top: 0, left: 800, bottom: 20 }}
-        pageBoundingRect={page}
+        boundingRect={page}
       >
         <div className="bg-yellow-400">
           <a>this is a right top tip</a>
@@ -60,7 +60,7 @@ export const TheTipContainer: Story = (args) => {
       <TipContainer
         scrollTop={10}
         style={{ top: 740, left: 50, bottom: 20 }}
-        pageBoundingRect={page}
+        boundingRect={page}
       >
         <div className="bg-yellow-400">
           <a>this is a left bottom tip</a>
@@ -80,7 +80,7 @@ export const TheTipContainer: Story = (args) => {
       <TipContainer
         scrollTop={10}
         style={{ top: 740, left: 800, bottom: 20 }}
-        pageBoundingRect={page}
+        boundingRect={page}
       >
         <div className="bg-yellow-400">
           <a>this is a right bottom tip</a>

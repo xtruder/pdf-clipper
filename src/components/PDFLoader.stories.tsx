@@ -1,13 +1,13 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { PDFLoader } from "./PdfLoader";
+import { PDFLoader } from "./PDFLoader";
 
 export default {
-  title: "PdfLoader",
+  title: "PDFLoader",
 };
 
-export const ThePdfLoader: Story = (args) => {
+export const ThePDFLoader: Story = (args) => {
   return (
     <PDFLoader
       url={args.url}
@@ -20,11 +20,11 @@ export const ThePdfLoader: Story = (args) => {
   );
 };
 
-ThePdfLoader.args = {
+ThePDFLoader.args = {
   url: "https://arxiv.org/pdf/1708.08021.pdf",
 };
 
-ThePdfLoader.argTypes = {
+ThePDFLoader.argTypes = {
   onError: {
     action: "error",
   },

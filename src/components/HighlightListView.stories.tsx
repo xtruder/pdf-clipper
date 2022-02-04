@@ -1,8 +1,9 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
+import { PDFHighlight, HighlightColor } from "~/models";
+
 import { HighlightListView } from "./HighlightListView";
-import { Highlight, HighlightColor } from "~/lib/highlights/types";
 
 export default {
   title: "HighlightListView",
@@ -24,9 +25,9 @@ TheHighlightListView.args = {
   highlights: [
     {
       id: "h1",
-      color: HighlightColor.BLUE,
       content: {
         text: "some highlight text",
+        color: HighlightColor.BLUE,
       },
       location: {
         pageNumber: 1,
@@ -36,9 +37,9 @@ TheHighlightListView.args = {
     },
     {
       id: "h2",
-      color: HighlightColor.YELLOW,
       content: {
         text: "some longer highlight text",
+        color: HighlightColor.YELLOW,
       },
       location: {
         pageNumber: 2,
@@ -48,9 +49,9 @@ TheHighlightListView.args = {
     },
     {
       id: "h3",
-      color: HighlightColor.RED,
       content: {
         image: "https://i.stack.imgur.com/P8iKH.png",
+        color: HighlightColor.RED,
       },
       location: {
         pageNumber: 3,
@@ -60,9 +61,9 @@ TheHighlightListView.args = {
     },
     {
       id: "h4",
-      color: HighlightColor.RED,
       content: {
         image: "https://i.stack.imgur.com/P8iKH.png",
+        color: HighlightColor.RED,
       },
       location: {
         pageNumber: 3,
@@ -72,9 +73,9 @@ TheHighlightListView.args = {
     },
     {
       id: "h5",
-      color: HighlightColor.RED,
       content: {
         image: "https://i.stack.imgur.com/P8iKH.png",
+        color: HighlightColor.RED,
       },
       location: {
         pageNumber: 3,
@@ -84,9 +85,9 @@ TheHighlightListView.args = {
     },
     {
       id: "h6",
-      color: HighlightColor.RED,
       content: {
         image: "https://i.stack.imgur.com/P8iKH.png",
+        color: HighlightColor.RED,
       },
       location: {
         pageNumber: 3,
@@ -94,7 +95,7 @@ TheHighlightListView.args = {
         rects: [],
       },
     },
-  ] as Highlight[],
+  ] as PDFHighlight[],
 };
 
 TheHighlightListView.argTypes = {};

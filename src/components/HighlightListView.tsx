@@ -1,15 +1,15 @@
 import React from "react";
-import { Highlight } from "~/lib/highlights/types";
+import { PDFHighlight } from "~/models";
 import { HighlightCard } from "./HighlightCard";
 
 export interface HighlightListViewProps {
-  highlights: Highlight[];
-  scrollToHighlight?: string;
-  selectedHighlight?: string;
-  onHighlightClicked?: (h: Highlight) => void;
-  onHighlightDeleteClicked?: (h: Highlight) => void;
-  onHighlightEditClicked?: (h: Highlight) => void;
-  onHighlightPageClicked?: (h: Highlight) => void;
+  highlights: PDFHighlight[];
+  scrollToHighlight?: PDFHighlight;
+  selectedHighlight?: PDFHighlight;
+  onHighlightClicked?: (h: PDFHighlight) => void;
+  onHighlightDeleteClicked?: (h: PDFHighlight) => void;
+  onHighlightEditClicked?: (h: PDFHighlight) => void;
+  onHighlightPageClicked?: (h: PDFHighlight) => void;
 }
 
 export const HighlightListView: React.FC<HighlightListViewProps> = ({
@@ -29,15 +29,15 @@ export const HighlightListView: React.FC<HighlightListViewProps> = ({
   return (
     <ul>
       {sortedHighlights.map((h) => {
-        const selected = h.id === selectedHighlight;
-        const scrollIntoView = h.id === scrollToHighlight;
+        const selected = h.id === selectedHighlight?.id;
+        const scrollIntoView = h.id === scrollToHighlight?.id;
 
         return (
           <li key={h.id} className="mt-2">
             <HighlightCard
               text={h.content.text}
               image={h.content.image}
-              color={h.color}
+              color={h.content.color}
               pageNumber={h.location.pageNumber}
               selected={selected}
               scrollIntoView={scrollIntoView}

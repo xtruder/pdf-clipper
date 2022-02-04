@@ -10,9 +10,8 @@ import { ReactComponent as ChevronDoubleRightIcon } from "~/assets/icons/chevron
 import { ReactComponent as ChevronDoubleLeftIcon } from "~/assets/icons/chevron-double-left-outline.svg";
 import { ReactComponent as CollectionIcon } from "~/assets/icons/collections-outline.svg";
 import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outline.svg";
-import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
 
-import { HighlightColor } from "~/lib/highlights/types";
+import { HighlightColor } from "~/models";
 
 const preventFocus = (e: React.FocusEvent) => {
   e.preventDefault();
@@ -224,7 +223,7 @@ export const ExpandButton: React.FC<{
   );
 };
 
-export type SidebarTabNames = "pages" | "outline" | "annotations" | "bookmarks";
+export type SidebarTabNames = "pages" | "outline" | "annotations";
 
 const sidebarTabs: {
   name: SidebarTabNames;

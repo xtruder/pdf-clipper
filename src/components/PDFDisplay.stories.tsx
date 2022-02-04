@@ -1,14 +1,14 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { PDFDisplay } from "./PdfDisplay";
-import { PDFLoader } from "./PdfLoader";
+import { PDFDisplay } from "./PDFDisplay";
+import { PDFLoader } from "./PDFLoader";
 
 export default {
-  title: "PdfViewer",
+  title: "PDFDisplay",
 };
 
-export const ThePdfViewer: Story = (args) => {
+export const ThePDFDisplay: Story = (args) => {
   return (
     <PDFLoader
       url={args.url}
@@ -38,7 +38,7 @@ export const ThePdfViewer: Story = (args) => {
   );
 };
 
-ThePdfViewer.args = {
+ThePDFDisplay.args = {
   url: "https://arxiv.org/pdf/1708.08021.pdf",
   pdfScaleValue: "auto",
   pageNumber: 1,
@@ -65,7 +65,7 @@ ThePdfViewer.args = {
   ],
 };
 
-ThePdfViewer.argTypes = {
+ThePDFDisplay.argTypes = {
   onError: {
     action: "error",
   },

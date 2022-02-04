@@ -2,9 +2,9 @@ import React from "react";
 import useState from "react-usestateref";
 import { Story } from "@storybook/react";
 
-import { Highlight, NewHighlight } from "~/lib/highlights/types";
-import { PDFLoader } from "./PdfLoader";
-import { PDFHighlighter } from "./PdfHighlighter";
+import { PDFHighlight, NewPDFHighlight } from "~/models";
+import { PDFLoader } from "./PDFLoader";
+import { PDFHighlighter } from "./PDFHighlighter";
 
 export default {
   title: "PDFHighlighter",
@@ -17,10 +17,12 @@ let s4 = () => {
 };
 
 export const ThePDFHighlighter: Story = (args) => {
-  const [highlights, setHighlights, highlightsRef] = useState<Highlight[]>([]);
+  const [highlights, setHighlights, highlightsRef] = useState<PDFHighlight[]>(
+    []
+  );
   const [_, setInProgressHighlight, inProgressHighlightRef] =
-    useState<NewHighlight | null>(null);
-  const [selectedHighlight, setSelectedHighlight] = useState<string>();
+    useState<NewPDFHighlight | null>(null);
+  const [selectedHighlight, setSelectedHighlight] = useState<PDFHighlight>();
 
   return (
     <PDFLoader
@@ -47,13 +49,13 @@ export const ThePDFHighlighter: Story = (args) => {
 
             newHighlights[idx] = highlight;
 
-            setSelectedHighlight(highlight.id);
+            setSelectedHighlight(highlight);
             setHighlights(newHighlights);
           }}
           onHighlightClicked={(highlight) => {
             args.onHighlightClicked(highlight);
 
-            setSelectedHighlight(highlight.id);
+            setSelectedHighlight(highlight);
           }}
           onKeyDown={(event: KeyboardEvent) => {
             switch (event.code) {
@@ -64,7 +66,7 @@ export const ThePDFHighlighter: Story = (args) => {
                     id: s4(),
                   };
 
-                  setSelectedHighlight(highlight.id);
+                  setSelectedHighlight(highlight);
                   setHighlights([...highlightsRef.current, highlight]);
 
                   setInProgressHighlight(null);

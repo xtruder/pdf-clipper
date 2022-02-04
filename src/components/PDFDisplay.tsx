@@ -1,4 +1,5 @@
-import React, { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import React, { MouseEvent, useEffect, useMemo, useRef } from "react";
+import useState from "react-usestateref";
 import ReactDOM from "react-dom";
 import debounce from "lodash.debounce";
 
@@ -14,7 +15,7 @@ import { Rect, getWindow, getCanvasAreaAsPNG } from "~/lib/dom";
 import { PageView, Viewport, findOrCreateContainerLayer } from "~/lib/pdfjs";
 
 import "pdfjs-dist/web/pdf_viewer.css";
-import "./PdfDisplay.css";
+import "./PDFDisplay.css";
 
 export interface ScrollPosition {
   pageNumber: number;
@@ -31,7 +32,7 @@ export interface PageLayer {
   }[];
 }
 
-export interface PDFViewerProxy {
+export interface PDFDisplayProxy {
   pdfDocument: PDFDocumentProxy;
   currentScale: number;
   getPageView(pageNumber: number): PageView | null;
@@ -39,7 +40,7 @@ export interface PDFViewerProxy {
 }
 
 interface PDFDisplayEvents {
-  onDocumentReady?: (viewer: PDFViewerProxy) => void;
+  onDocumentReady?: (viewer: PDFDisplayProxy) => void;
   onTextLayerRendered?: (event: { pageNumber: number }) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
   onMouseDown?: (event: MouseEvent) => void;
@@ -91,25 +92,24 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   const pageLayersRef = useRef(pageLayers);
   pageLayersRef.current = pageLayers;
 
-  const // pdfjs EventBus, PDFLinkService, and viewer itself
-    eventBus = useMemo(() => new EventBus(), []),
-    linkService = useMemo(
-      () =>
-        new PDFLinkService({
-          eventBus,
-          externalLinkTarget: 2,
-        }),
-      []
-    ),
-    [pdfViewer, setPDFViewer] = useState<PDFViewer>();
+  const eventBus = useMemo(() => new EventBus(), []);
+  const linkService = useMemo(
+    () =>
+      new PDFLinkService({
+        eventBus,
+        externalLinkTarget: 2,
+      }),
+    []
+  );
+  const [pdfViewer, setPDFViewer, pdfViewerRef] = useState<PDFViewer>();
 
   // pdfjs container element ref
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleScaledValue = debounce(() => {
-    if (!pdfViewer) return;
+    if (!pdfViewerRef.current) return;
 
-    pdfViewer.currentScaleValue = pdfScaleValue;
+    pdfViewerRef.current.currentScaleValue = pdfScaleValue;
   }, 500);
 
   // Observer for document resizes
@@ -119,7 +119,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   }, []);
 
   const getPageView = (pageNumber: number): PageView | null => {
-    return pdfViewer!.getPageView(pageNumber - 1) || null;
+    return pdfViewerRef.current!.getPageView(pageNumber - 1) || null;
   };
 
   // helper function to make a screeen of a page area
@@ -149,11 +149,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   const onScroll = (_scroll: any) => {
-    if (!pdfViewer) return;
+    if (!pdfViewerRef.current) return;
 
     onPageScroll({
-      pageNumber: pdfViewer.currentPageNumber,
-      top: pdfViewer.scroll.lastY,
+      pageNumber: pdfViewerRef.current.currentPageNumber,
+      top: pdfViewerRef.current.scroll.lastY,
     });
   };
 
@@ -163,7 +163,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       screenshotPageArea,
       pdfDocument,
       get currentScale(): number {
-        return pdfViewer!.currentScale;
+        return pdfViewerRef.current!.currentScale;
       },
     });
 
@@ -176,7 +176,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   const doScroll = (position: ScrollPosition) => {
-    if (!pdfViewer || !pdfViewer.container) return;
+    if (!pdfViewerRef.current || !pdfViewerRef.current?.container) return;
 
     let destArray = position.destArray;
 
@@ -191,7 +191,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       ];
     }
 
-    pdfViewer.scrollPageIntoView({
+    pdfViewerRef.current.scrollPageIntoView({
       pageNumber: position.pageNumber,
       destArray,
     });
@@ -236,14 +236,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
     resizeObserver?.observe(containerRef.current);
     return () => resizeObserver?.disconnect();
-  }, []);
+  }, [containerRef]);
 
   // initialize pdfjs viewer when pdf document changes
   useEffect(() => {
     if (!containerRef.current) return;
     if (pdfDocument === currentPdfDocument) return;
 
-    const pdfViewer = new PDFViewer({
+    const _pdfViewer = new PDFViewer({
       container: containerRef.current,
       eventBus,
       textLayerMode: 1,
@@ -254,17 +254,17 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     });
 
     linkService.setDocument(pdfDocument);
-    linkService.setViewer(pdfViewer);
+    linkService.setViewer(_pdfViewer);
 
-    pdfViewer.setDocument(pdfDocument);
+    _pdfViewer.setDocument(pdfDocument);
 
     setCurrentPdfDocument(pdfDocument);
-    setPDFViewer(pdfViewer);
+    setPDFViewer(_pdfViewer);
   }, [pdfDocument]);
 
   // init event listeners when pdfViewer changes
   useEffect(() => {
-    if (!pdfViewer || !containerRef.current) return;
+    if (!containerRef.current) return;
 
     const container = containerRef.current;
     const { ownerDocument: doc } = container;

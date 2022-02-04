@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Rect } from "~/lib/dom";
-import { HighlightColor } from "~/lib/highlights/types";
+import { HighlightColor } from "~/models";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200 text-red-800",

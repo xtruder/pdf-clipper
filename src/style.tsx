@@ -1,1 +1,1 @@
-import { HighlightColor } from "./lib/highlights/types";
+import { HighlightColor } from "./models";

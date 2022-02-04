@@ -78,3 +78,31 @@ export const clearRangeSelection = () => {
     window.getSelection()?.removeAllRanges();
   }
 };
+
+// gets bounding rect between two points
+export const getBoundingRect = (start: Point, end: Point): Rect => {
+  return {
+    left: Math.min(end.x, start.x),
+    top: Math.min(end.y, start.y),
+
+    width: Math.abs(end.x - start.x),
+    height: Math.abs(end.y - start.y),
+  };
+};
+
+export const isDOMRectInside = (rect1: DOMRect, rect2: DOMRect) => {
+  if (rect1.top < rect2.top) {
+    return false;
+  }
+  if (rect1.bottom > rect2.bottom) {
+    return false;
+  }
+  if (rect1.right > rect2.right) {
+    return false;
+  }
+  if (rect1.left < rect2.left) {
+    return false;
+  }
+
+  return true;
+};

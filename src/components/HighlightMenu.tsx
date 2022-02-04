@@ -1,5 +1,6 @@
 import React from "react";
-import { HighlightColor } from "~/lib/highlights/types";
+
+import { HighlightColor } from "~/models";
 
 export interface HighlightMenuProps {
   color: HighlightColor;

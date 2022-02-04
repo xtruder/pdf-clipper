@@ -1,6 +1,6 @@
 import { PageRect, ScaledRect, ScaledPageRect } from "./types";
 
-import { Rect, Point } from "~/lib/dom";
+import { Rect, isDOMRectInside } from "~/lib/dom";
 import { PageElement, Viewport } from "~/lib/pdfjs";
 
 const pdfToViewport = (rect: Rect, viewport: Viewport): Rect => {
@@ -52,33 +52,6 @@ export const viewportRectToScaledPageRect = (
   pageNumber: rect.pageNumber,
 });
 
-export const getBoundingRect = (start: Point, end: Point): Rect => {
-  return {
-    left: Math.min(end.x, start.x),
-    top: Math.min(end.y, start.y),
-
-    width: Math.abs(end.x - start.x),
-    height: Math.abs(end.y - start.y),
-  };
-};
-
-const isClientRectInsidePageRect = (clientRect: DOMRect, pageRect: DOMRect) => {
-  if (clientRect.top < pageRect.top) {
-    return false;
-  }
-  if (clientRect.bottom > pageRect.bottom) {
-    return false;
-  }
-  if (clientRect.right > pageRect.right) {
-    return false;
-  }
-  if (clientRect.left < pageRect.left) {
-    return false;
-  }
-
-  return true;
-};
-
 // gets highlighted client rects that are within page
 export const getHighlightedRectsWithinPages = (
   // highlighted range
@@ -97,7 +70,7 @@ export const getHighlightedRectsWithinPages = (
       const pageRect = page.node.getBoundingClientRect();
 
       if (
-        isClientRectInsidePageRect(clientRect, pageRect) &&
+        isDOMRectInside(clientRect, pageRect) &&
         clientRect.top >= 0 &&
         clientRect.bottom >= 0 &&
         clientRect.width > 0 &&

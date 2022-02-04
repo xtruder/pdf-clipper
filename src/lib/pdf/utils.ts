@@ -1,9 +1,9 @@
 import { groupBy, unique } from "~/lib/utils";
 
-import { PartialHighlight } from "./types";
+import { PartialPDFHighlight } from "~/models";
 
 // get highlights per page, that are on that page or have rects on page
-export const groupHighlightsByPage = <T extends PartialHighlight>(
+export const groupHighlightsByPage = <T extends PartialPDFHighlight>(
   highlights: T[]
 ): Record<number, T[]> => {
   // get all rects from all highlights

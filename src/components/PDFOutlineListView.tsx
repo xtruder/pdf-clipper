@@ -5,7 +5,7 @@ import { getDocumentOutline, OutlineNode } from "~/lib/pdfjs";
 
 import { ReactComponent as ChevronUpIcon } from "~/assets/icons/chevron-up-outline.svg";
 import { ReactComponent as ChevronDownIcon } from "~/assets/icons/chevron-down-outline.svg";
-import { ScrollPosition } from "./PdfDisplay";
+import { ScrollPosition } from "./PDFDisplay";
 
 /*
 node.dest:
@@ -18,7 +18,7 @@ node.dest:
 4: null
 */
 
-const PdfOutlineItem: React.FC<{
+const PDFOutlineItem: React.FC<{
   key: number;
   node: OutlineNode;
   depth: number;
@@ -64,12 +64,12 @@ const PdfOutlineItem: React.FC<{
   );
 };
 
-export interface PdfOutlineListViewProps {
+export interface PDFOutlineListViewProps {
   document: PDFDocumentProxy;
   onOutlineNodeClicked?: (position: ScrollPosition) => void;
 }
 
-export const PdfOutlineListView: React.FC<PdfOutlineListViewProps> = ({
+export const PDFOutlineListView: React.FC<PDFOutlineListViewProps> = ({
   document,
   onOutlineNodeClicked = () => null,
 }) => {
@@ -91,7 +91,7 @@ export const PdfOutlineListView: React.FC<PdfOutlineListViewProps> = ({
       const childNodes = renderOutlineNodes(node.items, depth + 1);
 
       return (
-        <PdfOutlineItem
+        <PDFOutlineItem
           key={i}
           node={node}
           depth={depth}
@@ -103,7 +103,7 @@ export const PdfOutlineListView: React.FC<PdfOutlineListViewProps> = ({
           }
         >
           {childNodes.length > 0 && childNodes}
-        </PdfOutlineItem>
+        </PDFOutlineItem>
       );
     });
 

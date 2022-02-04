@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Story } from "@storybook/react";
-import { ActionButton, ExpandButton } from "./PdfControls";
+import { ActionButton, ExpandButton } from "./PDFControls";
 
 export default {
   title: "PDFControls",
