@@ -19,6 +19,7 @@ export interface PDFReaderProps {
   pdfDocument: PDFDocumentProxy;
   highlights: PDFHighlight[];
   className?: string;
+  isDarkMode?: boolean;
 
   onHighlightCreate: (h: NewPDFHighlight) => PDFHighlight;
   onHighlightUpdate: (h: PDFHighlight) => void;
@@ -28,6 +29,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   pdfDocument,
   highlights = [],
   className = "",
+  isDarkMode = false,
 
   onHighlightCreate,
   onHighlightUpdate = () => null,
@@ -51,6 +53,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
   const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
   const [scale, setScale] = useState<number>();
+  const [isDarkReader, setIsDarkReader] = useState<boolean>(isDarkMode);
 
   const clearAreaSelection = () => {
     if (!enableAreaSelection) return;
@@ -152,6 +155,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     if (selectedHighlight) setScrollToListViewHighlight(selectedHighlight);
   }, [selectedHighlight]);
 
+  useEffect(() => {
+    setIsDarkReader(isDarkMode);
+  }, [isDarkMode]);
+
   const sidebar = (
     <Sidebar
       onTabChange={() => {
@@ -201,10 +208,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         <ActionButton
           bottom={20}
           right={25}
+          scale={scale}
+          isDark={isDarkMode}
           onColorSelect={setHighlightColor}
           onSelectMode={setAreaSelectActive}
           onScaleValueChange={setPdfScaleValue}
-          scale={scale}
+          onDarkChange={setIsDarkReader}
         />
 
         <PDFHighlighter
@@ -217,6 +226,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           areaSelectionActive={areaSelectActive}
           pdfScaleValue={pdfScaleValue}
           highlightColor={highlightColor}
+          isDarkReader={isDarkReader}
           // event handlers
           onHighlighting={setInProgressHighlight}
           onHighlightUpdated={updateHighlight}

@@ -86,6 +86,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   showHighlights = true,
   enableAreaSelection = true,
   areaSelectionActive = false,
+  isDarkReader = false,
 
   onHighlighting = () => null,
   onHighlightUpdated = () => null,
@@ -284,7 +285,9 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
     let highlightLayer: PageLayer = {
       name: "annotationLayer",
-      className: "mix-blend-multiply z-10",
+      className: `${
+        isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"
+      } z-10`,
       pages: [],
     };
 
@@ -319,6 +322,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     <PDFDisplay
       {...props}
       containerClassName={containerClassName}
+      isDarkReader={isDarkReader}
       onDocumentReady={(viewer) => {
         setPDFViewer(viewer);
         props.onDocumentReady && props.onDocumentReady(viewer);
@@ -338,7 +342,9 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
       containerChildren={
         <>
           <MouseSelection
-            className={`absolute mix-blend-multiply border-dashed border-2 ${colorToClassName[highlightColor]}`}
+            className={`absolute border-dashed border-2
+              ${colorToClassName[highlightColor]}
+              ${isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"}`}
             active={enableAreaSelection}
             onDragStart={() => setDisableInteractions(true)}
             onDragEnd={() => setDisableInteractions(false)}

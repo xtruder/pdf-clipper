@@ -1,5 +1,6 @@
 import React from "react";
 import { Story } from "@storybook/react";
+import { useDarkMode } from "storybook-dark-mode";
 
 import { PDFDisplay } from "./PDFDisplay";
 import { PDFLoader } from "./PDFLoader";
@@ -9,6 +10,8 @@ export default {
 };
 
 export const ThePDFDisplay: Story = (args) => {
+  const isDarkMode = useDarkMode();
+
   return (
     <PDFLoader
       url={args.url}
@@ -22,6 +25,7 @@ export const ThePDFDisplay: Story = (args) => {
             top: args.scrollTop,
           }}
           pageLayers={args.pageLayers}
+          isDarkMode={isDarkMode}
           //containerClassName="textLayer__selection_red"
           // handlers
           onDocumentReady={args.onDocumentReady}
@@ -34,7 +38,7 @@ export const ThePDFDisplay: Story = (args) => {
       )}
       onError={args.onError}
       showLoader={() => <a>Loading...</a>}
-    ></PDFLoader>
+    />
   );
 };
 

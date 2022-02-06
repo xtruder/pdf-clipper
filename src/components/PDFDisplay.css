@@ -11,6 +11,10 @@
   @apply bg-yellow-400;
 }
 
+.pdfViewerContainer.pdfViewerContainerDark .page canvas {
+  filter: grayscale(0%) invert(100%) contrast(100%) brightness(100%) hue-rotate(180deg);
+}
+
 /* .annotationLayer {
   position: absolute;
   top: 0;

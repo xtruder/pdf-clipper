@@ -21,6 +21,7 @@ const selectedColorToClass: Record<HighlightColor, string> = {
 const defaultColor = HighlightColor.YELLOW;
 
 export interface AreaHighlightProps {
+  className?: string;
   boundingRect: Rect;
   color?: HighlightColor;
   isSelected: boolean;
@@ -32,6 +33,7 @@ export interface AreaHighlightProps {
 }
 
 export const AreaHighlight: React.FC<AreaHighlightProps> = ({
+  className = "",
   boundingRect,
   color,
   isSelected,
@@ -45,7 +47,9 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
     : colorToClass[color || defaultColor];
 
   return (
-    <div className="border-solid opacity-100 mix-blend-multiply absolute">
+    <div
+      className={`border-solid opacity-100 mix-blend-multiply absolute ${className}`}
+    >
       <Rnd
         className={`cursor-pointer transition-colors ${colorClass}`}
         position={{ x: boundingRect.left, y: boundingRect.top }}

@@ -60,6 +60,7 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
   scrollTo?: ScrollPosition;
   disableInteractions?: boolean;
   pageLayers?: PageLayer[];
+  isDarkReader?: boolean;
 }
 
 export const PDFDisplay: React.FC<PDFDisplayProps> = ({
@@ -72,6 +73,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   scrollTo,
   disableInteractions = false,
   pageLayers = [],
+  isDarkReader = false,
 
   onDocumentReady = () => null,
   onTextLayerRendered = () => null,
@@ -333,7 +335,9 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     >
       <div
         ref={containerRef}
-        className={`absolute overflow-auto w-full h-full ${containerClassName}`}
+        className={`pdfViewerContainer absolute overflow-auto w-full h-full
+          ${isDarkReader ? "pdfViewerContainerDark" : ""}
+          ${containerClassName}`}
       >
         {/** React must not change this div, as it is being rendered by pdfjs */}
         <div className="pdfViewer" />

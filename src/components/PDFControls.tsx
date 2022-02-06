@@ -10,6 +10,8 @@ import { ReactComponent as ChevronDoubleRightIcon } from "~/assets/icons/chevron
 import { ReactComponent as ChevronDoubleLeftIcon } from "~/assets/icons/chevron-double-left-outline.svg";
 import { ReactComponent as CollectionIcon } from "~/assets/icons/collections-outline.svg";
 import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outline.svg";
+import { ReactComponent as MoonIcon } from "~/assets/icons/moon-outline.svg";
+import { ReactComponent as SunIcon } from "~/assets/icons/sun-outline.svg";
 
 import { HighlightColor } from "~/models";
 
@@ -47,17 +49,21 @@ export const ActionButton: React.FC<{
   bottom: number;
   right: number;
   scale?: number;
+  isDark?: boolean;
   onColorSelect?: (color: HighlightColor) => void;
   onSelectMode?: (areaSelect: boolean) => void;
   onScaleValueChange?: (value: string) => void;
+  onDarkChange?: (value: boolean) => void;
 }> = ({
   className,
   bottom,
   right,
   scale = 1,
+  isDark = false,
   onColorSelect,
   onSelectMode,
   onScaleValueChange,
+  onDarkChange = () => null,
 }) => {
   const [opened, setOpened] = useState(false);
   const [areaSelectActive, setAreaSelectActive] = useState(false);
@@ -66,6 +72,7 @@ export const ActionButton: React.FC<{
   );
   const [selectedScaleValue, setSelectedScaleValue] = useState("auto");
   const [currentScale, setCurrentScale] = useState(scale);
+  const [currentIsDark, setCurrentIsDark] = useState(false);
 
   const scaleRef = useRef(scale);
   scaleRef.current = scale;
@@ -95,6 +102,14 @@ export const ActionButton: React.FC<{
   useEffect(() => {
     if (scale !== currentScale) setCurrentScale(scale);
   }, [scale]);
+
+  useEffect(() => {
+    onDarkChange(currentIsDark);
+  }, [currentIsDark]);
+
+  useEffect(() => {
+    setCurrentIsDark(isDark);
+  }, [isDark]);
 
   const changeScaleValue = (change: number) => {
     let value = roundPlaces(currentScale + change, 1);
@@ -145,13 +160,22 @@ export const ActionButton: React.FC<{
                   <div className="flex items-stretch self-center">
                     <button
                       className="btn btn-circle btn-xs"
+                      onClick={() => setCurrentIsDark(!currentIsDark)}
+                      onFocus={preventFocus}
+                    >
+                      {currentIsDark ? <SunIcon /> : <MoonIcon />}
+                    </button>
+                    <button
+                      className="btn btn-circle btn-xs ml-1"
                       onClick={() => changeScaleValue(-0.1)}
+                      onFocus={preventFocus}
                     >
                       <MinusIcon />
                     </button>
                     <button
                       className="btn btn-circle btn-xs ml-1"
                       onClick={() => changeScaleValue(+0.1)}
+                      onFocus={preventFocus}
                     >
                       <PlusIcon />
                     </button>

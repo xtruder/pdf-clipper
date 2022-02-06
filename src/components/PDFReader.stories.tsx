@@ -6,6 +6,7 @@ import { NewPDFHighlight, PDFHighlight } from "~/models";
 
 import { PDFReader } from "./PDFReader";
 import { PDFLoader } from "./PDFLoader";
+import { useDarkMode } from "storybook-dark-mode";
 
 export default {
   title: "PDFReader",
@@ -38,16 +39,19 @@ export const ThePDFReader: Story = (args) => {
     setHighlights(newHighlights);
   };
 
+  const isDarkMode = useDarkMode();
+
   return (
     <PDFLoader
       url={args.url}
       showDocument={(pdfDocument) => (
         <PDFReader
-          className="h-full"
+          className="h-screen"
           pdfDocument={pdfDocument}
           highlights={highlights}
           onHighlightCreate={onHighlightCreate}
           onHighlightUpdate={onHighlightUpdate}
+          isDarkMode={isDarkMode}
         />
       )}
     />
