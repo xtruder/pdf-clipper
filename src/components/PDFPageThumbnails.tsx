@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
@@ -11,20 +11,32 @@ const PDFPageThumbnail: React.FC<{
   onClick: () => void;
 }> = ({ page, width, onClick }) => {
   const [pageScreenshot, setPageScreenshot] = useState<string>();
+  const [inViewTriggered, setInViewTriggered] = useState<boolean>(false);
   const height = useMemo<number>(() => getPageHeight(page, width), []);
-  const { ref, inView } = useInView({ threshold: 0 });
+  let { ref, inView } = useInView({ threshold: 0, delay: 20 });
 
-  useEffect(
-    (async () => {
-      if (pageScreenshot || !inView) return;
+  const inViewRef = useRef(inView);
+  inViewRef.current = inView;
 
-      const screenshot = await screenshotPage(page, width);
+  // do not trigger immiditaely but wait 200ms, so we know thumbnail is really
+  // being watched
+  useEffect(() => {
+    if (!inViewRef.current || inViewTriggered) return;
+    setInViewTriggered(true);
 
-      if (!screenshot) return;
-      setPageScreenshot(screenshot);
-    }) as any,
-    [pageScreenshot, inView]
-  );
+    setTimeout(async () => {
+      if (inViewRef.current) {
+        if (pageScreenshot) return;
+
+        const screenshot = await screenshotPage(page, width);
+
+        if (!screenshot) return;
+        setPageScreenshot(screenshot);
+      } else {
+        setInViewTriggered(false);
+      }
+    }, 100);
+  }, [inView]);
 
   return (
     <div
