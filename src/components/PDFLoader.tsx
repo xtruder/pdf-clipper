@@ -49,6 +49,8 @@ export const PDFLoader: React.FC<PDFLoaderArgs> = ({
       const loadingTask = getDocument({
         url,
         ownerDocument,
+        cMapUrl: new URL("/public/cmaps", window.location.toString()).href,
+        cMapPacked: true,
       });
 
       const loadedPDFDocument = await loadingTask.promise;
