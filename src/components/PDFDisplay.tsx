@@ -101,7 +101,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
         eventBus,
         externalLinkTarget: 2,
       }),
-    []
+    [eventBus]
   );
   const [pdfViewer, setPDFViewer, pdfViewerRef] = useState<PDFViewer>();
 
@@ -253,10 +253,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       linkService,
       renderer: "canvas",
       l10n: NullL10n,
+      annotationMode: 1,
     });
 
-    linkService.setDocument(pdfDocument);
     linkService.setViewer(_pdfViewer);
+    linkService.setDocument(pdfDocument);
 
     _pdfViewer.setDocument(pdfDocument);
 

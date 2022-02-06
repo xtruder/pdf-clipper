@@ -15,6 +15,10 @@
   filter: grayscale(0%) invert(100%) contrast(100%) brightness(100%) hue-rotate(180deg);
 }
 
+.annotationLayer section {
+  z-index: 3;
+}
+
 /* .annotationLayer {
   position: absolute;
   top: 0;

@@ -284,7 +284,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const highlightsByPage = groupHighlightsByPage([...highlights]);
 
     let highlightLayer: PageLayer = {
-      name: "annotationLayer",
+      name: "highlightLayer",
       className: `${
         isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"
       } z-10`,
