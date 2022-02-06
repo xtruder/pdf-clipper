@@ -1,4 +1,9 @@
-export const resetValue = <T>(func: (value: T) => void, reset: T, value: T) => {
-  func(reset);
-  setTimeout(() => func(value), 0);
+type UndefinedOrBoolean<T> = T extends boolean ? boolean : T;
+
+export const resetValue = <V>(
+  func: (value: UndefinedOrBoolean<V>) => void,
+  newValue: UndefinedOrBoolean<V>
+) => {
+  func(typeof newValue === "boolean" ? !newValue : (undefined as any));
+  setTimeout(() => func(newValue), 0);
 };

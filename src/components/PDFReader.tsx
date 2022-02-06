@@ -57,7 +57,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   const clearAreaSelection = () => {
     if (!enableAreaSelection) return;
-    resetValue(setEnableAreaSelection, false, true);
+    resetValue(setEnableAreaSelection, true);
   };
 
   // clears range and area selection
@@ -163,11 +163,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     <Sidebar
       onTabChange={() => {
         if (selectedHighlight)
-          resetValue(
-            setScrollToListViewHighlight,
-            undefined,
-            selectedHighlight
-          );
+          resetValue(setScrollToListViewHighlight, selectedHighlight);
       }}
       content={{
         pages: pdfDocument && (
