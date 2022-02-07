@@ -106,3 +106,10 @@ export const isDOMRectInside = (rect1: DOMRect, rect2: DOMRect) => {
 
   return true;
 };
+
+export const stripHtml = (html: string): string => {
+  let div = document.createElement("DIV");
+  div.innerHTML = html;
+  console.log(div.textContent);
+  return div.textContent || div.innerText || "";
+};
