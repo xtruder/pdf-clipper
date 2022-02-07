@@ -3,10 +3,10 @@ import { useInView } from "react-intersection-observer";
 
 import { HighlightColor } from "~/models";
 
-import { ReactComponent as PencilAltIcon } from "../assets/icons/pencil-alt-outline.svg";
-import { ReactComponent as TrashIcon } from "../assets/icons/trash-outline.svg";
-import { ReactComponent as ChevronDoubleDownIcon } from "../assets/icons/chevron-double-down-outline.svg";
-import { ReactComponent as ChevronDoubleUpIcon } from "../assets/icons/chevron-double-up-outline.svg";
+import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
+import { ReactComponent as TrashIcon } from "~/assets/icons/trash-outline.svg";
+import { ReactComponent as ChevronDoubleDownIcon } from "~/assets/icons/chevron-double-down-outline.svg";
+import { ReactComponent as ChevronDoubleUpIcon } from "~/assets/icons/chevron-double-up-outline.svg";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200",
