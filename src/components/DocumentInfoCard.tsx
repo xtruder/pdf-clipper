@@ -1,11 +1,9 @@
-import React, { useRef, useState } from "react";
-import ContentEditable from "react-contenteditable";
+import React, { useRef } from "react";
 
 import { DocumentInfo } from "~/models";
 
 import { ReactComponent as BookOpenIcon } from "~/assets/icons/book-open-outline.svg";
-import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
-import { stripHtml } from "~/lib/dom";
+import { EditableText } from "./EditableText";
 
 export interface DocumentInfoCardProps {
   document: DocumentInfo;
@@ -14,7 +12,6 @@ export interface DocumentInfoCardProps {
 export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
   document,
 }) => {
-  const [isEditingDescription, setEditDescription] = useState(false);
   const description = useRef(document.description || "");
 
   return (
@@ -27,26 +24,18 @@ export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
         )}
       </figure>
       <div className="flex flex-[2] card-body">
-        <h2 className="card-title">{document.title}</h2>
-        <span className="flex-1">
-          <PencilAltIcon
-            className="w-4 h-4 float-right cursor-pointer"
-            onClick={() => setEditDescription(!isEditingDescription)}
+        <h2 className="card-title">
+          <EditableText
+            text={document.title}
+            placeholder="Write title here..."
           />
-
-          {isEditingDescription ? (
-            <ContentEditable
-              html={description.current}
-              onChange={(e) => {
-                description.current = stripHtml(e.target.value);
-              }}
-              onBlur={() => setEditDescription(false)}
-            />
-          ) : (
-            <a className="line-clamp-4 sm:line-clamp-3 md:line-clamp-2">
-              {description.current}
-            </a>
-          )}
+        </h2>
+        <span className="flex-1">
+          <EditableText
+            text={description.current}
+            placeholder="Write description here..."
+            clampClassName="line-clamp-4 sm:line-clamp-3 md:line-clamp-2"
+          />
         </span>
         <div className="flex flex-row items-center">
           <progress className="progress w-1/4 mr-2" value="30" max="100" />
