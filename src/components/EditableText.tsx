@@ -1,7 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import ContentEditable from "react-contenteditable";
 
-import { setEndOfContenteditable, stripHtml } from "~/lib/dom";
+import {
+  copyPlainText,
+  cutPlainText,
+  setEndOfContenteditable,
+  stripHtml,
+} from "~/lib/dom";
 
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 
@@ -103,6 +108,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
           onChange={(e) => {
             textRef.current = stripHtml(e.target.value).trimEnd();
           }}
+          onCopy={copyPlainText}
+          onCut={cutPlainText}
           onBlur={() => {
             if (textRef.current === "" && editableDivRef.current) {
               editableDivRef.current.innerHTML = "";

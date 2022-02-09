@@ -1,3 +1,5 @@
+import React from "react";
+
 // Point defines a point in 2D space
 export interface Point {
   x: number;
@@ -127,4 +129,22 @@ export const setEndOfContenteditable = (
   const selection = window.getSelection(); //get the selection object (allows you to change selection)
   selection?.removeAllRanges(); //remove any selections already made
   selection?.addRange(range); //make the range you have just created the visible selection
+};
+
+export const copyPlainText = (e: React.ClipboardEvent) => {
+  const selection = document.getSelection();
+  if (!selection) return;
+
+  const text = selection.toString().trimEnd();
+  e.clipboardData.setData("text/plain", text);
+  e.preventDefault();
+};
+
+export const cutPlainText = (e: React.ClipboardEvent) => {
+  const selection = document.getSelection();
+  if (!selection) return;
+
+  e.clipboardData.setData("text/plain", selection.toString());
+  selection.deleteFromDocument();
+  e.preventDefault();
 };
