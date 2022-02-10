@@ -117,14 +117,19 @@ export const EditableText: React.FC<EditableTextProps> = ({
             }
 
             setIsEditing(false);
+            setIsClamping(true);
           }}
         />
       ) : (
         <div
+          tabIndex={0}
           className={`${className} w-full ${isClamping ? clampClassName : ""}`}
           onClick={() => {
             setIsClamping(false);
             if (editOnClick) setIsEditing(true);
+          }}
+          onBlur={() => {
+            setIsClamping(true);
           }}
         >
           {textRef.current}
