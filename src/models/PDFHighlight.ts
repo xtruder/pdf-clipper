@@ -26,10 +26,6 @@ export interface PDFHighlight extends Highlight {
   content: PDFHighlightContent;
 }
 
-export interface NewPDFHighlight
-  extends Omit<PDFHighlight, "id">,
-    Partial<Pick<PDFHighlight, "id">> {}
-
 export interface PartialPDFHighlight extends Partial<PDFHighlight> {
   location: PDFHighlightLocation;
 }

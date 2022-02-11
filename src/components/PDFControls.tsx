@@ -91,10 +91,7 @@ export const ActionButton: React.FC<{
         onScaleValueChange(currentScale + "");
       } else {
         onScaleValueChange(selectedScaleValue);
-        setTimeout(() => {
-          console.log(scaleRef.current);
-          setCurrentScale(scaleRef.current);
-        }, 100);
+        setTimeout(() => setCurrentScale(scaleRef.current), 100);
       }
     }
   }, [selectedScaleValue, currentScale]);
@@ -339,7 +336,11 @@ export const SidebarContent: React.FC<{
     <div
       className={`rounded-lg shadow bg-base-100 drawer drawer-mobile h-full ${className}`}
     >
-      <input type="checkbox" className="drawer-toggle" checked={showSidebar} />
+      <input
+        type="checkbox"
+        className="drawer-toggle"
+        defaultChecked={showSidebar}
+      />
       <div className="flex flex-col drawer-content relative">
         <ExpandButton
           className="top-4 -left-1 z-20"

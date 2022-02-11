@@ -25,7 +25,7 @@ export const ThePDFDisplay: Story = (args) => {
             top: args.scrollTop,
           }}
           pageLayers={args.pageLayers}
-          isDarkMode={isDarkMode}
+          isDarkReader={isDarkMode}
           //containerClassName="textLayer__selection_red"
           // handlers
           onDocumentReady={args.onDocumentReady}

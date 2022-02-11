@@ -19,18 +19,17 @@ node.dest:
 */
 
 const PDFOutlineItem: React.FC<{
-  key: number;
   node: OutlineNode;
   depth: number;
   onClick?: () => void;
-}> = ({ key, node, children, onClick = () => null }) => {
+}> = ({ node, children, onClick = () => null }) => {
   const [isOpened, setIsOpened] = useState(true);
   const [mouseOver, setMouseOver] = useState(false);
 
   const Icon = isOpened ? ChevronUpIcon : ChevronDownIcon;
 
   return (
-    <li key={key}>
+    <li>
       <div
         onMouseEnter={() => setMouseOver(true)}
         onMouseLeave={() => setMouseOver(false)}

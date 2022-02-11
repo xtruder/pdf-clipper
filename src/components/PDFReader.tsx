@@ -6,7 +6,7 @@ import { PDFDocumentProxy } from "pdfjs-dist";
 import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
-import { PDFHighlight, NewPDFHighlight, HighlightColor } from "~/models";
+import { PDFHighlight, HighlightColor } from "~/models";
 
 import { PDFHighlighter } from "./PDFHighlighter";
 import { ActionButton, Sidebar, SidebarContent } from "./PDFControls";
@@ -21,7 +21,7 @@ export interface PDFReaderProps {
   className?: string;
   isDarkMode?: boolean;
 
-  onHighlightCreate: (h: NewPDFHighlight) => PDFHighlight;
+  onHighlightCreate: (h: PDFHighlight) => void;
   onHighlightUpdate: (h: PDFHighlight) => void;
 }
 
@@ -34,10 +34,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   onHighlightCreate,
   onHighlightUpdate = () => null,
 }) => {
-  const [currentHighlights, setCurrentHighlights, currentHighlightsRef] =
-    useState<PDFHighlight[]>([]);
   const [_, setInProgressHighlight, inProgressHighlightRef] =
-    useState<NewPDFHighlight>();
+    useState<PDFHighlight>();
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<PDFHighlight>();
   const [scrollToHighlight, setScrollToHighlight] = useState<PDFHighlight>();
@@ -66,36 +64,22 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     clearAreaSelection();
   };
 
-  const createHighlight = (newHighlight: NewPDFHighlight): void => {
-    const highlight = onHighlightCreate(newHighlight);
-
-    setCurrentHighlights([...currentHighlightsRef.current, highlight]);
-    setSelectedHighlight(highlight);
-
+  const createHighlight = (newHighlight: PDFHighlight): void => {
     clearSelection();
     setInProgressHighlight(undefined);
+
+    onHighlightCreate(newHighlight);
+    setSelectedHighlight(newHighlight);
   };
 
   const deleteHighlight = (highlight: PDFHighlight): void => {
-    const newHighlights = currentHighlightsRef.current.filter(
-      (h) => h.id !== highlight.id
-    );
-
-    highlight.deleted = true;
-
-    onHighlightUpdate(highlight);
-    setCurrentHighlights(newHighlights);
     setSelectedHighlight(undefined);
+
+    onHighlightUpdate({ ...highlight, deleted: true });
   };
 
   const updateHighlight = (highlight: PDFHighlight): void => {
-    const newHighlights = currentHighlightsRef.current.map((h) =>
-      h.id === highlight.id ? highlight : h
-    );
-
     onHighlightUpdate(highlight);
-    setCurrentHighlights(newHighlights);
-    setSelectedHighlight(highlight);
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -118,25 +102,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     }
   };
 
-  // sync input highlights with current highlights
-  useEffect(() => {
-    const currentHighlights = [...currentHighlightsRef.current];
-
-    for (const highlight of highlights) {
-      const idx = currentHighlights.findIndex((h) => highlight.id === h.id);
-
-      if (idx > -1) {
-        currentHighlights[idx] = highlight;
-      } else if (idx > -1 && highlight.deleted) {
-        delete currentHighlights[idx];
-      } else {
-        currentHighlights.push(highlight);
-      }
-    }
-
-    setCurrentHighlights(currentHighlights);
-  }, [highlights]);
-
   useEffect(() => {
     if (scrollToPage) {
       setScrollToHighlight(undefined);
@@ -158,6 +123,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   useEffect(() => {
     setIsDarkReader(isDarkMode);
   }, [isDarkMode]);
+
+  const currentHighlights = highlights.filter((h) => !h.deleted);
 
   const sidebar = (
     <Sidebar

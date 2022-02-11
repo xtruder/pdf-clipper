@@ -2,7 +2,7 @@ import React from "react";
 import useState from "react-usestateref";
 import { Story } from "@storybook/react";
 
-import { NewPDFHighlight, PDFHighlight } from "~/models";
+import { PDFHighlight } from "~/models";
 
 import { PDFReader } from "./PDFReader";
 import { PDFLoader } from "./PDFLoader";
@@ -23,12 +23,8 @@ export const ThePDFReader: Story = (args) => {
     []
   );
 
-  const onHighlightCreate = (highlight: NewPDFHighlight) => {
-    const newHighlight = { ...highlight, id: s4() };
-
-    setHighlights([...highlightsRef.current, newHighlight]);
-
-    return newHighlight;
+  const onHighlightCreate = (highlight: PDFHighlight) => {
+    setHighlights([...highlightsRef.current, highlight]);
   };
 
   const onHighlightUpdate = (highlight: PDFHighlight) => {

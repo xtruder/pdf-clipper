@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import useState from "react-usestateref";
 
-import { PDFHighlight, HighlightColor, NewPDFHighlight } from "~/models";
+import { PDFHighlight, HighlightColor } from "~/models";
 import {
   groupHighlightsByPage,
   getHighlightedRectsWithinPages,
@@ -25,6 +25,7 @@ import { AreaHighlight } from "./AreaHighlight";
 import { MouseSelection, Target } from "./MouseSelection";
 
 import "./PDFHighlighter.css";
+import { s4 } from "~/lib/utils";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "textLayer__selection_red",
@@ -44,7 +45,7 @@ const defaultColor = HighlightColor.YELLOW;
 
 interface PDFHighlighterEvents {
   // onHighlighting is triggered when highlight selection is still in progress
-  onHighlighting?: (highlight: NewPDFHighlight) => void;
+  onHighlighting?: (highlight: PDFHighlight) => void;
 
   // onHighlightClicked is triggered when highlight is clicked
   onHighlightClicked?: (highlight: PDFHighlight) => void;
@@ -131,7 +132,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const text = range.toString();
 
     // create a new highlight
-    const highlight: NewPDFHighlight = {
+    const highlight: PDFHighlight = {
+      id: s4(),
       location: {
         boundingRect: viewportRectToScaledPageRect(boundingRect, page.viewport),
         rects: rects.map((rect) =>
@@ -167,7 +169,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     if (!image) return;
 
     // create a new higlightwith image content
-    const highlight: NewPDFHighlight = {
+    const highlight: PDFHighlight = {
+      id: s4(),
       location: {
         boundingRect: viewportRectToScaledPageRect(
           { ...pageBoundingRect, pageNumber: page.number },

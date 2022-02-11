@@ -2,7 +2,8 @@ import React from "react";
 import useState from "react-usestateref";
 import { Story } from "@storybook/react";
 
-import { PDFHighlight, NewPDFHighlight } from "~/models";
+import { PDFHighlight } from "~/models";
+
 import { PDFLoader } from "./PDFLoader";
 import { PDFHighlighter } from "./PDFHighlighter";
 
@@ -21,7 +22,7 @@ export const ThePDFHighlighter: Story = (args) => {
     []
   );
   const [_, setInProgressHighlight, inProgressHighlightRef] =
-    useState<NewPDFHighlight | null>(null);
+    useState<PDFHighlight | null>(null);
   const [selectedHighlight, setSelectedHighlight] = useState<PDFHighlight>();
 
   return (
