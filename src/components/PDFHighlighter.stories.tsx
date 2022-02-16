@@ -1,11 +1,14 @@
 import React from "react";
 import useState from "react-usestateref";
+import { suspend } from "suspend-react";
+
 import { Story } from "@storybook/react";
 
 import { PDFHighlight } from "~/models";
 
-import { PDFLoader } from "./PDFLoader";
 import { PDFHighlighter } from "./PDFHighlighter";
+import { useContextProgress } from "./ProgressIndicator";
+import { loadPDF } from "~/lib/pdfjs";
 
 export default {
   title: "PDFHighlighter",
@@ -18,6 +21,9 @@ let s4 = () => {
 };
 
 export const ThePDFHighlighter: Story = (args) => {
+  const { setProgress } = useContextProgress();
+  const pdfDocument = suspend(() => loadPDF(args.url, setProgress), [args.url]);
+
   const [highlights, setHighlights, highlightsRef] = useState<PDFHighlight[]>(
     []
   );
@@ -26,58 +32,53 @@ export const ThePDFHighlighter: Story = (args) => {
   const [selectedHighlight, setSelectedHighlight] = useState<PDFHighlight>();
 
   return (
-    <PDFLoader
-      url={args.url}
-      showDocument={(document) => (
-        <PDFHighlighter
-          pdfDocument={document}
-          highlights={highlights}
-          pdfScaleValue={args.pdfScaleValue}
-          highlightColor={args.highlightColor}
-          selectedHighlight={selectedHighlight}
-          showHighlights={args.showHighlights}
-          areaSelectionActive={args.areaSelectionActive}
-          onHighlighting={(highlight) => {
-            args.onHighlighting(highlight);
+    <PDFHighlighter
+      pdfDocument={pdfDocument}
+      highlights={highlights}
+      pdfScaleValue={args.pdfScaleValue}
+      highlightColor={args.highlightColor}
+      selectedHighlight={selectedHighlight}
+      showHighlights={args.showHighlights}
+      areaSelectionActive={args.areaSelectionActive}
+      onHighlighting={(highlight) => {
+        args.onHighlighting(highlight);
 
-            setInProgressHighlight(highlight);
-          }}
-          onHighlightUpdated={(highlight) => {
-            args.onHighlightUpdated(highlight);
+        setInProgressHighlight(highlight);
+      }}
+      onHighlightUpdated={(highlight) => {
+        args.onHighlightUpdated(highlight);
 
-            const newHighlights = [...highlights];
-            const idx = newHighlights.findIndex((h) => h.id === highlight.id);
+        const newHighlights = [...highlights];
+        const idx = newHighlights.findIndex((h) => h.id === highlight.id);
 
-            newHighlights[idx] = highlight;
+        newHighlights[idx] = highlight;
 
-            setSelectedHighlight(highlight);
-            setHighlights(newHighlights);
-          }}
-          onHighlightClicked={(highlight) => {
-            args.onHighlightClicked(highlight);
+        setSelectedHighlight(highlight);
+        setHighlights(newHighlights);
+      }}
+      onHighlightClicked={(highlight) => {
+        args.onHighlightClicked(highlight);
 
-            setSelectedHighlight(highlight);
-          }}
-          onKeyDown={(event: KeyboardEvent) => {
-            switch (event.code) {
-              case "Enter":
-                if (inProgressHighlightRef.current) {
-                  const highlight = {
-                    ...inProgressHighlightRef.current,
-                    id: s4(),
-                  };
+        setSelectedHighlight(highlight);
+      }}
+      onKeyDown={(event: KeyboardEvent) => {
+        switch (event.code) {
+          case "Enter":
+            if (inProgressHighlightRef.current) {
+              const highlight = {
+                ...inProgressHighlightRef.current,
+                id: s4(),
+              };
 
-                  setSelectedHighlight(highlight);
-                  setHighlights([...highlightsRef.current, highlight]);
+              setSelectedHighlight(highlight);
+              setHighlights([...highlightsRef.current, highlight]);
 
-                  setInProgressHighlight(null);
-                }
-
-                break;
+              setInProgressHighlight(null);
             }
-          }}
-        />
-      )}
+
+            break;
+        }
+      }}
     />
   );
 };

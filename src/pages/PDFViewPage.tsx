@@ -1,31 +1,47 @@
 import React, { useContext } from "react";
 import { useParams } from "react-router-dom";
+import { suspend } from "suspend-react";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 import { PDFHighlight } from "~/models";
 import { StateCtx } from "~/state/state";
 
-import { PDFLoader } from "~/components/PDFLoader";
 import { PDFReader } from "~/components/PDFReader";
+import { useContextProgress } from "~/components/ProgressIndicator";
+import { loadPDF } from "~/lib/pdfjs";
 
 export interface PDFViewPageProps {}
 
 export const PDFViewPage: React.FC<PDFViewPageProps> = ({}) => {
-  const { documentInfo, documentHighlights } = useContext(StateCtx);
+  const { documentInfo, documentHighlights, currentAccount } =
+    useContext(StateCtx);
 
   const { documentId } = useParams();
   if (!documentId) return <a>Missing document ID</a>;
 
   const document = useRecoilValue(documentInfo(documentId));
-  if (!document) return <a>Missing document</a>;
+  if (!document || !document.url) throw new Error("Missing document");
+
+  const { url } = document;
+  if (!url) throw new Error("Document url is missing");
+
+  const { setProgress } = useContextProgress();
+  const pdfDocument = suspend(() => loadPDF(url, setProgress), [url]);
+
+  const account = useRecoilValue(currentAccount);
 
   const [highlights, setHighlights] = useRecoilState(
     documentHighlights(documentId)
   );
 
   const onHighlightCreate = (newHighlight: PDFHighlight) => {
+    newHighlight.meta = {
+      owner: account.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     setHighlights((highlights) => [...highlights, newHighlight]);
-    //setSelectedHighlightId(highlight.id);
   };
 
   const onHighlightUpdate = (highlight: PDFHighlight) =>
@@ -34,16 +50,11 @@ export const PDFViewPage: React.FC<PDFViewPageProps> = ({}) => {
     );
 
   return (
-    <PDFLoader
-      url={document.url!}
-      showDocument={(pdfDocument) => (
-        <PDFReader
-          pdfDocument={pdfDocument}
-          highlights={highlights}
-          onHighlightCreate={onHighlightCreate}
-          onHighlightUpdate={onHighlightUpdate}
-        />
-      )}
-    ></PDFLoader>
+    <PDFReader
+      pdfDocument={pdfDocument}
+      highlights={highlights}
+      onHighlightCreate={onHighlightCreate}
+      onHighlightUpdate={onHighlightUpdate}
+    />
   );
 };

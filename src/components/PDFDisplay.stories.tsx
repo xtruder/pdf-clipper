@@ -1,9 +1,11 @@
 import React from "react";
 import { Story } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
+import { suspend } from "suspend-react";
 
 import { PDFDisplay } from "./PDFDisplay";
-import { PDFLoader } from "./PDFLoader";
+import { loadPDF } from "~/lib/pdfjs";
+import { useContextProgress } from "./ProgressIndicator";
 
 export default {
   title: "PDFDisplay",
@@ -11,33 +13,28 @@ export default {
 
 export const ThePDFDisplay: Story = (args) => {
   const isDarkMode = useDarkMode();
+  const { setProgress } = useContextProgress();
+  const pdfDocument = suspend(() => loadPDF(args.url, setProgress), [args.url]);
 
   return (
-    <PDFLoader
-      url={args.url}
-      showDocument={(document) => (
-        <PDFDisplay
-          pdfDocument={document}
-          pdfScaleValue={args.pdfScaleValue}
-          disableInteractions={args.disableInteractions}
-          scrollTo={{
-            pageNumber: args.pageNumber,
-            top: args.scrollTop,
-          }}
-          pageLayers={args.pageLayers}
-          isDarkReader={isDarkMode}
-          //containerClassName="textLayer__selection_red"
-          // handlers
-          onDocumentReady={args.onDocumentReady}
-          onTextLayerRendered={args.onTextLayerRendered}
-          onKeyDown={args.onKeyDown}
-          onMouseDown={args.onMouseDown}
-          onRangeSelection={args.onRangeSelection}
-          onPageScroll={args.onPageScroll}
-        />
-      )}
-      onError={args.onError}
-      showLoader={() => <a>Loading...</a>}
+    <PDFDisplay
+      pdfDocument={pdfDocument}
+      pdfScaleValue={args.pdfScaleValue}
+      disableInteractions={args.disableInteractions}
+      scrollTo={{
+        pageNumber: args.pageNumber,
+        top: args.scrollTop,
+      }}
+      pageLayers={args.pageLayers}
+      isDarkReader={isDarkMode}
+      //containerClassName="textLayer__selection_red"
+      // handlers
+      onDocumentReady={args.onDocumentReady}
+      onTextLayerRendered={args.onTextLayerRendered}
+      onKeyDown={args.onKeyDown}
+      onMouseDown={args.onMouseDown}
+      onRangeSelection={args.onRangeSelection}
+      onPageScroll={args.onPageScroll}
     />
   );
 };

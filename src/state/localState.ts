@@ -10,16 +10,16 @@ import {
 } from "~/models";
 import { State } from "./state";
 
-export const getOrCreateUserAccount = selector<Account>({
-  key: "getOrCreateUserAccount",
-  get: async (): Promise<Account> => {
+const getCurrentAccount = selector<Account>({
+  key: "getCurrentAccount",
+  get: async () => {
     return { id: s4() };
   },
 });
 
 export const currentAccount = atom<Account>({
   key: "currentAccount",
-  default: getOrCreateUserAccount,
+  default: getCurrentAccount,
 });
 
 export const documentInfoList = atom<DocumentInfo[]>({

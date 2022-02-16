@@ -3,7 +3,7 @@ import useState from "react-usestateref";
 import ReactDOM from "react-dom";
 import debounce from "lodash.debounce";
 
-import { PDFDocumentProxy } from "pdfjs-dist";
+import { GlobalWorkerOptions, PDFDocumentProxy } from "pdfjs-dist";
 import {
   EventBus,
   NullL10n,
@@ -13,6 +13,11 @@ import {
 
 import { Rect, getWindow, getCanvasAreaAsPNG } from "~/lib/dom";
 import { PageView, Viewport, findOrCreateContainerLayer } from "~/lib/pdfjs";
+
+// import worker src to set for pdfjs global worker options
+import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
+
+GlobalWorkerOptions.workerSrc = workerSrc;
 
 import "pdfjs-dist/web/pdf_viewer.css";
 import "./PDFDisplay.css";

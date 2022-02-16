@@ -1,10 +1,14 @@
-import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
+import {
+  PDFDocumentProxy,
+  PDFPageProxy,
+  getDocument as getPDFDocument,
+} from "pdfjs-dist";
 
 import {
   asElement,
   getCanvasAreaAsPNG,
-  getDocument,
   isHTMLElement,
+  getDocument,
 } from "./dom";
 
 export interface PageView {
@@ -172,3 +176,20 @@ export async function getDocumentOutline(
 
   return mapOutlineNodes(outline);
 }
+
+export const loadPDF = async (
+  url: string,
+  onProgress: (progress: number) => void = () => null
+) => {
+  const loadingTask = getPDFDocument({
+    url,
+    cMapUrl: new URL("/public/cmaps", window.location.toString()).href,
+    cMapPacked: true,
+  });
+
+  loadingTask.onProgress = (args: { loaded: number; total: number }) => {
+    onProgress(args.loaded / args.total);
+  };
+
+  return await loadingTask.promise;
+};

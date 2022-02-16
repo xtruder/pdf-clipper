@@ -1,24 +1,24 @@
 import React from "react";
 import useState from "react-usestateref";
+import { suspend } from "suspend-react";
+
 import { Story } from "@storybook/react";
+import { useDarkMode } from "storybook-dark-mode";
 
 import { PDFHighlight } from "~/models";
 
 import { PDFReader } from "./PDFReader";
-import { PDFLoader } from "./PDFLoader";
-import { useDarkMode } from "storybook-dark-mode";
+import { useContextProgress } from "./ProgressIndicator";
+import { loadPDF } from "~/lib/pdfjs";
 
 export default {
   title: "PDFReader",
 };
 
-let s4 = () => {
-  return Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
-};
-
 export const ThePDFReader: Story = (args) => {
+  const { setProgress } = useContextProgress();
+  const pdfDocument = suspend(() => loadPDF(args.url, setProgress), [args.url]);
+
   const [highlights, setHighlights, highlightsRef] = useState<PDFHighlight[]>(
     []
   );
@@ -38,18 +38,13 @@ export const ThePDFReader: Story = (args) => {
   const isDarkMode = useDarkMode();
 
   return (
-    <PDFLoader
-      url={args.url}
-      showDocument={(pdfDocument) => (
-        <PDFReader
-          className="h-screen"
-          pdfDocument={pdfDocument}
-          highlights={highlights}
-          onHighlightCreate={onHighlightCreate}
-          onHighlightUpdate={onHighlightUpdate}
-          isDarkMode={isDarkMode}
-        />
-      )}
+    <PDFReader
+      className="h-screen"
+      pdfDocument={pdfDocument}
+      highlights={highlights}
+      onHighlightCreate={onHighlightCreate}
+      onHighlightUpdate={onHighlightUpdate}
+      isDarkMode={isDarkMode}
     />
   );
 };

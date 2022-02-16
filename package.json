@@ -38,6 +38,7 @@
     "react-router-dom": "^6.0.2",
     "react-usestateref": "^1.0.8",
     "recoil": "^0.6.1",
+    "suspend-react": "^0.0.8",
     "use-dark-mode-hook": "^1.2.6",
     "y-indexeddb": "^9.0.7",
     "y-webrtc": "^10.2.2",
