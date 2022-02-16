@@ -1,7 +1,12 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { addDecorator } from "@storybook/react";
-import { MemoryRouter } from "react-router-dom";
 import { useDarkMode } from "storybook-dark-mode";
+
+import {
+  ContextProgressProvider,
+  useContextProgress,
+  TopbarProgressIndicator,
+} from "../src/components/ProgressIndicator";
 
 import "virtual:windi.css";
 import "../src/App.css";
@@ -21,7 +26,23 @@ addDecorator((story, ctx) => {
     document.documentElement.classList.remove("dark");
   }
 
-  return <MemoryRouter>{story()}</MemoryRouter>;
+  const Story: React.FC = () => story();
+
+  const ShowProgress: React.FC = () => (
+    <TopbarProgressIndicator {...useContextProgress()} />
+  );
+
+  const StoryWrapper: React.FC = ({ children }) => (
+    <ContextProgressProvider>
+      <Suspense fallback={<ShowProgress />}>{children}</Suspense>
+    </ContextProgressProvider>
+  );
+
+  return (
+    <StoryWrapper>
+      <Story />
+    </StoryWrapper>
+  );
 });
 
 export const parameters = {
