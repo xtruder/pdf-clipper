@@ -17,3 +17,21 @@ export const s4 = () => {
     .toString(16)
     .substring(1);
 };
+
+export const setRandomInterval = <F extends Function>(
+  callback: F,
+  min: number,
+  max: number
+) => {
+  let timer: NodeJS.Timeout;
+
+  const randomInterval = () => Math.random() * (max - min + 1) + min;
+  const callCallback = () => {
+    callback();
+    timer = setTimeout(callCallback, randomInterval());
+  };
+
+  timer = setTimeout(callCallback, randomInterval());
+
+  return () => clearTimeout(timer);
+};
