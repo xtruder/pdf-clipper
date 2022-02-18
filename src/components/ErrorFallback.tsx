@@ -1,16 +1,21 @@
 import React, { useEffect } from "react";
 import { FallbackProps } from "react-error-boundary";
 
-export const ErrorFallback: React.FC<FallbackProps> = ({
+export interface ErrorFallbackProps extends FallbackProps {
+  className?: string;
+}
+
+export const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   error,
   resetErrorBoundary,
+  className = "",
 }) => {
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <div className="alert shadow-lg alert-error" role="alert">
+    <div className={`alert shadow-lg alert-error ${className}`} role="alert">
       <div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
