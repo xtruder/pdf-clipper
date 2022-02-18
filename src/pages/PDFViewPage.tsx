@@ -9,18 +9,17 @@ import { StateCtx } from "~/state/state";
 import { PDFReader } from "~/components/PDFReader";
 import { useContextProgress } from "~/components/ProgressIndicator";
 import { loadPDF } from "~/lib/pdfjs";
+import { ReaderLayout } from "~/layouts/ReaderLayout";
 
-export interface PDFViewPageProps {}
-
-export const PDFViewPage: React.FC<PDFViewPageProps> = ({}) => {
+const PDFViewPage: React.FC = () => {
   const { documentInfo, documentHighlights, currentAccount } =
     useContext(StateCtx);
 
   const { documentId } = useParams();
-  if (!documentId) return <a>Missing document ID</a>;
+  if (!documentId) throw new Error("Missing document ID");
 
   const document = useRecoilValue(documentInfo(documentId));
-  if (!document || !document.url) throw new Error("Missing document");
+  if (!document) throw new Error("Missing document");
 
   const { url } = document;
   if (!url) throw new Error("Document url is missing");
@@ -58,3 +57,9 @@ export const PDFViewPage: React.FC<PDFViewPageProps> = ({}) => {
     />
   );
 };
+
+export default () => (
+  <ReaderLayout>
+    <PDFViewPage />
+  </ReaderLayout>
+);

@@ -18,7 +18,7 @@ import {
 
 import { DocumentViewPage } from "~/pages/DocumentViewPage";
 import { MainPage } from "~/pages/MainPage";
-import { PDFViewPage } from "~/pages/PDFViewPage";
+import PDFViewPage from "~/pages/PDFViewPage";
 
 import "virtual:windi.css";
 import "./App.css";
@@ -57,14 +57,7 @@ const AppRouter: React.FC = () => {
             </PageWrapper>
           }
         />
-        <Route
-          path="/viewpdf/:documentId"
-          element={
-            <PageWrapper>
-              <PDFViewPage />
-            </PageWrapper>
-          }
-        ></Route>
+        <Route path="/viewpdf/:documentId" element={<PDFViewPage />} />
       </Routes>
     </Router>
   );
