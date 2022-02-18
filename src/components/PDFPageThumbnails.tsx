@@ -45,7 +45,7 @@ const PDFPageThumbnail: React.FC<{
     >
       <div className="flex absolute w-full h-full">
         <button
-          className="btn btn-xs bottom-0 right-0 absolute"
+          className="btn btn-xs bottom-0 right-0 absolute p-1 rounded-r-none"
           onClick={() => onClick()}
         >
           Page {page.pageNumber}
@@ -81,7 +81,7 @@ export const PDFPageThumbnails: React.FC<PDFPageThumbnailsProps> = ({
   );
 
   return (
-    <ul className="items-center">
+    <ul className="items-center grid grid-cols-2 gap-2">
       {pages ? (
         pages.map((page) => (
           <li key={page.pageNumber} className="flex justify-center relative">

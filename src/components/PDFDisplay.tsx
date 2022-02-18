@@ -337,11 +337,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     <div
       onPointerDown={onMouseDown}
       onPointerUp={onMouseUp}
-      className={className}
+      className={`${className} h-full`}
     >
       <div
         ref={containerRef}
-        className={`pdfViewerContainer absolute overflow-auto w-full h-full
+        className={`pdfViewerContainer absolute overflow-y-scroll w-full h-full
           ${isDarkReader ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}
       >

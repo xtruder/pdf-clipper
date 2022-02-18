@@ -50,6 +50,7 @@ const PDFViewPage: React.FC = () => {
 
   return (
     <PDFReader
+      className="flex-1 absolute h-full w-full"
       pdfDocument={pdfDocument}
       highlights={highlights}
       onHighlightCreate={onHighlightCreate}

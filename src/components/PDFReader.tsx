@@ -166,39 +166,37 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   );
 
   return (
-    <div className={className}>
-      <SidebarContent sidebar={sidebar}>
-        <ActionButton
-          bottom={20}
-          right={25}
-          scale={scale}
-          isDark={isDarkMode}
-          onColorSelect={setHighlightColor}
-          onSelectMode={setAreaSelectActive}
-          onScaleValueChange={setPdfScaleValue}
-          onDarkChange={setIsDarkReader}
-        />
+    <SidebarContent sidebar={sidebar} className={className}>
+      <ActionButton
+        bottom={20}
+        right={25}
+        scale={scale}
+        isDark={isDarkMode}
+        onColorSelect={setHighlightColor}
+        onSelectMode={setAreaSelectActive}
+        onScaleValueChange={setPdfScaleValue}
+        onDarkChange={setIsDarkReader}
+      />
 
-        <PDFHighlighter
-          pdfDocument={pdfDocument}
-          highlights={currentHighlights}
-          selectedHighlight={selectedHighlight}
-          scrollTo={scrollToPosition}
-          scrollToHighlight={scrollToHighlight}
-          enableAreaSelection={enableAreaSelection}
-          areaSelectionActive={areaSelectActive}
-          pdfScaleValue={pdfScaleValue}
-          highlightColor={highlightColor}
-          isDarkReader={isDarkReader}
-          // event handlers
-          onHighlighting={setInProgressHighlight}
-          onHighlightUpdated={updateHighlight}
-          onHighlightClicked={setSelectedHighlight}
-          onDocumentReady={setPdfViewer}
-          onKeyDown={onKeyDown}
-          onScaleChanging={(e) => setScale(e.scale)}
-        />
-      </SidebarContent>
-    </div>
+      <PDFHighlighter
+        pdfDocument={pdfDocument}
+        highlights={currentHighlights}
+        selectedHighlight={selectedHighlight}
+        scrollTo={scrollToPosition}
+        scrollToHighlight={scrollToHighlight}
+        enableAreaSelection={enableAreaSelection}
+        areaSelectionActive={areaSelectActive}
+        pdfScaleValue={pdfScaleValue}
+        highlightColor={highlightColor}
+        isDarkReader={isDarkReader}
+        // event handlers
+        onHighlighting={setInProgressHighlight}
+        onHighlightUpdated={updateHighlight}
+        onHighlightClicked={setSelectedHighlight}
+        onDocumentReady={setPdfViewer}
+        onKeyDown={onKeyDown}
+        onScaleChanging={(e) => setScale(e.scale)}
+      />
+    </SidebarContent>
   );
 };

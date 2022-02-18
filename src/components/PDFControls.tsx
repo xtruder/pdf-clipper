@@ -284,7 +284,8 @@ export const SidebarTabSelector: React.FC<{
           title={tab.title}
           onClick={() => onChange(tab.name)}
         >
-          <tab.Icon className="inline-block w-4 h-4 stroke-current" />
+          <tab.Icon className="inline-block w-4 h-4 stroke-current mr-1" />
+          <a className="hidden md:inline">{tab.title}</a>
         </a>
       ))}
     </div>
@@ -303,6 +304,16 @@ export const Sidebar: React.FC<{
 
   return (
     <div className="flex flex-col overflow-hidden p-2 w-3/4 sm:w-90 md:w-90 bg-base-100 text-base-content h-full">
+      <div className="navbar bg-base-300 text-neutral p-0 min-h-10 rounded-md">
+        <a className="btn btn-sm btn-ghost normal-case text-md">Back</a>
+        <a
+          className="text-elipsis line-clamp-1"
+          title="Fast and Precise Type Checking for JavaScript"
+        >
+          Fast and Precise Type Checking for JavaScript
+        </a>
+      </div>
+
       <SidebarTabSelector
         selectedTab={currentSelectedTab}
         onChange={(tab) => {
@@ -334,14 +345,14 @@ export const SidebarContent: React.FC<{
 
   return (
     <div
-      className={`rounded-lg shadow bg-base-100 drawer drawer-mobile h-full ${className}`}
+      className={`rounded-lg shadow bg-base-100 drawer drawer-mobile ${className}`}
     >
       <input
         type="checkbox"
         className="drawer-toggle"
         defaultChecked={showSidebar}
       />
-      <div className="flex flex-col drawer-content relative">
+      <div className="drawer-content relative">
         <ExpandButton
           className="top-4 -left-1 z-20"
           expanded={showSidebar}
