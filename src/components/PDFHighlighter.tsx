@@ -394,11 +394,11 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         onRangeSelection(isCollapsed, range);
         props.onRangeSelection && props.onRangeSelection(isCollapsed, range);
       }}
-      onMouseDown={(event) => {
-        if (!isHTMLElement(event.target)) return;
+      // onMouseDown={(event) => {
+      //   if (!isHTMLElement(event.target)) return;
 
-        const element = asElement(event.target);
-      }}
+      //   //const element = asElement(event.target);
+      // }}
       scrollTo={props.scrollTo || scrollPositionForHighligt(scrolledHighlight)}
       pageLayers={pageLayers}
       containerChildren={

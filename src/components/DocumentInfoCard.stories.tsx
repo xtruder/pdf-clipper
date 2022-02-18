@@ -1,6 +1,6 @@
 import { Story } from "@storybook/react";
 import React from "react";
-import { DocumentInfo, DocumentType } from "~/models";
+
 import { DocumentInfoCard } from "./DocumentInfoCard";
 
 export default {

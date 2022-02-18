@@ -7,7 +7,7 @@ export default {
   title: "TipContainer",
 };
 
-export const TheTipContainer: Story = (args) => {
+export const TheTipContainer: Story = (_args) => {
   const page = {
     left: 20,
     top: 20,

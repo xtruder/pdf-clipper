@@ -7,7 +7,7 @@ export default {
   title: "DocumentDropZone",
 };
 
-export const TheDocumentDropZone: Story = (args) => {
+export const TheDocumentDropZone: Story = (_args) => {
   return (
     <div className="p-2 w-100 h-40">
       <DocumentDropZone />

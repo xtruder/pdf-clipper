@@ -56,6 +56,7 @@ export const ActionButton: React.FC<{
   onSelectMode?: (areaSelect: boolean) => void;
   onScaleValueChange?: (value: string) => void;
   onDarkChange?: (value: boolean) => void;
+  onHighlightClick?: () => void;
 }> = ({
   className,
   bottom,
@@ -66,6 +67,7 @@ export const ActionButton: React.FC<{
   onSelectMode,
   onScaleValueChange,
   onDarkChange = () => null,
+  onHighlightClick = () => null,
 }) => {
   const [opened, setOpened] = useState(false);
   const [areaSelectActive, setAreaSelectActive] = useState(false);
@@ -150,6 +152,11 @@ export const ActionButton: React.FC<{
                   ) : (
                     <div className="w-6 h-6 border-base-content border-width-2"></div>
                   )}{" "}
+                </a>
+              </li>
+              <li>
+                <a onClick={() => onHighlightClick()}>
+                  <CollectionIcon />
                 </a>
               </li>
             </ul>
@@ -390,7 +397,13 @@ export const SidebarContent: React.FC<{
       >
         <label
           className="drawer-overlay"
-          onClick={() => setShowSidebar(!showSidebar)}
+          style={{
+            visibility: "visible",
+          }}
+          onClick={() => {
+            console.log("drawer clicked");
+            setShowSidebar(!showSidebar);
+          }}
         />
         {sidebar}
       </div>

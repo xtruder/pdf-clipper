@@ -226,6 +226,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         onSelectMode={setAreaSelectActive}
         onScaleValueChange={setPdfScaleValue}
         onDarkChange={setIsDarkReader}
+        onHighlightClick={() => {
+          if (inProgressHighlightRef.current) {
+            createHighlight(inProgressHighlightRef.current);
+          }
+        }}
       />
 
       <PDFHighlighter

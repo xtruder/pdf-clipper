@@ -10,6 +10,8 @@ import {
 } from "~/models";
 import { State } from "./state";
 
+const docId = "100";
+
 const getCurrentAccount = selector<Account>({
   key: "getCurrentAccount",
   get: async () => {
@@ -27,7 +29,7 @@ export const documentInfoList = atom<DocumentInfo[]>({
   default: [
     {
       type: DocumentType.PDF,
-      id: s4(),
+      id: docId,
       title: "Fast and Precise Type Checking for JavaScript",
       url: "https://arxiv.org/pdf/1708.08021.pdf",
     },

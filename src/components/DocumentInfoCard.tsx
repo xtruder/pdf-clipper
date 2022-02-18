@@ -1,6 +1,4 @@
-import React, { useRef } from "react";
-
-import { DocumentInfo } from "~/models";
+import React from "react";
 
 import { ReactComponent as BookOpenIcon } from "~/assets/icons/book-open-outline.svg";
 import { ReactComponent as TrashIcon } from "~/assets/icons/trash-outline.svg";

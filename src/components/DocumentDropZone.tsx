@@ -8,7 +8,7 @@ export interface DocumentDropZoneProps {}
 
 export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({}) => {
   const [readerErrorStr, setReaderErrorStr] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  //const [file, setFile] = useState<File | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -18,7 +18,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({}) => {
     reader.onabort = () => setReaderErrorStr("file reading was aborted");
     reader.onerror = () => setReaderErrorStr("error reading files");
     reader.onload = () => {
-      const binaryStr = reader.result;
+      //const binaryStr = reader.result;
 
       setReaderErrorStr(null);
     };
