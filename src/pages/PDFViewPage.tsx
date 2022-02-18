@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { suspend } from "suspend-react";
 import { useRecoilState, useRecoilValue } from "recoil";
 
@@ -15,10 +15,12 @@ const PDFViewPage: React.FC = () => {
   const { documentInfo, documentHighlights, currentAccount } =
     useContext(StateCtx);
 
+  const navigate = useNavigate();
+
   const { documentId } = useParams();
   if (!documentId) throw new Error("Missing document ID");
 
-  const document = useRecoilValue(documentInfo(documentId));
+  const [document, setDocument] = useRecoilState(documentInfo(documentId));
   if (!document) throw new Error("Missing document");
 
   const { url } = document;
@@ -53,8 +55,16 @@ const PDFViewPage: React.FC = () => {
       className="flex-1 absolute h-full w-full"
       pdfDocument={pdfDocument}
       highlights={highlights}
+      title={document.title}
+      onTitleChange={(title) =>
+        setDocument((d) => {
+          if (!d) return;
+          return { ...d, title };
+        })
+      }
       onHighlightCreate={onHighlightCreate}
       onHighlightUpdate={onHighlightUpdate}
+      onClose={() => navigate("/")}
     />
   );
 };

@@ -12,9 +12,7 @@ export type State = {
   currentAccount: RecoilState<Account>;
   documentInfoList: RecoilState<DocumentInfo[]>;
   documentReadingInfoList: RecoilState<DocumentReadingInfo[]>;
-  documentInfo: (
-    param: string
-  ) => RecoilValueReadOnly<DocumentInfo | undefined>;
+  documentInfo: (param: string) => RecoilState<DocumentInfo | undefined>;
   documentReadingInfo: (
     param: string
   ) => RecoilValueReadOnly<DocumentReadingInfo | undefined>;

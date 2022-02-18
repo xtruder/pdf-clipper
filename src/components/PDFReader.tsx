@@ -9,7 +9,12 @@ import { resetValue } from "~/lib/react";
 import { PDFHighlight, HighlightColor } from "~/models";
 
 import { PDFHighlighter } from "./PDFHighlighter";
-import { ActionButton, Sidebar, SidebarContent } from "./PDFControls";
+import {
+  ActionButton,
+  Sidebar,
+  SidebarContent,
+  SidebarNavbar,
+} from "./PDFControls";
 import { PDFDisplayProxy, ScrollPosition } from "./PDFDisplay";
 import { HighlightListView } from "./HighlightListView";
 import { PDFPageThumbnails } from "./PDFPageThumbnails";
@@ -17,22 +22,28 @@ import { PDFOutlineListView } from "./PDFOutlineListView";
 
 export interface PDFReaderProps {
   pdfDocument: PDFDocumentProxy;
+  title?: string;
   highlights: PDFHighlight[];
   className?: string;
   isDarkMode?: boolean;
 
   onHighlightCreate: (h: PDFHighlight) => void;
   onHighlightUpdate: (h: PDFHighlight) => void;
+  onTitleChange?: (title: string) => void;
+  onClose?: () => void;
 }
 
 export const PDFReader: React.FC<PDFReaderProps> = ({
   pdfDocument,
+  title,
   highlights = [],
   className = "",
   isDarkMode = false,
 
   onHighlightCreate,
   onHighlightUpdate = () => null,
+  onTitleChange,
+  onClose,
 }) => {
   const [_, setInProgressHighlight, inProgressHighlightRef] =
     useState<PDFHighlight>();
@@ -128,6 +139,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   const sidebar = (
     <Sidebar
+      header={
+        <SidebarNavbar
+          title={title}
+          onTitleChange={onTitleChange}
+          onBackClicked={onClose}
+        />
+      }
       onTabChange={() => {
         if (selectedHighlight)
           resetValue(setScrollToListViewHighlight, selectedHighlight);

@@ -14,6 +14,7 @@ import { ReactComponent as MoonIcon } from "~/assets/icons/moon-outline.svg";
 import { ReactComponent as SunIcon } from "~/assets/icons/sun-outline.svg";
 
 import { HighlightColor } from "~/models";
+import { EditableText } from "./EditableText";
 
 const preventFocus = (e: React.FocusEvent) => {
   e.preventDefault();
@@ -292,11 +293,39 @@ export const SidebarTabSelector: React.FC<{
   );
 };
 
+export const SidebarNavbar: React.FC<{
+  title?: string;
+  onTitleChange?: (title: string) => void;
+  onBackClicked?: () => void;
+}> = ({ title, onTitleChange, onBackClicked = () => null }) => (
+  <div className="navbar bg-base-200 p-1 mb-2 min-h-10 rounded-md">
+    <a
+      className="btn btn-sm btn-primary normal-case text-md mr-2"
+      onClick={() => onBackClicked()}
+    >
+      Back
+    </a>
+    <EditableText
+      placeholder="Write title here ..."
+      text={title}
+      editOnClick={true}
+      clampLines={1}
+      onChange={onTitleChange}
+    />
+  </div>
+);
+
 export const Sidebar: React.FC<{
   selectedTab?: SidebarTabNames;
+  header?: JSX.Element;
   content?: Record<SidebarTabNames, JSX.Element | null>;
   onTabChange?: (name: SidebarTabNames) => void;
-}> = ({ selectedTab = "outline", content, onTabChange = () => null }) => {
+}> = ({
+  header,
+  selectedTab = "outline",
+  content,
+  onTabChange = () => null,
+}) => {
   const [currentSelectedTab, setCurrentSelectedTab] =
     useState<SidebarTabNames>(selectedTab);
 
@@ -304,16 +333,7 @@ export const Sidebar: React.FC<{
 
   return (
     <div className="flex flex-col overflow-hidden p-2 w-3/4 sm:w-90 md:w-90 bg-base-100 text-base-content h-full">
-      <div className="navbar bg-base-300 text-neutral p-0 min-h-10 rounded-md">
-        <a className="btn btn-sm btn-ghost normal-case text-md">Back</a>
-        <a
-          className="text-elipsis line-clamp-1"
-          title="Fast and Precise Type Checking for JavaScript"
-        >
-          Fast and Precise Type Checking for JavaScript
-        </a>
-      </div>
-
+      {header}
       <SidebarTabSelector
         selectedTab={currentSelectedTab}
         onChange={(tab) => {

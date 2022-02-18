@@ -45,6 +45,7 @@ export const ThePDFReader: Story = (args) => {
       onHighlightCreate={onHighlightCreate}
       onHighlightUpdate={onHighlightUpdate}
       isDarkMode={isDarkMode}
+      title={"Fast and Precise Type Checking for JavaScript"}
     />
   );
 };

@@ -28,7 +28,7 @@ export const documentInfoList = atom<DocumentInfo[]>({
     {
       type: DocumentType.PDF,
       id: s4(),
-      title: "neki",
+      title: "Fast and Precise Type Checking for JavaScript",
       url: "https://arxiv.org/pdf/1708.08021.pdf",
     },
   ],
@@ -52,6 +52,22 @@ export const documentInfo = selectorFamily<DocumentInfo | undefined, string>({
       const docs = get(documentInfoList);
 
       return docs.find((d) => d.id === id);
+    },
+  set:
+    (id) =>
+    ({ get, set }, newValue) => {
+      const docs = get(documentInfoList);
+
+      let newDocs: DocumentInfo[];
+      if (!newValue) {
+        newDocs = docs.filter((d) => d.id !== id);
+      } else {
+        newDocs = docs.map((d) =>
+          d.id === id ? (newValue as DocumentInfo) : d
+        );
+      }
+
+      set(documentInfoList, newDocs);
     },
 });
 
