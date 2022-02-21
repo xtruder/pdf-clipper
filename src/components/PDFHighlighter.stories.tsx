@@ -44,39 +44,39 @@ export const ThePDFHighlighter: Story = (args) => {
       enableAreaSelection={enableAreaSelection}
       highlightTooltip={
         <ul className="menu bg-base-100 menu-horizontal rounded-box">
-          <li
-            onClick={() => {
-              clearRangeSelection();
-              resetValue(setEnableAreaSelection, true);
+          <li>
+            <button
+              onClick={() => {
+                clearRangeSelection();
+                resetValue(setEnableAreaSelection, true);
 
-              if (tooltipedHighlight?.content) {
-                setHighlights(
-                  highlightsRef.current.filter(
-                    (h) => h.id !== tooltipedHighlight.id
-                  )
-                );
-              } else {
-                setTooltipedHighlight(undefined);
-              }
-            }}
-          >
-            <button>
+                if (tooltipedHighlight?.content) {
+                  setHighlights(
+                    highlightsRef.current.filter(
+                      (h) => h.id !== tooltipedHighlight.id
+                    )
+                  );
+                } else {
+                  setTooltipedHighlight(undefined);
+                }
+              }}
+            >
               <CloseIcon />
             </button>
           </li>
-          <li
-            onClick={() => {
-              if (!inProgressHighlightRef.current) return;
+          <li>
+            <button
+              onClick={() => {
+                if (!inProgressHighlightRef.current) return;
 
-              const highlight = inProgressHighlightRef.current;
+                const highlight = inProgressHighlightRef.current;
 
-              setSelectedHighlight(highlight);
-              setHighlights([...highlightsRef.current, highlight]);
+                setSelectedHighlight(highlight);
+                setHighlights([...highlightsRef.current, highlight]);
 
-              setInProgressHighlight(undefined);
-            }}
-          >
-            <button>
+                setInProgressHighlight(undefined);
+              }}
+            >
               <BookmarkIcon />
             </button>
           </li>

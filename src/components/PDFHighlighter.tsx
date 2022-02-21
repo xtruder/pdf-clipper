@@ -117,6 +117,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   const selectedHighlightRef = useRef(selectedHighlight);
   selectedHighlightRef.current = selectedHighlight;
 
+  const highlightTipRef = useRef<HTMLDivElement>();
+
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
     if (!enableHighlightsRef.current) return;
 
@@ -193,6 +195,16 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
     console.log("set in progress");
     onHighlighting(highlight);
+  };
+
+  const shouldResetAreaSelection = (
+    event: MouseEvent | TouchEvent
+  ): boolean => {
+    return !(
+      highlightTipRef.current &&
+      event.target &&
+      highlightTipRef.current.contains(event.target as any)
+    );
   };
 
   const shouldStartAreaSelection = (
@@ -321,6 +333,9 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
           top: boundingRect.top + pageNode.offsetTop,
           bottom: boundingRect.top + pageNode.offsetTop + boundingRect.height,
         }}
+        onRef={(ref) => {
+          highlightTipRef.current = ref;
+        }}
       >
         {tooltip}
       </TipContainer>
@@ -396,6 +411,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
             onDragStart={() => setDisableInteractions(true)}
             onDragEnd={() => setDisableInteractions(false)}
             shouldStart={shouldStartAreaSelection}
+            shouldReset={shouldResetAreaSelection}
             shouldEnd={shouldEndAreaSelection}
             onSelection={onMouseSelection}
             onReset={() => onHighlighting(undefined)}

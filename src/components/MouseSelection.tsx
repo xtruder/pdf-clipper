@@ -57,10 +57,23 @@ export type MouseSelectionProps = {
     boundingRect: Rect,
     resetSelection: () => void
   ) => void;
+
+  // shouldStart determines whether mouse selection should be started
   shouldStart?: (event: MouseEvent | TouchEvent) => boolean;
+
+  // shouldReset determines whether previous selection should be reset
+  shouldReset?: (event: MouseEvent | TouchEvent) => boolean;
+
+  // shouldEnd determines whether mouse selection should end
   shouldEnd?: (event: MouseEvent | TouchEvent | KeyboardEvent) => boolean;
+
+  // onDragStart is triggered when mouse drag is started
   onDragStart?: (start: Target) => void;
+
+  // onDragEnd is triggered when mouse drag is ended
   onDragEnd?: (start: Target, end: Target | null) => void;
+
+  // onReset is triggered when selection has been reset
   onReset?: () => void;
 };
 
@@ -75,6 +88,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   onSelecting = () => null,
   shouldStart = () => true,
   shouldEnd = () => true,
+  shouldReset = () => true,
   onDragStart = () => null,
   onDragEnd = () => null,
   onReset = () => null,
@@ -91,8 +105,8 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     boundingRect.width >= minSelection && boundingRect.height >= minSelection;
 
   const resetSelection = () => {
-    setDragState(initialDragState);
     onReset();
+    setDragState(initialDragState);
   };
 
   // componentDidMount set event listeners
@@ -130,7 +144,9 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
       if (!event.target || !isHTMLElement(event.target)) return;
 
       // if we should not start reset the drag state
-      if (!shouldStart(event)) return resetSelection();
+      if (!shouldStart(event)) {
+        return shouldReset(event) && resetSelection();
+      }
 
       const { pageX, pageY } = touchPoint(event);
 

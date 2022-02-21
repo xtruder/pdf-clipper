@@ -13,13 +13,17 @@ export interface TipContainerProps {
 
   // tip container position
   style: { top: number; left: number; bottom: number };
+
+  onRef?: (ref: HTMLDivElement) => void;
 }
 
 export const TipContainer: React.FC<TipContainerProps> = ({
   children,
-  style,
   scrollTop,
   boundingRect,
+
+  style,
+  onRef = () => null,
 }) => {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -69,10 +73,14 @@ export const TipContainer: React.FC<TipContainerProps> = ({
     }
   }, [currentChildren]);
 
+  useEffect(() => {
+    if (ref.current) onRef(ref.current);
+  }, [ref]);
+
   return (
     <div
       ref={ref}
-      className="z-12 absolute"
+      className="z-10 absolute"
       style={{
         visibility: isStyleCalculationInProgress ? "hidden" : "visible",
         top,
