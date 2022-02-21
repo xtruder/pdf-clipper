@@ -1,17 +1,19 @@
 import React, { useRef } from "react";
 import useState from "react-usestateref";
 
-import { PDFHighlight, HighlightColor } from "~/models";
+import { PDFHighlight, HighlightColor, PartialPDFHighlight } from "~/models";
 import {
   groupHighlightsByPage,
   getHighlightedRectsWithinPages,
   getBoundingRectForRects,
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
+  PageRect,
 } from "~/lib/pdf";
 
 import { Rect, asElement, isHTMLElement } from "~/lib/dom";
 import { getPageFromElement, getPagesFromRange, Viewport } from "~/lib/pdfjs";
+import { s4 } from "~/lib/utils";
 
 import {
   PageLayer,
@@ -23,9 +25,9 @@ import {
 import { TextHighlight } from "./TextHighlight";
 import { AreaHighlight } from "./AreaHighlight";
 import { MouseSelection, Target } from "./MouseSelection";
+import { TipContainer } from "./TipContainer";
 
 import "./PDFHighlighter.css";
-import { s4 } from "~/lib/utils";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "textLayer__selection_red",
@@ -45,7 +47,7 @@ const defaultColor = HighlightColor.YELLOW;
 
 interface PDFHighlighterEvents {
   // onHighlighting is triggered when highlight selection is still in progress
-  onHighlighting?: (highlight: PDFHighlight) => void;
+  onHighlighting?: (highlight: PDFHighlight | undefined) => void;
 
   // onHighlightClicked is triggered when highlight is clicked
   onHighlightClicked?: (highlight: PDFHighlight) => void;
@@ -62,6 +64,11 @@ export interface PDFHighlighterProps
 
   // id of currently selected highlight
   selectedHighlight?: PDFHighlight;
+
+  // highlight to show tooltip for, with tooltip content
+  tooltipedHighlight?: PartialPDFHighlight;
+
+  highlightTooltip?: JSX.Element;
 
   // id of highlight we should scroll to
   scrollToHighlight?: PDFHighlight;
@@ -82,6 +89,8 @@ export interface PDFHighlighterProps
 export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   highlights = [],
   selectedHighlight,
+  tooltipedHighlight,
+  highlightTooltip,
   scrollToHighlight,
   highlightColor = defaultColor,
   showHighlights = true,
@@ -112,9 +121,12 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     if (!enableHighlightsRef.current) return;
 
     const pdfViewer = pdfViewerRef.current;
-
-    if (isCollapsed || !range) return;
     if (!pdfViewer) return;
+
+    if (isCollapsed || !range) {
+      onHighlighting(undefined);
+      return;
+    }
 
     // get pages from selected range
     const pages = getPagesFromRange(range);
@@ -156,26 +168,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const viewport = pdfViewer.getPageView(page.number)?.viewport;
     if (!viewport) return;
 
-    const pageBoundingRect = {
+    // bounding rect of selection on a page
+    const pageBoundingRect: PageRect = {
       ...boundingRect,
       top: boundingRect.top - page.node.offsetTop,
       left: boundingRect.left - page.node.offsetLeft,
       pageNumber: page.number,
     };
 
-    // create image of selection
+    // screenshot selection
     const image = pdfViewer.screenshotPageArea(page.number, pageBoundingRect);
-
     if (!image) return;
 
     // create a new higlightwith image content
     const highlight: PDFHighlight = {
       id: s4(),
       location: {
-        boundingRect: viewportRectToScaledPageRect(
-          { ...pageBoundingRect, pageNumber: page.number },
-          viewport
-        ),
+        boundingRect: viewportRectToScaledPageRect(pageBoundingRect, viewport),
         rects: [],
         pageNumber: page.number,
       },
@@ -283,6 +292,41 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     );
   };
 
+  const renderHighlightTooltip = (
+    highlight: PartialPDFHighlight,
+    tooltip: JSX.Element
+  ) => {
+    if (!pdfViewer) return;
+
+    const pageView = pdfViewer.getPageView(highlight.location.pageNumber);
+    if (!pageView) return;
+
+    const boundingRect = scaledRectToViewportRect(
+      highlight.location.boundingRect,
+      pageView.viewport
+    );
+
+    const pageNode = pageView.div;
+    const pageBoundingClientRect = pageNode?.getBoundingClientRect();
+
+    if (!pageNode || !pageBoundingClientRect) return;
+
+    return (
+      <TipContainer
+        scrollTop={pdfViewer.container.scrollTop}
+        boundingRect={pageBoundingClientRect}
+        style={{
+          left:
+            pageNode?.offsetLeft + boundingRect.left + boundingRect.width / 2,
+          top: boundingRect.top + pageNode.offsetTop,
+          bottom: boundingRect.top + pageNode.offsetTop + boundingRect.height,
+        }}
+      >
+        {tooltip}
+      </TipContainer>
+    );
+  };
+
   const renderPageLayers = (highlights: PDFHighlight[]): PageLayer[] => {
     const highlightsByPage = groupHighlightsByPage([...highlights]);
 
@@ -354,7 +398,12 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
             shouldStart={shouldStartAreaSelection}
             shouldEnd={shouldEndAreaSelection}
             onSelection={onMouseSelection}
+            onReset={() => onHighlighting(undefined)}
           />
+
+          {tooltipedHighlight && highlightTooltip
+            ? renderHighlightTooltip(tooltipedHighlight, highlightTooltip)
+            : null}
 
           {props.containerChildren}
         </>

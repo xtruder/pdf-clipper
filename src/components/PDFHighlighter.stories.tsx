@@ -4,20 +4,19 @@ import { suspend } from "suspend-react";
 
 import { Story } from "@storybook/react";
 
-import { PDFHighlight } from "~/models";
+import { PartialPDFHighlight, PDFHighlight } from "~/models";
+import { loadPDF } from "~/lib/pdfjs";
 
 import { PDFHighlighter } from "./PDFHighlighter";
 import { useContextProgress } from "./ProgressIndicator";
-import { loadPDF } from "~/lib/pdfjs";
+
+import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
+import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
+import { clearRangeSelection } from "~/lib/dom";
+import { resetValue } from "~/lib/react";
 
 export default {
   title: "PDFHighlighter",
-};
-
-let s4 = () => {
-  return Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
 };
 
 export const ThePDFHighlighter: Story = (args) => {
@@ -28,8 +27,11 @@ export const ThePDFHighlighter: Story = (args) => {
     []
   );
   const [_, setInProgressHighlight, inProgressHighlightRef] =
-    useState<PDFHighlight | null>(null);
+    useState<PDFHighlight>();
   const [selectedHighlight, setSelectedHighlight] = useState<PDFHighlight>();
+  const [tooltipedHighlight, setTooltipedHighlight] =
+    useState<PartialPDFHighlight>();
+  const [enableAreaSelection, setEnableAreaSelection] = useState(true);
 
   return (
     <PDFHighlighter
@@ -38,12 +40,55 @@ export const ThePDFHighlighter: Story = (args) => {
       pdfScaleValue={args.pdfScaleValue}
       highlightColor={args.highlightColor}
       selectedHighlight={selectedHighlight}
+      tooltipedHighlight={tooltipedHighlight}
+      enableAreaSelection={enableAreaSelection}
+      highlightTooltip={
+        <ul className="menu bg-base-100 menu-horizontal rounded-box">
+          <li
+            onClick={() => {
+              clearRangeSelection();
+              resetValue(setEnableAreaSelection, true);
+
+              if (tooltipedHighlight?.content) {
+                setHighlights(
+                  highlightsRef.current.filter(
+                    (h) => h.id !== tooltipedHighlight.id
+                  )
+                );
+              } else {
+                setTooltipedHighlight(undefined);
+              }
+            }}
+          >
+            <button>
+              <CloseIcon />
+            </button>
+          </li>
+          <li
+            onClick={() => {
+              if (!inProgressHighlightRef.current) return;
+
+              const highlight = inProgressHighlightRef.current;
+
+              setSelectedHighlight(highlight);
+              setHighlights([...highlightsRef.current, highlight]);
+
+              setInProgressHighlight(undefined);
+            }}
+          >
+            <button>
+              <BookmarkIcon />
+            </button>
+          </li>
+        </ul>
+      }
       showHighlights={args.showHighlights}
       areaSelectionActive={args.areaSelectionActive}
       onHighlighting={(highlight) => {
         args.onHighlighting(highlight);
 
         setInProgressHighlight(highlight);
+        setTooltipedHighlight(highlight);
       }}
       onHighlightUpdated={(highlight) => {
         args.onHighlightUpdated(highlight);
@@ -54,26 +99,25 @@ export const ThePDFHighlighter: Story = (args) => {
         newHighlights[idx] = highlight;
 
         setSelectedHighlight(highlight);
+        setTooltipedHighlight(highlight);
         setHighlights(newHighlights);
       }}
       onHighlightClicked={(highlight) => {
         args.onHighlightClicked(highlight);
 
         setSelectedHighlight(highlight);
+        setTooltipedHighlight(highlight);
       }}
       onKeyDown={(event: KeyboardEvent) => {
         switch (event.code) {
           case "Enter":
             if (inProgressHighlightRef.current) {
-              const highlight = {
-                ...inProgressHighlightRef.current,
-                id: s4(),
-              };
+              const highlight = inProgressHighlightRef.current;
 
               setSelectedHighlight(highlight);
               setHighlights([...highlightsRef.current, highlight]);
 
-              setInProgressHighlight(null);
+              setInProgressHighlight(undefined);
             }
 
             break;

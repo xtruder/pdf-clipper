@@ -40,6 +40,7 @@ export interface PageLayer {
 export interface PDFDisplayProxy {
   pdfDocument: PDFDocumentProxy;
   currentScale: number;
+  container: HTMLDivElement;
   getPageView(pageNumber: number): PageView | null;
   screenshotPageArea(pageNumber: number, area: Rect): string | null;
 }
@@ -166,6 +167,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   const onPagesInit = () => {
     onDocumentReady({
+      container: containerRef.current!,
       getPageView,
       screenshotPageArea,
       pdfDocument,

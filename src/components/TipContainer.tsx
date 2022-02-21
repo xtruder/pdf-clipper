@@ -21,7 +21,7 @@ export const TipContainer: React.FC<TipContainerProps> = ({
   scrollTop,
   boundingRect,
 }) => {
-  const containerDiv = useRef<HTMLDivElement | null>(null);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   // state variables
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
@@ -38,20 +38,20 @@ export const TipContainer: React.FC<TipContainerProps> = ({
   // left position of container
   const left = clamp(style.left - width / 2, 0, boundingRect.width - width);
 
-  const childrenWithProps = React.Children.map(children, (child) =>
-    React.cloneElement(child!, {
-      onUpdate: () => setSize({ width: 0, height: 0 }),
-      popup: {
-        position: shouldMove ? "below" : "above",
-      },
-    })
-  );
+  // const childrenWithProps = React.Children.map(children, (child) =>
+  //   React.cloneElement(child!, {
+  //     onUpdate: () => setSize({ width: 0, height: 0 }),
+  //     popup: {
+  //       position: shouldMove ? "below" : "above",
+  //     },
+  //   })
+  // );
 
   const updateSizes = () => {
-    if (!containerDiv.current) return;
+    if (!ref.current) return;
 
     // get sizes of current container div
-    const { offsetWidth, offsetHeight } = containerDiv.current;
+    const { offsetWidth, offsetHeight } = ref.current;
 
     // set new sizes
     setSize({ width: offsetWidth, height: offsetHeight });
@@ -71,15 +71,15 @@ export const TipContainer: React.FC<TipContainerProps> = ({
 
   return (
     <div
-      ref={containerDiv}
-      className="z-10 absolute"
+      ref={ref}
+      className="z-12 absolute"
       style={{
         visibility: isStyleCalculationInProgress ? "hidden" : "visible",
         top,
         left,
       }}
     >
-      {childrenWithProps}
+      {children}
     </div>
   );
 };
