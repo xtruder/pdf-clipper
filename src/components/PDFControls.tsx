@@ -12,6 +12,7 @@ import { ReactComponent as CollectionIcon } from "~/assets/icons/collections-out
 import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outline.svg";
 import { ReactComponent as MoonIcon } from "~/assets/icons/moon-outline.svg";
 import { ReactComponent as SunIcon } from "~/assets/icons/sun-outline.svg";
+import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
 
 import { HighlightColor } from "~/models";
 import { EditableText } from "./EditableText";
@@ -394,6 +395,31 @@ export const SidebarContent: React.FC<{
         {sidebar}
       </div>
     </div>
+  );
+};
+
+export const HighlightTooltip: React.FC<{
+  className?: string;
+  onCloseClicked?: () => void;
+  onBookmarkClicked?: () => void;
+}> = ({
+  className = "",
+  onCloseClicked = () => null,
+  onBookmarkClicked = () => null,
+}) => {
+  return (
+    <ul className={`menu bg-base-100 menu-horizontal rounded-box ${className}`}>
+      <li>
+        <button onClick={onCloseClicked}>
+          <CloseIcon />
+        </button>
+      </li>
+      <li>
+        <button onClick={onBookmarkClicked}>
+          <BookmarkIcon />
+        </button>
+      </li>
+    </ul>
   );
 };
 

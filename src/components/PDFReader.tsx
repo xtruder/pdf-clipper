@@ -11,6 +11,7 @@ import { PDFHighlight, HighlightColor } from "~/models";
 import { PDFHighlighter } from "./PDFHighlighter";
 import {
   ActionButton,
+  HighlightTooltip,
   Sidebar,
   SidebarContent,
   SidebarNavbar,
@@ -50,6 +51,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<PDFHighlight>();
   const [scrollToHighlight, setScrollToHighlight] = useState<PDFHighlight>();
+  const [tooltipedHighlight, setTooltipedHighlight] = useState<PDFHighlight>();
   const [scrollToListViewHighlight, setScrollToListViewHighlight] =
     useState<PDFHighlight>();
   const [scrollToPage, setScrollToPage] = useState<number>();
@@ -128,12 +130,20 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   }, [scrollToHighlight]);
 
   useEffect(() => {
-    if (selectedHighlight) setScrollToListViewHighlight(selectedHighlight);
+    if (selectedHighlight) {
+      setScrollToListViewHighlight(selectedHighlight);
+    }
+
+    setTooltipedHighlight(selectedHighlight);
   }, [selectedHighlight]);
 
   useEffect(() => {
     setIsDarkReader(isDarkMode);
   }, [isDarkMode]);
+
+  useEffect(() => {
+    setTooltipedHighlight(inProgressHighlightRef.current);
+  }, [inProgressHighlightRef.current]);
 
   const currentHighlights = highlights.filter((h) => !h.deleted);
 
@@ -183,6 +193,28 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     />
   );
 
+  const highlightTooltip = (
+    <HighlightTooltip
+      onCloseClicked={() => {
+        if (!tooltipedHighlight) return;
+
+        if (tooltipedHighlight.id === inProgressHighlightRef.current?.id) {
+          setTooltipedHighlight(undefined);
+          clearSelection();
+        } else {
+          deleteHighlight(tooltipedHighlight);
+        }
+      }}
+      onBookmarkClicked={() => {
+        if (!inProgressHighlightRef.current) return;
+
+        const highlight = inProgressHighlightRef.current;
+
+        createHighlight(highlight);
+      }}
+    />
+  );
+
   return (
     <SidebarContent sidebar={sidebar} className={className}>
       <ActionButton
@@ -202,11 +234,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         selectedHighlight={selectedHighlight}
         scrollTo={scrollToPosition}
         scrollToHighlight={scrollToHighlight}
+        tooltipedHighlight={tooltipedHighlight}
         enableAreaSelection={enableAreaSelection}
         areaSelectionActive={areaSelectActive}
         pdfScaleValue={pdfScaleValue}
         highlightColor={highlightColor}
         isDarkReader={isDarkReader}
+        highlightTooltip={highlightTooltip}
         // event handlers
         onHighlighting={setInProgressHighlight}
         onHighlightUpdated={updateHighlight}
