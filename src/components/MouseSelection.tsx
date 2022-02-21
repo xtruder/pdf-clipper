@@ -45,9 +45,15 @@ export type MouseSelectionProps = {
   containerClassName?: string;
   minSelection?: number;
   active?: boolean;
-  onSelection: (
+  onSelection?: (
     start: Target,
     end: Target,
+    boundingRect: Rect,
+    resetSelection: () => void
+  ) => void;
+  onSelecting?: (
+    start: Target,
+    cur: Target,
     boundingRect: Rect,
     resetSelection: () => void
   ) => void;
@@ -55,6 +61,7 @@ export type MouseSelectionProps = {
   shouldEnd?: (event: MouseEvent | TouchEvent | KeyboardEvent) => boolean;
   onDragStart?: (start: Target) => void;
   onDragEnd?: (start: Target, end: Target | null) => void;
+  onReset?: () => void;
 };
 
 export const MouseSelection: React.FC<MouseSelectionProps> = ({
@@ -64,11 +71,13 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   active = true,
 
   // handlers
-  onSelection,
+  onSelection = () => null,
+  onSelecting = () => null,
   shouldStart = () => true,
   shouldEnd = () => true,
   onDragStart = () => null,
   onDragEnd = () => null,
+  onReset = () => null,
 }) => {
   const [dragState, setDragState] = useState<DragState>(initialDragState);
   const dragStateRef = useRef(dragState);
@@ -81,9 +90,14 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   const shouldRender = (boundingRect: Rect): boolean =>
     boundingRect.width >= minSelection && boundingRect.height >= minSelection;
 
+  const resetSelection = () => {
+    setDragState(initialDragState);
+    onReset();
+  };
+
   // componentDidMount set event listeners
   useEffect(() => {
-    if (!active) return setDragState(initialDragState);
+    if (!active) return resetSelection();
 
     const containerEl = rootEl.current?.parentElement;
 
@@ -116,7 +130,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
       if (!event.target || !isHTMLElement(event.target)) return;
 
       // if we should not start reset the drag state
-      if (!shouldStart(event)) return setDragState(initialDragState);
+      if (!shouldStart(event)) return resetSelection();
 
       const { pageX, pageY } = touchPoint(event);
 
@@ -208,30 +222,24 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     containerEl.addEventListener("mousedown", onPointerDown);
     containerEl.addEventListener("touchstart", onPointerDown);
 
-    // remove mousedown listener on component unmount
+    // remove mousedown listener on changes
     return () => {
       containerEl.removeEventListener("mousedown", onPointerDown);
       containerEl.removeEventListener("touchstart", onPointerDown);
     };
   }, [shouldStart, minSelection, onSelection, onDragStart, onDragEnd, active]);
 
-  // drag start effect handler
+  // dragState handlers
   useEffect(() => {
-    if (!selected && start && !end) onDragStart(start);
-  }, [dragState]);
-
-  // drag end effect handler
-  useEffect(() => {
-    if (selected && start) {
+    if (!selected && start && !end) {
+      onDragStart(start);
+    } else if (!selected && start && end) {
+      onSelecting(start, end, getBoundingRect(start, end), resetSelection);
+    } else if (selected && start) {
       onDragEnd(start, end);
 
-      if (end) {
-        const boundingRect = getBoundingRect(start, end);
-
-        onSelection(start, end, boundingRect, () =>
-          setDragState(initialDragState)
-        );
-      }
+      if (end)
+        onSelection(start, end, getBoundingRect(start, end), resetSelection);
     }
   }, [dragState]);
 
