@@ -365,11 +365,14 @@ export const Sidebar: React.FC<{
   );
 };
 
-export const SidebarContent: React.FC<{
+export const Drawer: React.FC<{
   className?: string;
   sidebar: JSX.Element;
 }> = ({ className = "", sidebar, children }) => {
-  const [showSidebar, setShowSidebar] = useState(false);
+  //  const [showSidebar, setShowSidebar] = useState(false);
+  const [isShown, setIsShown] = useState(false);
+
+  const Icon = isShown ? ChevronDoubleLeftIcon : ChevronDoubleRightIcon;
 
   return (
     <div
@@ -378,33 +381,21 @@ export const SidebarContent: React.FC<{
       <input
         type="checkbox"
         className="drawer-toggle"
-        defaultChecked={showSidebar}
+        id="main-drawer"
+        onChange={(e) => setIsShown(e.target.checked)}
       />
       <div className="drawer-content relative">
-        <ExpandButton
-          className="top-4 -left-1 z-20"
-          expanded={showSidebar}
-          onClick={() => setShowSidebar(!showSidebar)}
-        />
+        <label
+          className="absolute top-4 -left-1 z-20 btn btn-secondary btn-xs rounded-l-none drawer-button"
+          htmlFor="main-drawer"
+        >
+          <Icon className="inline-block w-4 h-4 stroke-current" />
+        </label>
 
         {children}
       </div>
-      <div
-        className="drawer-side"
-        style={{
-          ...(!showSidebar && { visibility: "hidden", maxWidth: 0 }),
-        }}
-      >
-        <label
-          className="drawer-overlay"
-          style={{
-            visibility: "visible",
-          }}
-          onClick={() => {
-            console.log("drawer clicked");
-            setShowSidebar(!showSidebar);
-          }}
-        />
+      <div className="transform drawer-side">
+        <label className="drawer-overlay" htmlFor="main-drawer" />
         {sidebar}
       </div>
     </div>

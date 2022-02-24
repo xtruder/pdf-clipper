@@ -13,7 +13,7 @@ import {
   ActionButton,
   HighlightTooltip,
   Sidebar,
-  SidebarContent,
+  Drawer,
   SidebarNavbar,
 } from "./PDFControls";
 import { PDFDisplayProxy, ScrollPosition } from "./PDFDisplay";
@@ -216,7 +216,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   );
 
   return (
-    <SidebarContent sidebar={sidebar} className={className}>
+    <Drawer sidebar={sidebar} className={className}>
       <ActionButton
         bottom={20}
         right={25}
@@ -254,6 +254,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         onKeyDown={onKeyDown}
         onScaleChanging={(e) => setScale(e.scale)}
       />
-    </SidebarContent>
+    </Drawer>
   );
 };

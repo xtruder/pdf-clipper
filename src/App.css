@@ -24,3 +24,25 @@
     margin-bottom: .75rem;
   }
 }
+
+/* Fixes for drawer to disable pointer events for overlay when not active */
+.drawer-toggle ~ .drawer-side {
+  pointer-events: none;
+}
+
+.drawer-toggle:checked~.drawer-side {
+  pointer-events: all;
+}
+
+@screen lg {
+  .drawer-toggle ~ .drawer-side {
+    pointer-events: all;
+  }
+
+  .drawer-toggle ~ .drawer-side {
+    display: none;
+  }
+  .drawer-toggle:checked~.drawer-side {
+    display: block;
+  }
+}
