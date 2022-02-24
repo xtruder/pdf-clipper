@@ -11,7 +11,7 @@ import {
   PageRect,
 } from "~/lib/pdf";
 
-import { Rect, asElement, isHTMLElement } from "~/lib/dom";
+import { Rect, isHTMLElement } from "~/lib/dom";
 import { getPageFromElement, getPagesFromRange, Viewport } from "~/lib/pdfjs";
 import { s4 } from "~/lib/utils";
 
@@ -103,10 +103,10 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   onHighlightClicked = () => null,
   ...props
 }) => {
-  const [disableInteractions, setDisableInteractions] = useState(false);
-
   const [pdfViewer, setPDFViewer, pdfViewerRef] =
     useState<PDFDisplayProxy | null>(null);
+
+  const [disableInteractions, setDisableInteractions] = useState(false);
 
   const selectionColorRef = useRef(highlightColor);
   selectionColorRef.current = highlightColor;
@@ -193,7 +193,6 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
       content: { image, color: selectionColorRef.current },
     };
 
-    console.log("set in progress");
     onHighlighting(highlight);
   };
 
@@ -210,20 +209,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   const shouldStartAreaSelection = (
     event: MouseEvent | TouchEvent
   ): boolean => {
-    return (
-      enableHighlightsRef.current &&
-      (event.altKey || areaSelectionActive) &&
-      isHTMLElement(event.target) &&
-      Boolean(asElement(event.target).closest(".page"))
-    );
-  };
-
-  const shouldEndAreaSelection = (
-    event: MouseEvent | TouchEvent | KeyboardEvent
-  ): boolean => {
-    if (event.type === "keyup" && event.altKey) return true;
-    if (event.type === "mouseup" && areaSelectionActive) return true;
-    return !event.altKey;
+    return isHTMLElement(event.target); //&&
+    //Boolean(asElement(event.target).closest(".page"))
   };
 
   const scrollPositionForHighligt = (
@@ -412,7 +399,6 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
             onDragEnd={() => setDisableInteractions(false)}
             shouldStart={shouldStartAreaSelection}
             shouldReset={shouldResetAreaSelection}
-            shouldEnd={shouldEndAreaSelection}
             onSelection={onMouseSelection}
             onReset={() => onHighlighting(undefined)}
           />
