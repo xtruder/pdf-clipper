@@ -35,7 +35,7 @@ export interface AreaHighlightProps {
   blendMode?: "normal" | "multiply" | "difference";
 
   onChange?: (rect: Rect) => void;
-  onClick?: (event: MouseEvent) => void;
+  onClick?: () => void;
   onDragStart?: () => void;
   onDragStop?: () => void;
 
@@ -64,28 +64,32 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
     ? selectedColorToClass[color || defaultColor]
     : colorToClass[color || defaultColor];
 
-  const resizableElRef = useRef<HTMLElement | null>(null);
+  const rndRef = useRef<Rnd | null>(null);
+  const rndElRef = useRef<HTMLElement | null>(null);
+  const { ref: rndInViewRef, inView } = useInView({ threshold: 1 });
 
-  const { ref: resizbelInViewRef, inView } = useInView({ threshold: 1 });
+  useEffect(() => {
+    if (!rndRef.current || !rndRef.current.resizableElement.current) return;
+
+    rndElRef.current = rndRef.current.resizableElement.current;
+    rndInViewRef(rndRef.current.resizableElement.current);
+  }, [rndRef]);
 
   useEffect(() => {
     if (!inView) onEscapeViewport();
   }, [inView]);
 
   return (
-    <div className="highlight">
+    <>
       {/**Resizable and draggable component */}
       <Rnd
-        className={`h-full w-full transition-colors rounded-md
+        ref={rndRef}
+        className={`transition-colors rounded-md
           mix-blend-${blendMode} ${colorClass}
           ${isSelected && selectedClassName} ${className}`}
-        ref={(ref) => {
-          resizableElRef.current = ref?.resizableElement.current || null;
-          resizbelInViewRef(resizableElRef.current);
-        }}
+        disableDragging={!isSelected}
         position={{ x: boundingRect.left, y: boundingRect.top }}
         size={{ width: boundingRect.width, height: boundingRect.height }}
-        onMouseDown={onClick}
         onResizeStop={(_mouseEvent, _direction, ref, _delta, position) =>
           onChange({
             top: position.y,
@@ -103,18 +107,20 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
             left: data.x,
           });
         }}
-      />
+      >
+        <div className="highlight h-full w-full" onClick={() => onClick()} />
+      </Rnd>
 
       {/**Tooltip attached to area highlight */}
       <TooltipContainer
         className={tooltipContainerClassName}
-        tooltipedEl={resizableElRef.current}
+        tooltipedEl={rndElRef.current}
         placement="bottom"
         show={showTooltip}
         observeChanges={true}
       >
         {tooltip}
       </TooltipContainer>
-    </div>
+    </>
   );
 };
