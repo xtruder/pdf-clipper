@@ -1,5 +1,6 @@
 import React, { MouseEvent, useEffect, useMemo, useRef } from "react";
 import useState from "react-usestateref";
+import useMergedRef from "@react-hook/merged-ref";
 import ReactDOM from "react-dom";
 import debounce from "lodash.debounce";
 
@@ -58,6 +59,7 @@ interface PDFDisplayEvents {
 
 export interface PDFDisplayProps extends PDFDisplayEvents {
   className?: string;
+  containerRef?: React.ForwardedRef<HTMLElement>;
   containerClassName?: string;
   pdfDocument: PDFDocumentProxy;
   pdfScaleValue?: string;
@@ -71,6 +73,7 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
 
 export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   className = "",
+  containerRef: _containerRef,
   containerClassName = "",
   pdfDocument,
   pdfScaleValue = "auto",
@@ -342,7 +345,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       className={`${className} h-full`}
     >
       <div
-        ref={containerRef}
+        ref={
+          _containerRef
+            ? useMergedRef(containerRef, _containerRef)
+            : containerRef
+        }
         className={`pdfViewerContainer absolute overflow-y-scroll w-full h-full
           ${isDarkReader ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}

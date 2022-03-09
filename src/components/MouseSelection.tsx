@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import useEvent from "@react-hook/event";
 
 import {
   Rect,
@@ -9,6 +10,8 @@ import {
   touchPoint,
   isEventNear,
 } from "~/lib/dom";
+
+import { TooltipContainer } from "./TooltipContainer";
 
 export type Target = Point & {
   target: HTMLElement;
@@ -41,6 +44,18 @@ export type MouseSelectionProps = {
 
   // key to start selection
   selectionKey?: "alt" | "ctrl";
+
+  // tooltip component
+  tooltip?: JSX.Element;
+
+  // className for tooltip container
+  tooltipContainerClassName?: string;
+
+  // ref for parent element where to add event listeners
+  eventsElRef: React.RefObject<HTMLElement>;
+
+  // blend mode to use for area highlighter
+  blendMode?: "normal" | "multiply" | "difference";
 
   // onSelection is triggered when selection is made
   onSelection?: (
@@ -83,11 +98,14 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   minSelection = 10,
   active = true,
   selectionKey = "alt",
+  tooltip,
+  tooltipContainerClassName,
+  eventsElRef,
+  blendMode = "normal",
 
   // handlers
   onSelection = () => null,
   onSelecting = () => null,
-  shouldStart = () => true,
   shouldEnd = () => true,
   shouldReset = () => true,
   onDragStart = () => null,
@@ -95,12 +113,12 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   onReset = () => null,
 }) => {
   const [dragState, setDragState] = useState<DragState>(initialDragState);
-  const dragStateRef = useRef(dragState);
-  dragStateRef.current = dragState;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const activeRef = useRef(active);
-  activeRef.current = active;
+  const selectionRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  const [lastTouch, setLastTouch] = useState<MouseEvent | TouchEvent>();
 
   const shouldRender = (boundingRect: Rect): boolean =>
     boundingRect.width >= minSelection && boundingRect.height >= minSelection;
@@ -110,8 +128,6 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     setDragState(initialDragState);
   };
 
-  const lastPointerDownRef = useRef<MouseEvent | TouchEvent>();
-
   const hasModKey = (event: MouseEvent | TouchEvent | KeyboardEvent) =>
     selectionKey === "alt"
       ? event.altKey
@@ -119,155 +135,134 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
       ? event.ctrlKey
       : false;
 
-  // componentDidMount set event listeners
-  useEffect(() => {
-    if (!activeRef.current) return;
+  // gets coordinates within container
+  const containerCoords = (pageX: number, pageY: number): Point => {
+    const parentEl = eventsElRef.current!;
 
-    const parentEl = containerRef.current?.parentElement;
+    let containerBoundingRect: DOMRect | null = null;
 
-    if (!parentEl) return;
+    if (!containerBoundingRect) {
+      containerBoundingRect = parentEl.getBoundingClientRect();
+    }
 
-    // gets coordinates within container
-    const containerCoords = (pageX: number, pageY: number): Point => {
-      let containerBoundingRect: DOMRect | null = null;
+    return {
+      x: pageX - containerBoundingRect.left + parentEl.scrollLeft,
+      y:
+        pageY - containerBoundingRect.top + parentEl.scrollTop - window.scrollY,
+    };
+  };
 
-      if (!containerBoundingRect) {
-        containerBoundingRect = parentEl.getBoundingClientRect();
-      }
+  const onPointerDown = (event: MouseEvent | TouchEvent) => {
+    // if there is multi touch going on do nothing
+    if ("touches" in event && event.touches.length > 1) return;
 
-      return {
-        x: pageX - containerBoundingRect.left + parentEl.scrollLeft,
-        y:
-          pageY -
-          containerBoundingRect.top +
-          parentEl.scrollTop -
-          window.scrollY,
-      };
+    // if pointer down is within tooltip, do nothing
+    if (tooltipRef.current?.contains(asElement(event.target))) return;
+
+    // don't reset drag state if still dragging
+    if (dragState.start && !dragState.selected) {
+      if (hasModKey(event)) return;
+      return resetSelection();
+    }
+
+    // if already selected, check if we should reset selection
+    if (dragState.selected && shouldReset(event)) return resetSelection();
+
+    // check whether there is event target
+    if (!event.target || !isHTMLElement(event.target)) return;
+
+    // if event is right not right for starting or we should not start return
+    if (!hasModKey(event) && !isEventNear(lastTouch, event)) {
+      setLastTouch(event);
+      return;
+    }
+
+    setLastTouch(event);
+
+    const { pageX, pageY } = touchPoint(event);
+
+    const start = {
+      ...containerCoords(pageX, pageY),
+      target: asElement(event.target),
     };
 
-    const onPointerDown = (event: MouseEvent | TouchEvent) => {
-      if (dragStateRef.current.selected && shouldReset(event))
-        return resetSelection();
+    setDragState({
+      start,
+      end: null,
+      selected: false,
+    });
+  };
 
-      // don't reset drag state if still dragging
-      if (dragStateRef.current.start || dragStateRef.current.selected) return;
+  const onPointerMove = (event: MouseEvent | TouchEvent): void => {
+    if (!dragState.start) return;
+    if (dragState.selected) return;
 
-      // check whether there is event target
-      if (!event.target || !isHTMLElement(event.target)) return;
+    let { pageX, pageY } = touchPoint(event);
 
-      const { pageX, pageY } = touchPoint(event);
+    if (
+      !isHTMLElement(event.target) ||
+      !eventsElRef.current?.contains(asElement(event.target))
+    )
+      return;
 
-      const isRightEvent =
-        isNear(event, lastPointerDownRef.current) || hasModKey(event);
-
-      // update last pointer down
-      lastPointerDownRef.current = event;
-
-      // if event is right not right for starting or we should not start return
-      if (!isRightEvent || !shouldStart(event)) {
-        return shouldReset(event) && resetSelection();
-      }
-
-      const start = {
+    setDragState({
+      ...dragState,
+      end: {
         ...containerCoords(pageX, pageY),
         target: asElement(event.target),
-      };
+      },
+    });
 
-      setDragState({
-        start,
-        end: null,
-        selected: false,
-      });
+    event.preventDefault();
+  };
 
-      event.preventDefault();
-    };
+  const onEnd = (end: Point): void => {
+    if (!dragState.start || !dragState.end) return;
 
-    const onPointerMove = (event: MouseEvent | TouchEvent): void => {
-      if (!dragStateRef.current.start) return;
-      if (dragStateRef.current.selected) return;
+    const boundingRect = getBoundingRect(dragState.start, end);
 
-      let { pageX, pageY } = touchPoint(event);
+    if (!shouldRender(boundingRect)) {
+      return resetSelection();
+    }
 
-      if (
-        !isHTMLElement(event.target) ||
-        !parentEl.contains(asElement(event.target))
-      )
-        return;
+    setDragState({ ...dragState, selected: true });
+  };
 
-      setDragState({
-        ...dragStateRef.current,
-        end: {
-          ...containerCoords(pageX, pageY),
-          target: asElement(event.target),
-        },
-      });
+  const onKeyUp = (event: KeyboardEvent): void => {
+    if (!dragState.start) return;
 
-      event.preventDefault();
-    };
+    // if mod key is stil pressed or we should not end, don't end drag
+    if (event.key.toLowerCase() !== selectionKey) return;
 
-    const onEnd = (end: Point): void => {
-      if (!dragStateRef.current.start || !dragStateRef.current.end) return;
+    const end = dragState.end;
+    if (!end) return;
 
-      const boundingRect = getBoundingRect(dragStateRef.current.start, end);
+    onEnd(end);
+  };
 
-      if (!shouldRender(boundingRect)) {
-        return resetSelection();
-      }
+  const onPointerUp = (event: MouseEvent | TouchEvent): void => {
+    if (!dragState.start) return;
+    if (!event.currentTarget) return;
 
-      setDragState({ ...dragStateRef.current, selected: true });
-    };
+    if (isEventNear(lastTouch, event)) {
+      return resetSelection();
+    }
 
-    const onKeyUp = (event: KeyboardEvent): void => {
-      if (!dragStateRef.current.start) return;
+    // if mod key is stil pressed or we should not end, don't end drag
+    if (hasModKey(event) || !shouldEnd(event)) return;
 
-      // if mod key is stil pressed or we should not end, don't end drag
-      if (!hasModKey(event) || !shouldEnd(event)) return;
+    let { pageX, pageY } = touchPoint(event);
 
-      const end = dragStateRef.current.end;
-      if (!end) return;
+    onEnd(containerCoords(pageX, pageY));
+  };
 
-      onEnd(end);
-    };
-
-    const onPointerUp = (event: MouseEvent | TouchEvent): void => {
-      if (!dragStateRef.current.start) return;
-      if (!event.currentTarget) return;
-
-      // if mod key is stil pressed or we should not end, don't end drag
-      if (hasModKey(event) || !shouldEnd(event)) return;
-
-      let { pageX, pageY } = touchPoint(event);
-
-      onEnd(containerCoords(pageX, pageY));
-    };
-
-    // add mousedown listener on mouse down
-    document.addEventListener("keyup", onKeyUp);
-    parentEl.addEventListener("mousedown", onPointerDown);
-    parentEl.addEventListener("touchstart", onPointerDown);
-    parentEl.addEventListener("mousemove", onPointerMove);
-    parentEl.addEventListener("touchmove", onPointerMove);
-    parentEl.addEventListener("mouseup", onPointerUp);
-    parentEl.addEventListener("touchend", onPointerUp);
-
-    // remove mousedown listener on changes
-    return () => {
-      parentEl.removeEventListener("mousedown", onPointerDown);
-      parentEl.removeEventListener("touchstart", onPointerDown);
-      parentEl.removeEventListener("mousemove", onPointerMove);
-      parentEl.removeEventListener("mouseup", onPointerUp);
-      parentEl.removeEventListener("touchmove", onPointerMove);
-      parentEl.removeEventListener("touchend", onPointerUp);
-      document.removeEventListener("keyup", onKeyUp);
-    };
-  }, [
-    shouldStart,
-    minSelection,
-    onSelection,
-    onDragStart,
-    onDragEnd,
-    selectionKey,
-  ]);
+  useEvent(document, "keyup", onKeyUp);
+  useEvent(eventsElRef, "mousedown", onPointerDown);
+  useEvent(eventsElRef, "touchstart", onPointerDown);
+  useEvent(eventsElRef, "mousemove", onPointerMove);
+  useEvent(eventsElRef, "touchmove", onPointerMove);
+  useEvent(eventsElRef, "mouseup", onPointerUp);
+  useEvent(eventsElRef, "touchend", onPointerUp);
 
   const { start, end, selected } = dragState;
 
@@ -292,13 +287,24 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   return (
     <div ref={containerRef} className={containerClassName}>
       {active && start && end && (
-        <div
-          className={className}
-          style={{
-            ...getBoundingRect(start, end),
-            position: "absolute",
-          }}
-        ></div>
+        <>
+          <div
+            className={`absolute mix-blend-${blendMode} ${className}`}
+            ref={selectionRef}
+            style={getBoundingRect(start, end)}
+          />
+          {tooltip && (
+            <TooltipContainer
+              ref={tooltipRef}
+              className={tooltipContainerClassName}
+              tooltipedEl={selectionRef.current}
+              placement="bottom"
+              show={selected}
+            >
+              {tooltip}
+            </TooltipContainer>
+          )}
+        </>
       )}
     </div>
   );

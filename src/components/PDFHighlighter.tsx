@@ -118,6 +118,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   selectedHighlightRef.current = selectedHighlight;
 
   const highlightTipRef = useRef<HTMLDivElement>();
+  // pdf container ref
+  const containerRef = useRef<HTMLElement | null>(null);
 
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
     if (!enableHighlightsRef.current) return;
@@ -370,6 +372,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   return (
     <PDFDisplay
       {...props}
+        containerRef={containerRef}
       containerClassName={containerClassName}
       isDarkReader={isDarkReader}
       onDocumentReady={(viewer) => {
@@ -394,6 +397,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
             className={`absolute border-dashed border-2
               ${colorToClassName[highlightColor]}
               ${isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"}`}
+              eventsElRef={containerRef}
             active={enableAreaSelection}
             onDragStart={() => setDisableInteractions(true)}
             onDragEnd={() => setDisableInteractions(false)}

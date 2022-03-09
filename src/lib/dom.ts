@@ -238,4 +238,3 @@ export const isEventNear = (
 
   return true;
 };
-
