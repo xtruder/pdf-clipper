@@ -380,7 +380,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     const _pdfViewer = new PDFViewer({
       container: containerRef.current,
       eventBus,
-      textLayerMode: 2,
+      textLayerMode: 1,
       removePageBorders: true,
       linkService,
       renderer: "canvas",
