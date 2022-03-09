@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useMemo, useRef } from "react";
 
-import { Rect } from "~/lib/dom";
+import { getBoundingRectForRects, Rect } from "~/lib/dom";
 import { HighlightColor } from "~/models";
+
+import { TooltipContainer } from "./TooltipContainer";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200 text-red-800",
@@ -22,7 +24,10 @@ const defaultColor = HighlightColor.YELLOW;
 export interface TextHighlightProps {
   rects: Rect[];
   color?: HighlightColor;
-  isSelected: boolean;
+  isSelected?: boolean;
+  showTooltip?: boolean;
+  tooltip?: JSX.Element;
+  tooltipContainerClassName?: string;
 
   // event handlers
   onClick?: (event: React.MouseEvent) => void;
@@ -31,13 +36,20 @@ export interface TextHighlightProps {
 export const TextHighlight: React.FC<TextHighlightProps> = ({
   rects,
   color,
-  isSelected,
+  isSelected = false,
+  tooltip,
+  tooltipContainerClassName,
+  showTooltip = isSelected,
 
   onClick = () => null,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
     : colorToClass[color || defaultColor];
+
+  const containerElRef = useRef<HTMLDivElement | null>(null);
+
+  const boundingRect = useMemo(() => getBoundingRectForRects(rects), [rects]);
 
   return (
     <div className={`absolute`}>
@@ -51,6 +63,23 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
           />
         ))}
       </div>
+
+      {/** wrapper element, so we can place ref somewhere */}
+      <div
+        ref={containerElRef}
+        className="opacity-0 absolute pointer-events-none"
+        style={boundingRect}
+      />
+
+      {/** tooltip container element */}
+      <TooltipContainer
+        className={tooltipContainerClassName}
+        tooltipedEl={containerElRef.current}
+        placement="bottom"
+        show={showTooltip}
+      >
+        {tooltip}
+      </TooltipContainer>
     </div>
   );
 };
