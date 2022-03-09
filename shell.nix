@@ -9,7 +9,7 @@ pkgs.mkShell {
     gnumake
 
     # nodejs
-    nodejs-16_x
+    nodejs-17_x
   ];
 
   hardeningDisable = [ "all" ];
