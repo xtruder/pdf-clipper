@@ -26,6 +26,7 @@ import "./PDFDisplay.css";
 export interface ScrollPosition {
   pageNumber: number;
   top?: number;
+  left?: number;
   destArray?: any[];
 }
 
@@ -97,7 +98,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   const [currentPdfDocument, setCurrentPdfDocument] =
     useState<PDFDocumentProxy>();
 
-  const [scrolledTo, setScrolledTo] = useState<ScrollPosition | null>(null);
+  const [scrolledTo, setScrolledTo] = useState<ScrollPosition>();
   const [renderedPages, setRenderedPages] = useState(new Set<number>());
 
   const pageLayersRef = useRef(pageLayers);
@@ -159,12 +160,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     onRangeSelection(selection.isCollapsed, range);
   };
 
-  const onScroll = (_scroll: any) => {
+  const onScroll = () => {
     if (!pdfViewerRef.current) return;
 
+    setScrolledTo(undefined);
     onPageScroll({
       pageNumber: pdfViewerRef.current.currentPageNumber,
-      top: pdfViewerRef.current.scroll.lastY,
+      top: containerRef.current?.scrollTop,
+      left: containerRef.current?.scrollLeft,
     });
   };
 
@@ -314,7 +317,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     ) {
       doScroll(scrollTo);
     }
-  }, [scrollTo, scrolledTo]);
+  }, [scrollTo]);
 
   useEffect(() => {
     if (!pdfViewer) return;
@@ -353,6 +356,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
         className={`pdfViewerContainer absolute overflow-y-scroll w-full h-full
           ${isDarkReader ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}
+        onScroll={onScroll}
       >
         {/** React must not change this div, as it is being rendered by pdfjs */}
         <div className="pdfViewer" />
