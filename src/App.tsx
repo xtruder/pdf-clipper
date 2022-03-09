@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import { RecoilRoot } from "recoil";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import useDarkMode from "use-dark-mode-hook";
+import useDarkMode from "@utilityjs/use-dark-mode";
 
 import { StateCtx } from "./state/state";
 import { localState } from "./state/localState";
@@ -64,7 +64,8 @@ const AppRouter: React.FC = () => {
 };
 
 export function App(): JSX.Element {
-  const [isDarkMode, _toggleDarkMode] = useDarkMode({});
+  const { isDarkMode } = useDarkMode({});
+
   const state = localState;
 
   return (

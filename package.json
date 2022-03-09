@@ -24,6 +24,7 @@
     "@syncedstore/react": "^0.3.5",
     "@types/react-dropzone": "^5.1.0",
     "@types/react-helmet": "^6.1.4",
+    "@utilityjs/use-dark-mode": "^1.0.0",
     "create-context-state": "^1.0.1",
     "lodash.debounce": "^4.0.8",
     "pdfjs-dist": "^2.11.338",
