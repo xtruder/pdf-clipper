@@ -392,10 +392,10 @@ export const HighlightTooltip: React.FC<{
     >
       <button className="btn btn-xs" onClick={onRemoveClicked}>
         <TrashIcon />
-        </button>
+      </button>
       <button className="btn btn-xs" onClick={onBookmarkClicked}>
-          <BookmarkIcon />
-        </button>
+        <BookmarkIcon />
+      </button>
       <button className="btn btn-xs" onClick={onShareClicked}>
         <ShareIcon />
       </button>

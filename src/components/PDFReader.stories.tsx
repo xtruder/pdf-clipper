@@ -28,9 +28,9 @@ export const ThePDFReader: Story = (args) => {
   };
 
   const onHighlightUpdate = (highlight: PDFHighlight) => {
-    let newHighlights = highlight.deleted
-      ? highlights.filter((h) => h.id !== highlight.id)
-      : highlights.map((h) => (h.id === highlight.id ? highlight : h));
+    let newHighlights = highlights.map((h) =>
+      h.id === highlight.id ? highlight : h
+    );
 
     setHighlights(newHighlights);
   };

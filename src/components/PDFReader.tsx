@@ -15,6 +15,7 @@ import {
   Sidebar,
   Drawer,
   SidebarNavbar,
+  SelectionTooltip,
 } from "./PDFControls";
 import { PDFDisplayProxy, ScrollPosition } from "./PDFDisplay";
 import { HighlightListView } from "./HighlightListView";
@@ -28,6 +29,9 @@ export interface PDFReaderProps {
   className?: string;
   isDarkMode?: boolean;
 
+  // whether to select highlight on highlight creation
+  selectOnCreate?: boolean;
+
   onHighlightCreate: (h: PDFHighlight) => void;
   onHighlightUpdate: (h: PDFHighlight) => void;
   onTitleChange?: (title: string) => void;
@@ -40,18 +44,18 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   highlights = [],
   className = "",
   isDarkMode = false,
+  selectOnCreate = false,
 
   onHighlightCreate,
   onHighlightUpdate = () => null,
   onTitleChange,
   onClose,
 }) => {
-  const [_, setInProgressHighlight, inProgressHighlightRef] =
+  const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
     useState<PDFHighlight>();
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
     useState<PDFHighlight>();
   const [scrollToHighlight, setScrollToHighlight] = useState<PDFHighlight>();
-  const [tooltipedHighlight, setTooltipedHighlight] = useState<PDFHighlight>();
   const [scrollToListViewHighlight, setScrollToListViewHighlight] =
     useState<PDFHighlight>();
   const [scrollToPage, setScrollToPage] = useState<number>();
@@ -74,14 +78,24 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const clearSelection = () => {
     clearRangeSelection();
     clearAreaSelection();
+    setSelectedHighlight(undefined);
   };
 
-  const createHighlight = (newHighlight: PDFHighlight): void => {
+  const createHighlight = (highlight?: PDFHighlight): void => {
+    if (!highlight) return;
+
+    // create a new highlight and mark it as selected
+    onHighlightCreate(highlight);
+
+    if (selectOnCreate) {
+      setSelectedHighlight(highlight);
+    } else {
+      setSelectedHighlight(undefined);
+    }
+
+    // clear selection and in progress highlight
     clearSelection();
     setInProgressHighlight(undefined);
-
-    onHighlightCreate(newHighlight);
-    setSelectedHighlight(newHighlight);
   };
 
   const deleteHighlight = (highlight?: PDFHighlight): void => {
@@ -94,7 +108,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     onHighlightUpdate({ ...highlight, deleted: true });
   };
 
-  const updateHighlight = (highlight: PDFHighlight): void => {
+  const updateHighlight = (highlight?: PDFHighlight): void => {
+    if (!highlight) return;
+
     onHighlightUpdate(highlight);
   };
 
@@ -136,17 +152,9 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     if (selectedHighlight) {
       setScrollToListViewHighlight(selectedHighlight);
     }
-
-    setTooltipedHighlight(selectedHighlight);
   }, [selectedHighlight]);
 
-  useEffect(() => {
-    setIsDarkReader(isDarkMode);
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    setTooltipedHighlight(inProgressHighlightRef.current);
-  }, [inProgressHighlightRef.current]);
+  useEffect(() => setIsDarkReader(isDarkMode), [isDarkMode]);
 
   const currentHighlights = highlights.filter((h) => !h.deleted);
 
@@ -223,11 +231,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         selectedHighlight={selectedHighlight}
         scrollTo={scrollToPosition}
         scrollToHighlight={scrollToHighlight}
-        tooltipedHighlight={tooltipedHighlight}
         enableAreaSelection={enableAreaSelection}
         pdfScaleValue={pdfScaleValue}
         highlightColor={highlightColor}
-        isDarkReader={isDarkReader}
+        enableDarkMode={isDarkReader}
         highlightTooltip={highlightTooltip}
         selectionTooltip={selectionTooltip}
         // event handlers
@@ -237,6 +244,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         onDocumentReady={setPdfViewer}
         onKeyDown={onKeyDown}
         onScaleChanging={(e) => setScale(e.scale)}
+        onPageScroll={() => {
+          setScrollToHighlight(undefined);
+          setScrollToPosition(undefined);
+        }}
       />
     </Drawer>
   );

@@ -3,7 +3,7 @@ import { Story } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
 import { suspend } from "suspend-react";
 
-import { PDFDisplay } from "./PDFDisplay";
+import { PDFLayerPage, PDFLayer, PDFDisplay } from "./PDFDisplay";
 import { loadPDF } from "~/lib/pdfjs";
 import { useContextProgress } from "./ProgressIndicator";
 
@@ -25,9 +25,22 @@ export const ThePDFDisplay: Story = (args) => {
       scrollTo={{
         pageNumber: args.pageNumber,
         top: args.scrollTop,
+        left: 0,
       }}
-      pageLayers={args.pageLayers}
-      isDarkReader={isDarkMode}
+      layers={[
+        <PDFLayer layerName="annotationsLayer">
+          <PDFLayerPage pageNumber={1}>
+            <span>Hello Mars</span>
+          </PDFLayerPage>
+          <PDFLayerPage pageNumber={2}>
+            <span>Hello Slovenia</span>
+          </PDFLayerPage>
+          <PDFLayerPage pageNumber={8}>
+            <span>Hello PDF</span>
+          </PDFLayerPage>
+        </PDFLayer>,
+      ]}
+      enableDarkMode={isDarkMode}
       //containerClassName="textLayer__selection_red"
       // handlers
       onDocumentReady={args.onDocumentReady}
@@ -47,25 +60,6 @@ ThePDFDisplay.args = {
   pageNumber: 1,
   scrollTop: 0,
   disableInteractions: false,
-  pageLayers: [
-    {
-      name: "annotationsLayer",
-      pages: [
-        {
-          pageNumber: 1,
-          element: <span>Hello World</span>,
-        },
-        {
-          pageNumber: 2,
-          element: <span>Hello Slovenia</span>,
-        },
-        {
-          pageNumber: 8,
-          element: <span>Hello PDF</span>,
-        },
-      ],
-    },
-  ],
   disableTextDoubleClick: false,
 };
 

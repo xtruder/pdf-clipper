@@ -23,7 +23,7 @@ import {
 } from "pdfjs-dist/web/pdf_viewer";
 
 import { Rect, getWindow, getCanvasAreaAsPNG, asElement } from "~/lib/dom";
-import { PageView, Viewport, findOrCreateContainerLayer } from "~/lib/pdfjs";
+import { PageView, findOrCreateContainerLayer } from "~/lib/pdfjs";
 
 // import worker src to set for pdfjs global worker options
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
@@ -40,14 +40,22 @@ export interface ScrollPosition {
   destArray?: any[];
 }
 
-export interface PageLayer {
-  name: string;
-  className?: string;
-  pages: {
-    pageNumber: number;
-    element: JSX.Element | ((viewport: Viewport) => JSX.Element);
-  }[];
+export interface PDFLayerPageProps {
+  pageNumber: number;
+  children: ReactNode;
 }
+
+export const PDFLayerPage: React.FC<PDFLayerPageProps> = ({ children }) => (
+  <>{children}</>
+);
+
+export interface PDFLayerProps {
+  layerName: string;
+  className?: string;
+  children: ReactElement<PDFLayerPageProps>[] | ReactElement<PDFLayerPageProps>;
+}
+
+export const PDFLayer: React.FC<PDFLayerProps> = () => <></>;
 
 export interface PDFDisplayProxy {
   pdfDocument: PDFDocumentProxy;
@@ -77,11 +85,13 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
   children?: JSX.Element | null;
   containerChildren?: JSX.Element | null;
   scrollTo?: ScrollPosition;
+  layers?: ReactElement<PDFLayerProps>[];
+
+  // whether dark mode is enabled
+  enableDarkMode?: boolean;
 
   // whether to disable all interactions
   disableInteractions?: boolean;
-  pageLayers?: PageLayer[];
-  isDarkReader?: boolean;
 
   // whether to disable double clicking text
   disableTextDoubleClick?: boolean;
@@ -96,9 +106,9 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   children = null,
   containerChildren = null,
   scrollTo,
+  layers = [],
+  enableDarkMode = false,
   disableInteractions = false,
-  pageLayers = [],
-  isDarkReader = false,
   disableTextDoubleClick = false,
 
   onDocumentReady = () => null,
@@ -117,8 +127,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   const [scrolledTo, setScrolledTo] = useState<ScrollPosition>();
   const [renderedPages, setRenderedPages] = useState(new Set<number>());
 
-  const pageLayersRef = useRef(pageLayers);
-  pageLayersRef.current = pageLayers;
   const [pinchZoomState, setPinchZoomState] = useState<{
     startX: number;
     startY: number;
@@ -284,7 +292,13 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     if (scrollTo) doScroll(scrollTo);
   };
 
-  const textLayerRendered = (event: any) => {
+  const textLayerRendered = (event: {
+    pageNumber: number;
+    source: {
+      textLayerDiv: HTMLDivElement;
+      textDiv: HTMLDivElement[];
+    };
+  }) => {
     setRenderedPages((pages) => new Set([...pages, event.pageNumber]));
     onTextLayerRendered(event);
   };
@@ -316,30 +330,36 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   const updatePageLayers = () => {
     if (!pdfViewer) return;
 
-    for (const layer of pageLayers) {
-      for (let pageNumber of renderedPages) {
+    for (const layer of layers) {
+      const { layerName, className, children: pages } = layer.props;
+
+      for (const pageNumber of renderedPages) {
         const pageView = getPageView(pageNumber);
         if (!pageView) continue;
 
         // adds div to page div for highlights
         const pageLayerDiv = findOrCreateContainerLayer<HTMLDivElement>(
           pageView.div,
-          layer.name
+          layerName
         );
         if (!pageLayerDiv) return;
 
-        pageLayerDiv.className = `${layer.name} absolute top-0 left-0 ${
-          layer.className || ""
-        }`;
+        pageLayerDiv.style.position = "absolute";
+        pageLayerDiv.style.top = "0px";
+        pageLayerDiv.style.left = "0px";
+        pageLayerDiv.style.width =
+          pageView.textLayer?.textLayerDiv.style.width || "0";
+        pageLayerDiv.style.height =
+          pageView.textLayer?.textLayerDiv.style.height || "0";
 
-        const layerPage = layer.pages.find((p) => p.pageNumber === pageNumber);
+        pageLayerDiv.className = `${layerName} ${className || ""}`;
 
-        let element = layerPage?.element || <></>;
-        if (typeof element === "function") {
-          element = element(pageView.viewport);
-        }
+        const allPages = Array.isArray(pages) ? pages : pages ? [pages] : [];
+        const pageChild = allPages.find(
+          (page) => page.props.pageNumber === pageNumber
+        );
 
-        ReactDOM.render(element, pageLayerDiv);
+        ReactDOM.render(pageChild || <></>, pageLayerDiv);
       }
     }
   };
@@ -411,10 +431,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   }, [pdfScaleValue]);
 
   // update page layers when pageLayers change or list of rendered pages change
-  useEffect(
-    () => updatePageLayers(),
-    [pageLayers, renderedPages, pdfScaleValue]
-  );
+  useEffect(() => updatePageLayers(), [layers, renderedPages, pdfScaleValue]);
 
   useEffect(() => {
     pdfViewer?.viewer?.classList.toggle("select-none", disableInteractions);
@@ -442,7 +459,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
             : containerRef
         }
         className={`pdfViewerContainer absolute overflow-y-scroll w-full h-full
-          ${isDarkReader ? "pdfViewerContainerDark" : ""}
+          ${enableDarkMode ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}
         onScroll={onScroll}
         onMouseDown={onMouseDown}

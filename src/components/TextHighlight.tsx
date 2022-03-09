@@ -32,7 +32,7 @@ export interface TextHighlightProps {
   textBlendMode?: "multiply" | "difference" | "normal";
 
   // event handlers
-  onClick?: (event: React.MouseEvent) => void;
+  onSelect?: () => void;
 }
 
 export const TextHighlight: React.FC<TextHighlightProps> = ({
@@ -45,7 +45,7 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
   showTooltip = isSelected,
   textBlendMode = "normal",
 
-  onClick = () => null,
+  onSelect = () => null,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
@@ -56,14 +56,13 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
   const boundingRect = useMemo(() => getBoundingRectForRects(rects), [rects]);
 
   return (
-    <div className={`highlight ${className}`}>
+    <div className={`highlight ${className}`} onClick={onSelect}>
       {/** Rendered rects */}
       <div>
         {rects.map((rect, index) => (
           <div
             key={index}
             style={rect}
-            onClick={(e) => onClick(e)}
             className={`cursor-pointer absolute mix-blend-${textBlendMode} ${colorClass}`}
           />
         ))}

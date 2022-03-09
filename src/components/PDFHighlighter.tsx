@@ -1,7 +1,12 @@
-import React, { useRef } from "react";
-import useState from "react-usestateref";
+import React, {
+  MouseEventHandler,
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
 
-import { PDFHighlight, HighlightColor, PartialPDFHighlight } from "~/models";
+import { PDFHighlight, HighlightColor } from "~/models";
 import {
   groupHighlightsByPage,
   getHighlightedRectsWithinPages,
@@ -11,21 +16,21 @@ import {
   PageRect,
 } from "~/lib/pdf";
 
-import { Rect, isHTMLElement } from "~/lib/dom";
-import { getPageFromElement, getPagesFromRange, Viewport } from "~/lib/pdfjs";
+import { Rect, clearRangeSelection } from "~/lib/dom";
+import { getPageFromElement, getPagesFromRange } from "~/lib/pdfjs";
 import { s4 } from "~/lib/utils";
 
 import {
-  PageLayer,
+  PDFLayer,
   PDFDisplayProxy,
   PDFDisplay,
   PDFDisplayProps,
   ScrollPosition,
+  PDFLayerPage,
 } from "./PDFDisplay";
-import { TextHighlight } from "./TextHighlight";
-import { AreaHighlight } from "./AreaHighlight";
 import { MouseSelection, Target } from "./MouseSelection";
-import { TipContainer } from "./TipContainer";
+import { RangeTooltipContainer } from "./RangeTooltipContainer";
+import { PDFHighlightComponent } from "./PDFHighlight";
 
 import "./PDFHighlighter.css";
 
@@ -50,7 +55,7 @@ interface PDFHighlighterEvents {
   onHighlighting?: (highlight: PDFHighlight | undefined) => void;
 
   // onHighlightClicked is triggered when highlight is clicked
-  onHighlightClicked?: (highlight: PDFHighlight) => void;
+  onHighlightClicked?: (highlight?: PDFHighlight) => void;
 
   // onHighlightUpdated is triggered when highlight is triggered
   onHighlightUpdated?: (highlight: PDFHighlight) => void;
@@ -65,72 +70,60 @@ export interface PDFHighlighterProps
   // id of currently selected highlight
   selectedHighlight?: PDFHighlight;
 
-  // highlight to show tooltip for, with tooltip content
-  tooltipedHighlight?: PartialPDFHighlight;
-
-  highlightTooltip?: JSX.Element;
-
   // id of highlight we should scroll to
   scrollToHighlight?: PDFHighlight;
 
   // color to use for highlight selection
   highlightColor?: HighlightColor;
 
+  // tooltip used for highlight
+  highlightTooltip?: JSX.Element;
+
+  // tooltip used when selecting
+  selectionTooltip?: JSX.Element;
+
   // enable highlights controls whether to enable highlights
   showHighlights?: boolean;
 
   // whether to enable area selection
   enableAreaSelection?: boolean;
-
-  // Whther area selection is activated
-  areaSelectionActive?: boolean;
 }
 
 export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   highlights = [],
   selectedHighlight,
-  tooltipedHighlight,
   highlightTooltip,
+  selectionTooltip,
   scrollToHighlight,
   highlightColor = defaultColor,
   showHighlights = true,
   enableAreaSelection = true,
-  areaSelectionActive = false,
-  isDarkReader = false,
+  enableDarkMode: isDarkReader = false,
 
   onHighlighting = () => null,
   onHighlightUpdated = () => null,
   onHighlightClicked = () => null,
   ...props
 }) => {
-  const [pdfViewer, setPDFViewer, pdfViewerRef] =
-    useState<PDFDisplayProxy | null>(null);
+  const [pdfViewer, setPDFViewer] = useState<PDFDisplayProxy | null>(null);
 
   const [disableInteractions, setDisableInteractions] = useState(false);
+  const [rangeSelection, setRangeSelection] = useState<Range | null>(null);
+  const [scrollTo, setScrollTo] = useState<ScrollPosition>();
 
-  const selectionColorRef = useRef(highlightColor);
-  selectionColorRef.current = highlightColor;
-
-  const enableHighlightsRef = useRef(showHighlights);
-  enableHighlightsRef.current = showHighlights;
-
-  const selectedHighlightRef = useRef(selectedHighlight);
-  selectedHighlightRef.current = selectedHighlight;
-
-  const highlightTipRef = useRef<HTMLDivElement>();
   // pdf container ref
   const containerRef = useRef<HTMLElement | null>(null);
 
   const onRangeSelection = (isCollapsed: boolean, range: Range | null) => {
-    if (!enableHighlightsRef.current) return;
-
-    const pdfViewer = pdfViewerRef.current;
     if (!pdfViewer) return;
 
     if (isCollapsed || !range) {
+      setRangeSelection(null);
       onHighlighting(undefined);
       return;
     }
+
+    setRangeSelection(range);
 
     // get pages from selected range
     const pages = getPagesFromRange(range);
@@ -157,7 +150,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         ),
         pageNumber,
       },
-      content: { text, color: selectionColorRef.current },
+      content: { text, color: highlightColor },
     };
 
     onHighlighting(highlight);
@@ -192,230 +185,159 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         rects: [],
         pageNumber: page.number,
       },
-      content: { image, color: selectionColorRef.current },
+      content: { image, color: highlightColor },
     };
 
     onHighlighting(highlight);
   };
 
-  const shouldResetAreaSelection = (
-    event: MouseEvent | TouchEvent
-  ): boolean => {
-    return !(
-      highlightTipRef.current &&
-      event.target &&
-      highlightTipRef.current.contains(event.target as any)
-    );
-  };
+  const onDoubleTap: MouseEventHandler = (event) => {
+    const elements = document.elementsFromPoint(event.clientX, event.clientY);
 
-  const shouldStartAreaSelection = (
-    event: MouseEvent | TouchEvent
-  ): boolean => {
-    return isHTMLElement(event.target); //&&
-    //Boolean(asElement(event.target).closest(".page"))
-  };
+    const annotation = elements.find((el) => el.closest(".highlight"));
 
-  const scrollPositionForHighligt = (
-    highlight: PDFHighlight | undefined
-  ): ScrollPosition | undefined => {
-    if (!highlight || !pdfViewer) return;
-
-    const page = pdfViewer.getPageView(highlight.location.pageNumber)!;
-
-    const scrollPosition = {
-      pageNumber: highlight.location.pageNumber,
-      top:
-        scaledRectToViewportRect(highlight.location.boundingRect, page.viewport)
-          .top - 10,
-    };
-
-    return scrollPosition;
-  };
-
-  const renderHighlight = (
-    key: any,
-    highlight: PDFHighlight,
-    viewport: Viewport
-  ): JSX.Element => {
-    const isSelected = highlight.id === selectedHighlightRef.current?.id;
-
-    const onAreaHighlightChanged = (boundingRect: Rect) => {
-      if (!pdfViewer) return;
-
-      const image = pdfViewer.screenshotPageArea(
-        highlight.location.pageNumber,
-        boundingRect
-      );
-      if (!image) return;
-
-      const newHighlight: PDFHighlight = {
-        ...highlight,
-        content: { image, color: highlight.content.color },
-        location: {
-          ...highlight.location,
-          boundingRect: viewportRectToScaledPageRect(
-            {
-              ...boundingRect,
-              pageNumber: highlight.location.boundingRect.pageNumber,
-            },
-            viewport
-          ),
-        },
-      };
-
-      onHighlightUpdated(newHighlight);
-    };
-
-    return highlight.content.text ? (
-      <TextHighlight
-        key={key}
-        rects={highlight.location.rects.map((r) =>
-          scaledRectToViewportRect(r, viewport)
-        )}
-        color={highlight.content.color}
-        isSelected={isSelected}
-        onClick={() => onHighlightClicked(highlight)}
-      />
-    ) : (
-      <AreaHighlight
-        key={key}
-        boundingRect={scaledRectToViewportRect(
-          highlight.location.boundingRect,
-          viewport
-        )}
-        color={highlight.content.color}
-        isSelected={isSelected}
-        onClick={() => onHighlightClicked(highlight)}
-        onChange={onAreaHighlightChanged}
-        onDragStart={() => setDisableInteractions(true)}
-        onDragStop={() => setDisableInteractions(false)}
-      />
-    );
-  };
-
-  const renderHighlightTooltip = (
-    highlight: PartialPDFHighlight,
-    tooltip: JSX.Element
-  ) => {
-    if (!pdfViewer) return;
-
-    const pageView = pdfViewer.getPageView(highlight.location.pageNumber);
-    if (!pageView) return;
-
-    const boundingRect = scaledRectToViewportRect(
-      highlight.location.boundingRect,
-      pageView.viewport
-    );
-
-    const pageNode = pageView.div;
-    const pageBoundingClientRect = pageNode?.getBoundingClientRect();
-
-    if (!pageNode || !pageBoundingClientRect) return;
-
-    return (
-      <TipContainer
-        scrollTop={pdfViewer.container.scrollTop}
-        boundingRect={pageBoundingClientRect}
-        style={{
-          left:
-            pageNode?.offsetLeft + boundingRect.left + boundingRect.width / 2,
-          top: boundingRect.top + pageNode.offsetTop,
-          bottom: boundingRect.top + pageNode.offsetTop + boundingRect.height,
-        }}
-        onRef={(ref) => {
-          highlightTipRef.current = ref;
-        }}
-      >
-        {tooltip}
-      </TipContainer>
-    );
-  };
-
-  const renderPageLayers = (highlights: PDFHighlight[]): PageLayer[] => {
-    const highlightsByPage = groupHighlightsByPage([...highlights]);
-
-    let highlightLayer: PageLayer = {
-      name: "highlightLayer",
-      className: `${
-        isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"
-      } z-10`,
-      pages: [],
-    };
-
-    // iterate by all pages and render highlights for every page
-    for (const [key, pageHighlights] of Object.entries(highlightsByPage)) {
-      const pageNumber = Number(key);
-
-      const element = (viewport: Viewport) => (
-        <>
-          {pageHighlights.map((highlight, index) =>
-            renderHighlight(index, highlight, viewport)
-          )}
-        </>
-      );
-
-      highlightLayer.pages.push({ pageNumber, element });
+    if (annotation) {
+      annotation.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    } else {
+      onHighlightClicked(undefined);
     }
-
-    return [highlightLayer];
   };
 
-  const containerClassName = `${
-    colorToRangeSelectionClassName[highlightColor]
-  } ${props.containerClassName || ""}`;
+  // if scrollToHighlight changes set scrollTo position
+  useEffect(() => {
+    if (!pdfViewer || !scrollToHighlight) return;
 
-  const pageLayers = renderPageLayers(showHighlights ? highlights : []);
-  if (props.pageLayers) pageLayers.push(...props.pageLayers);
+    const highlight = highlights.find((h) => h.id == scrollToHighlight?.id);
+    setScrollTo(scrollPositionForHighlight(highlight, pdfViewer));
+  }, [scrollToHighlight]);
 
-  let scrolledHighlight = highlights.find((h) => h.id == scrollToHighlight?.id);
+  // clear range selection if changing selected highlight
+  useEffect(() => clearRangeSelection(), [selectedHighlight]);
+
+  const containerClassName = `
+    ${colorToRangeSelectionClassName[highlightColor]}
+    ${props.containerClassName || ""}`;
+
+  const highlightsByPage = useMemo(
+    () => groupHighlightsByPage([...highlights]),
+    [highlights]
+  );
+
+  const highlightsLayer = useMemo(
+    () => (
+      <PDFLayer layerName="annotationsLayer">
+        {Object.entries(highlightsByPage).map(([key, pageHighlights]) => {
+          const pageNumber = Number(key);
+
+          return (
+            <PDFLayerPage pageNumber={pageNumber}>
+              {pageHighlights.map((highlight, index) => (
+                <PDFHighlightComponent
+                  key={index}
+                  highlight={highlight}
+                  pdfViewer={pdfViewer}
+                  selectedHighlight={selectedHighlight}
+                  isDarkReader={isDarkReader}
+                  highlightTooltip={highlightTooltip}
+                  onHighlightUpdated={onHighlightUpdated}
+                  onHighlightClicked={onHighlightClicked}
+                  onHighlightEditing={(h) => setDisableInteractions(!!h)}
+                />
+              ))}
+            </PDFLayerPage>
+          );
+        })}
+      </PDFLayer>
+    ),
+    [
+      pdfViewer,
+      highlightsByPage,
+      highlightTooltip,
+      isDarkReader,
+      selectedHighlight,
+      onHighlightUpdated,
+      onHighlightClicked,
+    ]
+  );
 
   return (
-    <PDFDisplay
-      {...props}
+    <>
+      {rangeSelection && (
+        <RangeTooltipContainer
+          className="z-10"
+          tooltip={selectionTooltip}
+          range={rangeSelection}
+          scrollElRef={containerRef}
+        />
+      )}
+
+      <PDFDisplay
+        {...props}
         containerRef={containerRef}
-      containerClassName={containerClassName}
-      isDarkReader={isDarkReader}
-      onDocumentReady={(viewer) => {
-        setPDFViewer(viewer);
-        props.onDocumentReady && props.onDocumentReady(viewer);
-      }}
-      disableInteractions={disableInteractions || props.disableInteractions}
-      onRangeSelection={(isCollapsed, range) => {
-        onRangeSelection(isCollapsed, range);
-        props.onRangeSelection && props.onRangeSelection(isCollapsed, range);
-      }}
-      // onMouseDown={(event) => {
-      //   if (!isHTMLElement(event.target)) return;
-
-      //   //const element = asElement(event.target);
-      // }}
-      scrollTo={props.scrollTo || scrollPositionForHighligt(scrolledHighlight)}
-      pageLayers={pageLayers}
-      containerChildren={
-        <>
-          <MouseSelection
-            className={`absolute border-dashed border-2
-              ${colorToClassName[highlightColor]}
-              ${isDarkReader ? "mix-blend-difference" : "mix-blend-multiply"}`}
+        containerClassName={containerClassName}
+        enableDarkMode={isDarkReader}
+        onDocumentReady={(viewer) => {
+          setPDFViewer(viewer);
+          props.onDocumentReady && props.onDocumentReady(viewer);
+        }}
+        disableInteractions={disableInteractions || props.disableInteractions}
+        disableTextDoubleClick={true}
+        onRangeSelection={(isCollapsed, range) => {
+          onRangeSelection(isCollapsed, range);
+          props.onRangeSelection && props.onRangeSelection(isCollapsed, range);
+        }}
+        scrollTo={scrollTo || props.scrollTo}
+        layers={[highlightsLayer]}
+        onDoubleTap={(event) => {
+          onDoubleTap(event);
+          props.onDoubleTap && props.onDoubleTap(event);
+        }}
+        onPageScroll={(location) => {
+          setScrollTo(undefined);
+          props.onPageScroll && props.onPageScroll(location);
+        }}
+        containerChildren={
+          <>
+            <MouseSelection
               eventsElRef={containerRef}
-            active={enableAreaSelection}
-            onDragStart={() => setDisableInteractions(true)}
-            onDragEnd={() => setDisableInteractions(false)}
-            shouldStart={shouldStartAreaSelection}
-            shouldReset={shouldResetAreaSelection}
-            onSelection={onMouseSelection}
-            onReset={() => onHighlighting(undefined)}
-          />
+              blendMode={isDarkReader ? "difference" : "multiply"}
+              className={`border-dashed border-2 rounded-md ${colorToClassName[highlightColor]}`}
+              tooltipContainerClassName="z-10"
+              active={enableAreaSelection}
+              tooltip={selectionTooltip}
+              onDragEnd={() => setDisableInteractions(false)}
+              onSelecting={() => {
+                clearRangeSelection();
+                setDisableInteractions(true);
+              }}
+              onSelection={onMouseSelection}
+              onReset={() => onHighlighting(undefined)}
+            />
 
-          {tooltipedHighlight && highlightTooltip
-            ? renderHighlightTooltip(tooltipedHighlight, highlightTooltip)
-            : null}
-
-          {props.containerChildren}
-        </>
-      }
-    >
-      {props.children}
-    </PDFDisplay>
+            {props.containerChildren}
+          </>
+        }
+      >
+        {props.children}
+      </PDFDisplay>
+    </>
   );
+};
+
+const scrollPositionForHighlight = (
+  highlight: PDFHighlight | undefined,
+  pdfViewer: PDFDisplayProxy
+): ScrollPosition | undefined => {
+  if (!highlight || !pdfViewer) return;
+
+  const page = pdfViewer.getPageView(highlight.location.pageNumber)!;
+
+  const scrollPosition = {
+    pageNumber: highlight.location.pageNumber,
+    top:
+      scaledRectToViewportRect(highlight.location.boundingRect, page.viewport)
+        .top - 10,
+  };
+
+  return scrollPosition;
 };

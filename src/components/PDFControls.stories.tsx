@@ -11,7 +11,7 @@ export const TheActionBar: Story = (args) => {
   return (
     <div className="w-full h-full">
       <ExpandButton className="top-4 left-0" />
-      <ActionButton bottom={20} right={15} scale={args.scale} />
+      <ActionButton scale={args.scale} />
     </div>
   );
 };

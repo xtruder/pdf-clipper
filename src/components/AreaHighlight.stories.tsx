@@ -1,5 +1,5 @@
 import { Story } from "@storybook/react";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState } from "react";
 
 import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
 import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
