@@ -1,0 +1,55 @@
+.tooltip-arrow {
+  @apply absolute w-12 h-1;
+}
+
+.tooltip-arrow::before {
+  @apply content-DEFAULT m-auto block w-0 h-0 border-solid;
+}
+
+.tooltip-arrow[data-placement*='bottom'] {
+  @apply -mt-1 top-0 left-0;
+}
+
+.tooltip-arrow[data-placement*='bottom']::before {
+  @apply border-t-0 border-r-6 border-b-4 border-l-6;
+  @apply border-t-transparent border-r-transparent border-b-neutral border-l-transparent;
+}
+
+.tooltip-arrow[data-placement*='top'] {
+  @apply bottom-0 left-0 -mb-1;
+}
+
+.tooltip-arrow[data-placement*='top']::before {
+  @apply border-t-4 border-r-6 border-b-0 border-l-6;
+  @apply border-t-neutral border-r-transparent border-b-neutral border-l-transparent;
+}
+
+.tooltip-arrow[data-placement*='right'] {
+  @apply left-0 mt-4;
+  margin-left: -1.7rem;
+}
+
+.tooltip-arrow[data-placement*='right']::before {
+  @apply border-t-6 border-r-6 border-b-6 border-l-0;
+  @apply border-t-transparent border-r-neutral border-b-transparent border-l-transparent;
+}
+
+.tooltip-arrow[data-placement*='left'] {
+  @apply right-0 mt-4;
+  margin-right: -1.7rem;
+}
+
+.tooltip-arrow[data-placement*='left']::before {
+  @apply border-t-6 border-r-0 border-b-6 border-l-6;
+  @apply border-t-transparent border-r-transparent border-b-transparent border-l-neutral;
+}
+
+.tooltip-container[data-popper-reference-hidden] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tooltip-container[data-popper-escaped] {
+  visibility: hidden;
+  pointer-events: none;
+}
