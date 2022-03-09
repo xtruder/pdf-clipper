@@ -27,10 +27,12 @@ export interface AreaHighlightProps {
   className?: string;
   boundingRect: Rect;
   color?: HighlightColor;
-  isSelected: boolean;
+  isSelected?: boolean;
+  selectedClassName?: string;
   tooltipContainerClassName?: string;
   tooltip?: JSX.Element;
   showTooltip?: boolean;
+  blendMode?: "normal" | "multiply" | "difference";
 
   onChange?: (rect: Rect) => void;
   onClick?: (event: MouseEvent) => void;
@@ -46,9 +48,12 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   boundingRect,
   color,
   isSelected,
+  selectedClassName = "",
   tooltip,
   tooltipContainerClassName,
   showTooltip = isSelected,
+  blendMode = "normal",
+
   onChange = () => null,
   onClick = () => null,
   onDragStart = () => null,
@@ -68,11 +73,12 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   }, [inView]);
 
   return (
-    <div
-      className={`border-solid opacity-100 mix-blend-multiply absolute ${className}`}
-    >
+    <div className="highlight">
+      {/**Resizable and draggable component */}
       <Rnd
-        className={`cursor-pointer transition-colors ${colorClass}`}
+        className={`h-full w-full transition-colors rounded-md
+          mix-blend-${blendMode} ${colorClass}
+          ${isSelected && selectedClassName} ${className}`}
         ref={(ref) => {
           resizableElRef.current = ref?.resizableElement.current || null;
           resizbelInViewRef(resizableElRef.current);
