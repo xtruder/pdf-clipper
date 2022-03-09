@@ -1,4 +1,12 @@
-import React, { MouseEvent, useEffect, useMemo, useRef } from "react";
+import React, {
+  MouseEventHandler,
+  ReactElement,
+  ReactNode,
+  TouchEventHandler,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import useState from "react-usestateref";
 import useMergedRef from "@react-hook/merged-ref";
 import ReactDOM from "react-dom";
@@ -103,6 +111,12 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   const pageLayersRef = useRef(pageLayers);
   pageLayersRef.current = pageLayers;
+  const [pinchZoomState, setPinchZoomState] = useState<{
+    startX: number;
+    startY: number;
+    initialPitchDistance: number;
+    pinchScale?: number;
+  }>();
 
   const eventBus = useMemo(() => new EventBus(), []);
   const linkService = useMemo(
@@ -169,6 +183,69 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       top: containerRef.current?.scrollTop,
       left: containerRef.current?.scrollLeft,
     });
+  };
+
+  const onTouchStart: TouchEventHandler = (event) => {
+    if (event.touches.length < 2) return setPinchZoomState(undefined);
+
+    setPinchZoomState({
+      startX: (event.touches[0].pageX + event.touches[1].pageX) / 2,
+      startY: (event.touches[0].pageY + event.touches[1].pageY) / 2,
+      initialPitchDistance: Math.hypot(
+        event.touches[1].pageX - event.touches[0].pageX,
+        event.touches[1].pageY - event.touches[0].pageY
+      ),
+    });
+  };
+
+  const onTouchMove: TouchEventHandler = (event) => {
+    if (!pdfViewer?.viewer) return;
+    if (!pinchZoomState || event.touches.length < 2) return;
+
+    let { startX, startY, initialPitchDistance, pinchScale } = pinchZoomState;
+
+    const pinchDistance = Math.hypot(
+      event.touches[1].pageX - event.touches[0].pageX,
+      event.touches[1].pageY - event.touches[0].pageY
+    );
+
+    const originX = startX + (containerRef.current?.scrollLeft || 0);
+    const originY = startY + (containerRef.current?.scrollTop || 0);
+
+    pinchScale = pinchDistance / initialPitchDistance;
+
+    const viewerEl = asElement(pdfViewer?.viewer);
+    viewerEl.style.transform = `scale(${pinchScale})`;
+    viewerEl.style.transformOrigin = `${originX}px ${originY}px`;
+
+    setPinchZoomState({
+      ...pinchZoomState,
+      pinchScale,
+    });
+  };
+
+  const onTouchEnd: TouchEventHandler = (_event) => {
+    if (!pdfViewer?.viewer || !containerRef.current) return;
+    if (!pinchZoomState) return;
+
+    const { startX, startY, pinchScale } = pinchZoomState;
+
+    const viewerEl = asElement(pdfViewer.viewer);
+    viewerEl.style.transform = "none";
+    viewerEl.style.transformOrigin = "unset";
+
+    pdfViewer.currentScale *= pinchScale || 1;
+    updatePageLayers();
+
+    const rect = containerRef.current.getBoundingClientRect();
+
+    const dx = startX - rect.left;
+    const dy = startY - rect.top;
+
+    containerRef.current.scrollLeft += dx * ((pinchScale || 1) - 1);
+    containerRef.current.scrollTop += dy * ((pinchScale || 1) - 1);
+
+    setPinchZoomState(undefined);
   };
 
   const onPagesInit = () => {
@@ -261,12 +338,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     const _pdfViewer = new PDFViewer({
       container: containerRef.current,
       eventBus,
-      textLayerMode: 1,
+      textLayerMode: 2,
       removePageBorders: true,
       linkService,
       renderer: "canvas",
       l10n: NullL10n,
-      annotationMode: 1,
+      annotationMode: 2,
+      maxCanvasPixels: -1,
+      useOnlyCssZoom: false,
     });
 
     linkService.setViewer(_pdfViewer);
@@ -342,11 +421,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   }, [disableInteractions, pdfViewer]);
 
   return (
-    <div
-      onPointerDown={onMouseDown}
-      onPointerUp={onMouseUp}
-      className={`${className} h-full`}
-    >
+    <div className={`${className} h-full`}>
       <div
         ref={
           _containerRef
@@ -357,6 +432,9 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
           ${isDarkReader ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}
         onScroll={onScroll}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       >
         {/** React must not change this div, as it is being rendered by pdfjs */}
         <div className="pdfViewer" />
