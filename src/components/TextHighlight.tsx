@@ -22,24 +22,28 @@ const selectedColorToClass: Record<HighlightColor, string> = {
 const defaultColor = HighlightColor.YELLOW;
 
 export interface TextHighlightProps {
+  className?: string;
   rects: Rect[];
   color?: HighlightColor;
   isSelected?: boolean;
   showTooltip?: boolean;
   tooltip?: JSX.Element;
   tooltipContainerClassName?: string;
+  textBlendMode?: "multiply" | "difference" | "normal";
 
   // event handlers
   onClick?: (event: React.MouseEvent) => void;
 }
 
 export const TextHighlight: React.FC<TextHighlightProps> = ({
+  className,
   rects,
   color,
   isSelected = false,
   tooltip,
   tooltipContainerClassName,
   showTooltip = isSelected,
+  textBlendMode = "normal",
 
   onClick = () => null,
 }) => {
@@ -52,14 +56,15 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
   const boundingRect = useMemo(() => getBoundingRectForRects(rects), [rects]);
 
   return (
-    <div className={`absolute`}>
-      <div className={`opacity-100`}>
+    <div className={`highlight ${className}`}>
+      {/** Rendered rects */}
+      <div>
         {rects.map((rect, index) => (
           <div
             key={index}
             style={rect}
-            className={`cursor-pointer absolute ${colorClass}`}
             onClick={(e) => onClick(e)}
+            className={`cursor-pointer absolute mix-blend-${textBlendMode} ${colorClass}`}
           />
         ))}
       </div>
