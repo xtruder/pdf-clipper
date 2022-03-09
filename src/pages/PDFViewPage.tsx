@@ -10,6 +10,7 @@ import { PDFReader } from "~/components/PDFReader";
 import { useContextProgress } from "~/components/ProgressIndicator";
 import { loadPDF } from "~/lib/pdfjs";
 import { ReaderLayout } from "~/layouts/ReaderLayout";
+//import useDarkMode from "@utilityjs/use-dark-mode";
 
 const PDFViewPage: React.FC = () => {
   const { documentInfo, documentHighlights, currentAccount } =
@@ -30,6 +31,8 @@ const PDFViewPage: React.FC = () => {
   const pdfDocument = suspend(() => loadPDF(url, setProgress), [url]);
 
   const account = useRecoilValue(currentAccount);
+
+  //const { isDarkMode } = useDarkMode({});
 
   const [highlights, setHighlights] = useRecoilState(
     documentHighlights(documentId)
@@ -53,6 +56,7 @@ const PDFViewPage: React.FC = () => {
   return (
     <PDFReader
       className="flex-1 absolute h-full w-full"
+      //isDarkMode={isDarkMode}
       pdfDocument={pdfDocument}
       highlights={highlights}
       title={document.title}
