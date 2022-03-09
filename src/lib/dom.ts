@@ -92,6 +92,27 @@ export const getBoundingRect = (start: Point, end: Point): Rect => {
   };
 };
 
+export const getRangeRects = (range: Range): Rect[] => {
+  const clientRects = Array.from(range.getClientRects());
+
+  return clientRects
+    .map((rect) => ({
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+    }))
+    .filter(
+      (rect) =>
+        !(
+          rect.left === 0 &&
+          rect.top === 0 &&
+          rect.width === 0 &&
+          rect.height === 0
+        )
+    );
+};
+
 export const getBoundingRectForRects = (clientRects: Rect[]): Rect => {
   const rects = clientRects.map((rect) => {
     const { left, top, width, height } = rect;
