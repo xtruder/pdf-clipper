@@ -48,29 +48,20 @@ const colorToClass: Record<HighlightColor, string> = {
 
 export const ActionButton: React.FC<{
   className?: string;
-  bottom: number;
-  right: number;
   scale?: number;
   isDark?: boolean;
   onColorSelect?: (color: HighlightColor) => void;
-  onSelectMode?: (areaSelect: boolean) => void;
   onScaleValueChange?: (value: string) => void;
   onDarkChange?: (value: boolean) => void;
-  onHighlightClick?: () => void;
 }> = ({
   className,
-  bottom,
-  right,
   scale = 1,
   isDark = false,
   onColorSelect,
-  onSelectMode,
   onScaleValueChange,
   onDarkChange = () => null,
-  onHighlightClick = () => null,
 }) => {
   const [opened, setOpened] = useState(false);
-  const [areaSelectActive, setAreaSelectActive] = useState(false);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
     HighlightColor.YELLOW
   );
@@ -84,10 +75,6 @@ export const ActionButton: React.FC<{
   useEffect(() => {
     if (onColorSelect) onColorSelect(selectedColor);
   }, [selectedColor]);
-
-  useEffect(() => {
-    if (onSelectMode) onSelectMode(areaSelectActive);
-  }, [areaSelectActive]);
 
   useEffect(() => {
     if (onScaleValueChange) {
@@ -123,10 +110,10 @@ export const ActionButton: React.FC<{
   return (
     <>
       <div
-        className={`absolute z-50 dropdown dropdown-top dropdown-end ${
-          opened && "dropdown-open"
-        } ${className}`}
-        style={{ bottom, right }}
+        className={`
+          absolute z-50 dropdown dropdown-top dropdown-end
+          ${opened && "dropdown-open"}
+          ${className}`}
       >
         {opened && (
           <>
@@ -145,20 +132,6 @@ export const ActionButton: React.FC<{
                   </li>
                 );
               })}
-              <li>
-                <a onClick={() => setAreaSelectActive(!areaSelectActive)}>
-                  {areaSelectActive ? (
-                    <DocumentTextIcon />
-                  ) : (
-                    <div className="w-6 h-6 border-base-content border-width-2"></div>
-                  )}{" "}
-                </a>
-              </li>
-              <li>
-                <a onClick={() => onHighlightClick()}>
-                  <CollectionIcon />
-                </a>
-              </li>
             </ul>
             <ul className="shadow menu items-stretch px-1 horizontal bg-base-100 rounded-box min-h-12 mr-2 animate-bounce-in">
               <li>
@@ -213,9 +186,7 @@ export const ActionButton: React.FC<{
           </>
         )}
         <button
-          className={`btn btn-primary btn-md ${
-            areaSelectActive ? "btn-square" : "btn-circle"
-          }`}
+          className="btn btn-primary btn-md btn-circle"
           tabIndex={-1}
           onClick={() => setOpened(!opened)}
           onFocus={preventFocus}

@@ -57,7 +57,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [scrollToPage, setScrollToPage] = useState<number>();
   const [scrollToPosition, setScrollToPosition] = useState<ScrollPosition>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
-  const [areaSelectActive, setAreaSelectActive] = useState<boolean>(false);
   const [highlightColor, setHighlightColor] = useState<HighlightColor>(
     HighlightColor.YELLOW
   );
@@ -218,19 +217,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   return (
     <Drawer sidebar={sidebar} className={className}>
       <ActionButton
-        bottom={20}
-        right={25}
+        className="bottom-16 right-4 lg:right-12"
         scale={scale}
         isDark={isDarkMode}
         onColorSelect={setHighlightColor}
-        onSelectMode={setAreaSelectActive}
         onScaleValueChange={setPdfScaleValue}
         onDarkChange={setIsDarkReader}
-        onHighlightClick={() => {
-          if (inProgressHighlightRef.current) {
-            createHighlight(inProgressHighlightRef.current);
-          }
-        }}
       />
 
       <PDFHighlighter
@@ -241,7 +233,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         scrollToHighlight={scrollToHighlight}
         tooltipedHighlight={tooltipedHighlight}
         enableAreaSelection={enableAreaSelection}
-        areaSelectionActive={areaSelectActive}
         pdfScaleValue={pdfScaleValue}
         highlightColor={highlightColor}
         isDarkReader={isDarkReader}
