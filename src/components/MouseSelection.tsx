@@ -6,23 +6,8 @@ import {
   asElement,
   isHTMLElement,
   getBoundingRect,
+  touchPoint,
 } from "~/lib/dom";
-
-const touchPoint = (event: MouseEvent | TouchEvent) => {
-  if ("changedTouches" in event && event["changedTouches"].length > 0) {
-    const last = event.changedTouches.length - 1;
-    return {
-      pageX: event.changedTouches[last].pageX,
-      pageY: event.changedTouches[last].pageY,
-    };
-  } else if ("touches" in event && event["touches"].length > 0) {
-    return { pageX: event.touches[0].pageX, pageY: event.touches[0].pageY };
-  } else if ("pageX" in event && "pageY" in event) {
-    return { pageX: event.pageX, pageY: event.pageY };
-  }
-
-  throw new Error("invalid event");
-};
 
 export type Target = Point & {
   target: HTMLElement;
