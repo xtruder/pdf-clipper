@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
 import { Rnd } from "react-rnd";
 
 import { Rect } from "~/lib/dom";
@@ -35,6 +36,9 @@ export interface AreaHighlightProps {
   onClick?: (event: MouseEvent) => void;
   onDragStart?: () => void;
   onDragStop?: () => void;
+
+  // event triggered when highlight escapes viewport
+  onEscapeViewport?: () => void;
 }
 
 export const AreaHighlight: React.FC<AreaHighlightProps> = ({
@@ -49,12 +53,19 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   onClick = () => null,
   onDragStart = () => null,
   onDragStop = () => null,
+  onEscapeViewport = () => null,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
     : colorToClass[color || defaultColor];
 
   const resizableElRef = useRef<HTMLElement | null>(null);
+
+  const { ref: resizbelInViewRef, inView } = useInView({ threshold: 1 });
+
+  useEffect(() => {
+    if (!inView) onEscapeViewport();
+  }, [inView]);
 
   return (
     <div
