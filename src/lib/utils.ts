@@ -12,6 +12,19 @@ export const groupBy = <T, K extends keyof any>(
 export const unique = <T>(list: T[]): T[] =>
   list.filter((x, i, a) => a.indexOf(x) === i);
 
+type Entry<T> = {
+  [K in keyof T]: [K, T[K]];
+}[keyof T];
+
+export function filterObject<T extends object>(
+  obj: T,
+  fn: (entry: Entry<T>, i: number, arr: Entry<T>[]) => boolean
+) {
+  return Object.fromEntries(
+    (Object.entries(obj) as Entry<T>[]).filter(fn)
+  ) as Partial<T>;
+}
+
 export const s4 = () => {
   return Math.floor((1 + Math.random()) * 0x10000)
     .toString(16)

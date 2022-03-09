@@ -1,0 +1,7 @@
+.range-tooltip-container[data-popper-reference-hidden] {
+  display: none;
+}
+
+.range-tooltip-container[data-popper-escaped] {
+  display: none;
+}
