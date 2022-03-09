@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 
 import { Rect } from "~/lib/dom";
 import { HighlightColor } from "~/models";
+
+import { TooltipContainer } from "./TooltipContainer";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200",
@@ -25,6 +27,9 @@ export interface AreaHighlightProps {
   boundingRect: Rect;
   color?: HighlightColor;
   isSelected: boolean;
+  tooltipContainerClassName?: string;
+  tooltip?: JSX.Element;
+  showTooltip?: boolean;
 
   onChange?: (rect: Rect) => void;
   onClick?: (event: MouseEvent) => void;
@@ -37,6 +42,9 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   boundingRect,
   color,
   isSelected,
+  tooltip,
+  tooltipContainerClassName,
+  showTooltip = isSelected,
   onChange = () => null,
   onClick = () => null,
   onDragStart = () => null,
@@ -46,12 +54,18 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
     ? selectedColorToClass[color || defaultColor]
     : colorToClass[color || defaultColor];
 
+  const resizableElRef = useRef<HTMLElement | null>(null);
+
   return (
     <div
       className={`border-solid opacity-100 mix-blend-multiply absolute ${className}`}
     >
       <Rnd
         className={`cursor-pointer transition-colors ${colorClass}`}
+        ref={(ref) => {
+          resizableElRef.current = ref?.resizableElement.current || null;
+          resizbelInViewRef(resizableElRef.current);
+        }}
         position={{ x: boundingRect.left, y: boundingRect.top }}
         size={{ width: boundingRect.width, height: boundingRect.height }}
         onMouseDown={onClick}
@@ -73,6 +87,17 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
           });
         }}
       />
+
+      {/**Tooltip attached to area highlight */}
+      <TooltipContainer
+        className={tooltipContainerClassName}
+        tooltipedEl={resizableElRef.current}
+        placement="bottom"
+        show={showTooltip}
+        observeChanges={true}
+      >
+        {tooltip}
+      </TooltipContainer>
     </div>
   );
 };
