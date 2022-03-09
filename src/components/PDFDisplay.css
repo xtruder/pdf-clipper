@@ -12,7 +12,7 @@
 }
 
 .pdfViewerContainer.pdfViewerContainerDark .page canvas {
-  filter: grayscale(0%) invert(100%) contrast(100%) brightness(100%) hue-rotate(180deg);
+  filter: invert(100%);
 }
 
 .annotationLayer section {
