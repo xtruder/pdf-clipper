@@ -84,9 +84,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     setSelectedHighlight(newHighlight);
   };
 
-  const deleteHighlight = (highlight: PDFHighlight): void => {
+  const deleteHighlight = (highlight?: PDFHighlight): void => {
+    if (!highlight) return;
+
+    // unselect highlight
     setSelectedHighlight(undefined);
 
+    // mark highlight as deleted
     onHighlightUpdate({ ...highlight, deleted: true });
   };
 
@@ -194,24 +198,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   const highlightTooltip = (
     <HighlightTooltip
-      onCloseClicked={() => {
-        if (!tooltipedHighlight) return;
-
-        if (tooltipedHighlight.id === inProgressHighlightRef.current?.id) {
-          setTooltipedHighlight(undefined);
-          clearSelection();
-        } else {
-          deleteHighlight(tooltipedHighlight);
-        }
-      }}
-      onBookmarkClicked={() => {
-        if (!inProgressHighlightRef.current) return;
-
-        const highlight = inProgressHighlightRef.current;
-
-        createHighlight(highlight);
-      }}
+      onRemoveClicked={() => deleteHighlight(selectedHighlight)}
     />
+  );
+
+  const selectionTooltip = (
+    <SelectionTooltip onClick={() => createHighlight(inProgressHighlight)} />
   );
 
   return (
@@ -237,6 +229,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         highlightColor={highlightColor}
         isDarkReader={isDarkReader}
         highlightTooltip={highlightTooltip}
+        selectionTooltip={selectionTooltip}
         // event handlers
         onHighlighting={setInProgressHighlight}
         onHighlightUpdated={updateHighlight}

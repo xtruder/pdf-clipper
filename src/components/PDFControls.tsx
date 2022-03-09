@@ -5,6 +5,7 @@ import { ReactComponent as PlusIcon } from "~/assets/icons/plus-outline.svg";
 import { ReactComponent as MinusIcon } from "~/assets/icons/minus-outline.svg";
 import { ReactComponent as ChevronLeftIcon } from "~/assets/icons/chevron-left-outline.svg";
 import { ReactComponent as CloseIcon } from "~/assets/icons/close-outline.svg";
+import { ReactComponent as TrashIcon } from "~/assets/icons/trash-outline.svg";
 import { ReactComponent as DocumentTextIcon } from "~/assets/icons/document-text-outline.svg";
 import { ReactComponent as ChevronDoubleRightIcon } from "~/assets/icons/chevron-double-right-outline.svg";
 import { ReactComponent as ChevronDoubleLeftIcon } from "~/assets/icons/chevron-double-left-outline.svg";
@@ -13,6 +14,7 @@ import { ReactComponent as AnnotationIcon } from "~/assets/icons/annotation-outl
 import { ReactComponent as MoonIcon } from "~/assets/icons/moon-outline.svg";
 import { ReactComponent as SunIcon } from "~/assets/icons/sun-outline.svg";
 import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
+import { ReactComponent as ShareIcon } from "~/assets/icons/share-outline.svg";
 
 import { HighlightColor } from "~/models";
 import { EditableText } from "./EditableText";
@@ -375,26 +377,39 @@ export const Drawer: React.FC<{
 
 export const HighlightTooltip: React.FC<{
   className?: string;
-  onCloseClicked?: () => void;
+  onRemoveClicked?: () => void;
   onBookmarkClicked?: () => void;
+  onShareClicked?: () => void;
 }> = ({
   className = "",
-  onCloseClicked = () => null,
+  onRemoveClicked = () => null,
   onBookmarkClicked = () => null,
+  onShareClicked = () => null,
 }) => {
   return (
-    <ul className={`menu bg-base-100 menu-horizontal rounded-box ${className}`}>
-      <li>
-        <button onClick={onCloseClicked}>
-          <CloseIcon />
+    <div
+      className={`py-1 px-0 flex flex-row bg-neutral menu-horizontal rounded-lg ${className}`}
+    >
+      <button className="btn btn-xs" onClick={onRemoveClicked}>
+        <TrashIcon />
         </button>
-      </li>
-      <li>
-        <button onClick={onBookmarkClicked}>
+      <button className="btn btn-xs" onClick={onBookmarkClicked}>
           <BookmarkIcon />
         </button>
-      </li>
-    </ul>
+      <button className="btn btn-xs" onClick={onShareClicked}>
+        <ShareIcon />
+      </button>
+    </div>
+  );
+};
+
+export const SelectionTooltip: React.FC<{
+  onClick: () => void;
+}> = ({ onClick }) => {
+  return (
+    <button className="btn btn-sm" onClick={onClick}>
+      Highlight
+    </button>
   );
 };
 
