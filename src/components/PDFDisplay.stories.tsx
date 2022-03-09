@@ -21,6 +21,7 @@ export const ThePDFDisplay: Story = (args) => {
       pdfDocument={pdfDocument}
       pdfScaleValue={args.pdfScaleValue}
       disableInteractions={args.disableInteractions}
+      disableTextDoubleClick={args.disableTextDoubleClick}
       scrollTo={{
         pageNumber: args.pageNumber,
         top: args.scrollTop,
@@ -32,9 +33,10 @@ export const ThePDFDisplay: Story = (args) => {
       onDocumentReady={args.onDocumentReady}
       onTextLayerRendered={args.onTextLayerRendered}
       onKeyDown={args.onKeyDown}
-      onMouseDown={args.onMouseDown}
       onRangeSelection={args.onRangeSelection}
       onPageScroll={args.onPageScroll}
+      onSingleTap={args.onSingleTap}
+      onDoubleTap={args.onDoubleTap}
     />
   );
 };
@@ -64,6 +66,7 @@ ThePDFDisplay.args = {
       ],
     },
   ],
+  disableTextDoubleClick: false,
 };
 
 ThePDFDisplay.argTypes = {
@@ -87,5 +90,11 @@ ThePDFDisplay.argTypes = {
   },
   onPageScroll: {
     action: "on page scroll",
+  },
+  onSingleTap: {
+    action: "single tap",
+  },
+  onDoubleTap: {
+    action: "double tap",
   },
 };

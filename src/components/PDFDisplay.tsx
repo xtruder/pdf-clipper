@@ -11,6 +11,8 @@ import useState from "react-usestateref";
 import useMergedRef from "@react-hook/merged-ref";
 import ReactDOM from "react-dom";
 import debounce from "lodash.debounce";
+import useEvent from "@react-hook/event";
+import { useDoubleTap } from "use-double-tap";
 
 import { GlobalWorkerOptions, PDFDocumentProxy } from "pdfjs-dist";
 import {
@@ -20,7 +22,7 @@ import {
   PDFViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import { Rect, getWindow, getCanvasAreaAsPNG } from "~/lib/dom";
+import { Rect, getWindow, getCanvasAreaAsPNG, asElement } from "~/lib/dom";
 import { PageView, Viewport, findOrCreateContainerLayer } from "~/lib/pdfjs";
 
 // import worker src to set for pdfjs global worker options
@@ -59,11 +61,11 @@ interface PDFDisplayEvents {
   onDocumentReady?: (viewer: PDFDisplayProxy) => void;
   onTextLayerRendered?: (event: { pageNumber: number }) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
-  onMouseDown?: (event: MouseEvent) => void;
-  onMouseUp?: (event: MouseEvent) => void;
   onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
   onPageScroll?: (position: ScrollPosition) => void;
   onScaleChanging?: (event: { scale: number; presetValue: string }) => void;
+  onSingleTap?: MouseEventHandler;
+  onDoubleTap?: MouseEventHandler;
 }
 
 export interface PDFDisplayProps extends PDFDisplayEvents {
@@ -75,9 +77,14 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
   children?: JSX.Element | null;
   containerChildren?: JSX.Element | null;
   scrollTo?: ScrollPosition;
+
+  // whether to disable all interactions
   disableInteractions?: boolean;
   pageLayers?: PageLayer[];
   isDarkReader?: boolean;
+
+  // whether to disable double clicking text
+  disableTextDoubleClick?: boolean;
 }
 
 export const PDFDisplay: React.FC<PDFDisplayProps> = ({
@@ -92,15 +99,16 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   disableInteractions = false,
   pageLayers = [],
   isDarkReader = false,
+  disableTextDoubleClick = false,
 
   onDocumentReady = () => null,
   onTextLayerRendered = () => null,
   onKeyDown = () => null,
-  onMouseUp = () => null,
-  onMouseDown = () => null,
   onRangeSelection = () => null,
   onPageScroll = () => null,
   onScaleChanging = () => null,
+  onSingleTap = () => null,
+  onDoubleTap = () => null,
 }) => {
   // current pdf document that we are displaying
   const [currentPdfDocument, setCurrentPdfDocument] =
@@ -118,6 +126,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     pinchScale?: number;
   }>();
 
+  // initialize pdfjs event bus and link service
   const eventBus = useMemo(() => new EventBus(), []);
   const linkService = useMemo(
     () =>
@@ -127,6 +136,8 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       }),
     [eventBus]
   );
+
+  // pdf viewer element
   const [pdfViewer, setPDFViewer, pdfViewerRef] = useState<PDFViewer>();
 
   // pdfjs container element ref
@@ -183,6 +194,17 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       top: containerRef.current?.scrollTop,
       left: containerRef.current?.scrollLeft,
     });
+  };
+
+  const onMouseDown: MouseEventHandler = (event) => {
+    // if text double clicks are disabled and clicked within text layer
+    // prevent default
+    if (
+      disableTextDoubleClick &&
+      event.detail > 1 &&
+      asElement(event.target).closest(".textLayer")
+    )
+      event.preventDefault();
   };
 
   const onTouchStart: TouchEventHandler = (event) => {
@@ -359,31 +381,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   // init event listeners when pdfViewer changes
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    const container = containerRef.current;
-    const { ownerDocument: doc } = container;
-
     eventBus.on("textlayerrendered", textLayerRendered);
     eventBus.on("pagesinit", onPagesInit);
     eventBus.on("scalechanging", onScaleChanging);
-
-    doc.addEventListener("selectionchange", onSelectionChanged);
-    doc.addEventListener("keydown", onKeyDown);
-    doc.defaultView?.addEventListener("resize", handleScaledValue);
-
-    container.addEventListener("scroll", onScroll);
 
     return () => {
       eventBus.off("pagesinit", onPagesInit);
       eventBus.off("textlayerrendered", onTextLayerRendered);
       eventBus.off("scalechanging", onScaleChanging);
-
-      doc.removeEventListener("selectionchange", onSelectionChanged);
-      doc.removeEventListener("keydown", onKeyDown);
-      doc.defaultView?.removeEventListener("resize", handleScaledValue);
-
-      container.removeEventListener("scroll", onScroll);
     };
   }, [pdfViewer]);
 
@@ -420,6 +425,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     );
   }, [disableInteractions, pdfViewer]);
 
+  // add event handlers for selection and resize
+  const doc = containerRef.current?.ownerDocument || null;
+  useEvent(doc, "selectionchange", onSelectionChanged);
+  useEvent(doc, "keydown", onKeyDown);
+  useEvent(doc?.defaultView || null, "resize", handleScaledValue);
+
+  const doubleTapProps = useDoubleTap(onDoubleTap, 250, { onSingleTap });
+
   return (
     <div className={`${className} h-full`}>
       <div
@@ -432,9 +445,11 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
           ${isDarkReader ? "pdfViewerContainerDark" : ""}
           ${containerClassName}`}
         onScroll={onScroll}
+        onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
+        {...doubleTapProps}
       >
         {/** React must not change this div, as it is being rendered by pdfjs */}
         <div className="pdfViewer" />
