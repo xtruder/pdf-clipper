@@ -219,3 +219,23 @@ export const touchPoint = (event: MouseEvent | TouchEvent) => {
   throw new Error("invalid event");
 };
 
+export const isEventNear = (
+  ev1?: MouseEvent | TouchEvent,
+  ev2?: MouseEvent | TouchEvent,
+  {
+    maxDelay = 250,
+    maxDistance = 100,
+  }: { maxDelay?: number; maxDistance?: number } = {}
+): boolean => {
+  if (!ev1 || !ev2) return false;
+
+  if (Math.abs(ev1.timeStamp - ev2.timeStamp) > maxDelay) return false;
+
+  const { pageX: x1, pageY: y1 } = touchPoint(ev1);
+  const { pageX: x2, pageY: y2 } = touchPoint(ev1);
+
+  if (Math.abs(x1 - x2) + Math.abs(y1 - y2) > maxDistance) return false;
+
+  return true;
+};
+

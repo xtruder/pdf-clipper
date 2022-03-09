@@ -7,6 +7,7 @@ import {
   isHTMLElement,
   getBoundingRect,
   touchPoint,
+  isEventNear,
 } from "~/lib/dom";
 
 export type Target = Point & {
@@ -117,21 +118,6 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
       : selectionKey === "ctrl"
       ? event.ctrlKey
       : false;
-
-  const isNear = (
-    event: MouseEvent | TouchEvent,
-    previousEvent?: MouseEvent | TouchEvent
-  ): boolean => {
-    if (!previousEvent) return false;
-
-    const p1 = touchPoint(event);
-    const p2 = touchPoint(previousEvent);
-
-    const distancePx =
-      Math.abs(p1.pageX - p2.pageX) + Math.abs(p1.pageY - p2.pageY);
-
-    return distancePx < 20 && event.timeStamp - previousEvent.timeStamp < 200;
-  };
 
   // componentDidMount set event listeners
   useEffect(() => {
