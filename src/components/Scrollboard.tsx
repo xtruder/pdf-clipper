@@ -6,10 +6,11 @@ export interface ScrollboardProps {
   contentRef?: ForwardedRef<HTMLDivElement | null>;
 
   onSize?: (width: number, height: number) => void;
+  onScroll?: (scroll: { scrollLeft: number; scrollTop: number }) => void;
 }
 
 export const Scrollboard: React.FC<ScrollboardProps> = forwardRef(
-  ({ children, contentRef, center = true, onSize }, ref) => {
+  ({ children, contentRef, center = true, onSize, onScroll }, ref) => {
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -28,6 +29,13 @@ export const Scrollboard: React.FC<ScrollboardProps> = forwardRef(
       <div
         ref={useMergedRef(ref, scrollRef)}
         className="w-screen h-screen overflow-scroll bg-dark-100"
+        onScroll={() => {
+          if (!scrollRef.current) return;
+
+          const { scrollLeft, scrollTop } = scrollRef.current;
+
+          onScroll && onScroll({ scrollLeft, scrollTop });
+        }}
       >
         <div
           ref={contentRef}
