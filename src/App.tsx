@@ -72,6 +72,10 @@ export function App(): JSX.Element {
     <>
       <HelmetProvider>
         <Helmet>
+          <meta charSet="UTF-8" />
+          <link rel="icon" type="image/svg+xml" href="src/favicon.svg" />
+          <title>PDF clipper</title>
+
           <meta
             name="viewport"
             content="minimum-scale=1.0, initial-scale=1.0, maximum-scale=1.0, width=device-width, shrink-to-fit=no"
