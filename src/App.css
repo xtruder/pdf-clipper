@@ -1,3 +1,10 @@
+/* disable navigation bar hiding on mobile*/
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 .loader {
   border-top-color: #3498db;
   -webkit-animation: spinner 1.0s linear infinite;

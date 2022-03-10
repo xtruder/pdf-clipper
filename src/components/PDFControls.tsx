@@ -15,6 +15,7 @@ import { ReactComponent as MoonIcon } from "~/assets/icons/moon-outline.svg";
 import { ReactComponent as SunIcon } from "~/assets/icons/sun-outline.svg";
 import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.svg";
 import { ReactComponent as ShareIcon } from "~/assets/icons/share-outline.svg";
+import { ReactComponent as ArrowsExpandIcon } from "~/assets/icons/arrows-expand-outline.svg";
 
 import { HighlightColor } from "~/models";
 import { EditableText } from "./EditableText";
@@ -55,6 +56,7 @@ export const ActionButton: React.FC<{
   onColorSelect?: (color: HighlightColor) => void;
   onScaleValueChange?: (value: string) => void;
   onDarkChange?: (value: boolean) => void;
+  onFullScreen?: () => void;
 }> = ({
   className,
   scale = 1,
@@ -62,6 +64,7 @@ export const ActionButton: React.FC<{
   onColorSelect,
   onScaleValueChange,
   onDarkChange = () => null,
+  onFullScreen = () => null,
 }) => {
   const [opened, setOpened] = useState(false);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
@@ -145,6 +148,12 @@ export const ActionButton: React.FC<{
                       onFocus={preventFocus}
                     >
                       {currentIsDark ? <SunIcon /> : <MoonIcon />}
+                    </button>
+                    <button
+                      className="btn btn-circle btn-xs ml-1"
+                      onClick={() => onFullScreen()}
+                    >
+                      <ArrowsExpandIcon />
                     </button>
                     <button
                       className="btn btn-circle btn-xs ml-1"

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import useState from "react-usestateref";
+import { FullScreen } from "@chiragrupani/fullscreen-react";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
 
@@ -68,6 +69,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
   const [scale, setScale] = useState<number>();
   const [isDarkReader, setIsDarkReader] = useState<boolean>(isDarkMode);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   const clearAreaSelection = () => {
     if (!enableAreaSelection) return;
@@ -215,40 +217,43 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   );
 
   return (
-    <Drawer sidebar={sidebar} className={className}>
-      <ActionButton
-        className="bottom-16 right-4 lg:right-12"
-        scale={scale}
-        isDark={isDarkMode}
-        onColorSelect={setHighlightColor}
-        onScaleValueChange={setPdfScaleValue}
-        onDarkChange={setIsDarkReader}
-      />
+    <FullScreen isFullScreen={isFullScreen} onChange={setIsFullScreen}>
+      <Drawer sidebar={sidebar} className={className}>
+        <ActionButton
+          className="bottom-10 right-6 lg:right-12"
+          scale={scale}
+          isDark={isDarkMode}
+          onColorSelect={setHighlightColor}
+          onScaleValueChange={setPdfScaleValue}
+          onDarkChange={setIsDarkReader}
+          onFullScreen={() => setIsFullScreen(!isFullScreen)}
+        />
 
-      <PDFHighlighter
-        pdfDocument={pdfDocument}
-        highlights={currentHighlights}
-        selectedHighlight={selectedHighlight}
-        scrollTo={scrollToPosition}
-        scrollToHighlight={scrollToHighlight}
-        enableAreaSelection={enableAreaSelection}
-        pdfScaleValue={pdfScaleValue}
-        highlightColor={highlightColor}
-        enableDarkMode={isDarkReader}
-        highlightTooltip={highlightTooltip}
-        selectionTooltip={selectionTooltip}
-        // event handlers
-        onHighlighting={setInProgressHighlight}
-        onHighlightUpdated={updateHighlight}
-        onHighlightClicked={setSelectedHighlight}
-        onDocumentReady={setPdfViewer}
-        onKeyDown={onKeyDown}
-        onScaleChanging={(e) => setScale(e.scale)}
-        onPageScroll={() => {
-          setScrollToHighlight(undefined);
-          setScrollToPosition(undefined);
-        }}
-      />
-    </Drawer>
+        <PDFHighlighter
+          pdfDocument={pdfDocument}
+          highlights={currentHighlights}
+          selectedHighlight={selectedHighlight}
+          scrollTo={scrollToPosition}
+          scrollToHighlight={scrollToHighlight}
+          enableAreaSelection={enableAreaSelection}
+          pdfScaleValue={pdfScaleValue}
+          highlightColor={highlightColor}
+          enableDarkMode={isDarkReader}
+          highlightTooltip={highlightTooltip}
+          selectionTooltip={selectionTooltip}
+          // event handlers
+          onHighlighting={setInProgressHighlight}
+          onHighlightUpdated={updateHighlight}
+          onHighlightClicked={setSelectedHighlight}
+          onDocumentReady={setPdfViewer}
+          onKeyDown={onKeyDown}
+          onScaleChanging={(e) => setScale(e.scale)}
+          onPageScroll={() => {
+            setScrollToHighlight(undefined);
+            setScrollToPosition(undefined);
+          }}
+        />
+      </Drawer>
+    </FullScreen>
   );
 };
