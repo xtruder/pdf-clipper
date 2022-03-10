@@ -113,7 +113,7 @@ export const ActionButton: React.FC<{
     <>
       <div
         className={`
-          absolute z-50 dropdown dropdown-top dropdown-end
+          fixed z-50 dropdown dropdown-top dropdown-end
           ${opened && "dropdown-open"}
           ${className}`}
       >
@@ -210,7 +210,7 @@ export const ExpandButton: React.FC<{
   onClick?: (expand: boolean) => void;
 }> = ({ className = "", expanded = false, onClick = () => null }) => {
   return (
-    <div className={`absolute ${className}`}>
+    <div className={`sticky ${className}`}>
       <button
         className="btn btn-secondary btn-xs rounded-l-none"
         tabIndex={-1}
@@ -367,7 +367,7 @@ export const Drawer: React.FC<{
 
         {children}
       </div>
-      <div className="transform drawer-side">
+      <div className="transform drawer-side !max-h-$vh">
         <label className="drawer-overlay" htmlFor="main-drawer" />
         {sidebar}
       </div>

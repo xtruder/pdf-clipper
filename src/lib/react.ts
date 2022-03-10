@@ -1,3 +1,4 @@
+import useEvent from "@react-hook/event";
 import { useEffect, useState } from "react";
 
 type UndefinedOrBoolean<T> = T extends boolean ? boolean : T;
@@ -28,4 +29,20 @@ export const useIsChanging = (interval: number, value: any): boolean => {
   }, [value]);
 
   return changing;
+};
+
+/** Observes viewport size and outputs it's width and height */
+export const useViewport = () => {
+  const [width, setWidth] = useState(window.innerWidth);
+  const [height, setHeight] = useState(window.innerHeight);
+
+  const handleWindowResize = () => {
+    setWidth(window.innerWidth);
+    setHeight(window.innerHeight);
+  };
+
+  useEvent(window, "resize", handleWindowResize);
+
+  // Return both the height and width
+  return { width, height };
 };

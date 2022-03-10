@@ -1,10 +1,11 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { RecoilRoot } from "recoil";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import useDarkMode from "@utilityjs/use-dark-mode";
+import { useViewport } from "./lib/react";
 
 import { StateCtx } from "./state/state";
 import { localState } from "./state/localState";
@@ -64,9 +65,16 @@ const AppRouter: React.FC = () => {
 };
 
 export function App(): JSX.Element {
-  const { isDarkMode } = useDarkMode({});
-
   const state = localState;
+
+  const { isDarkMode } = useDarkMode({});
+  const { height, width } = useViewport();
+
+  // define global --vh and --vw css variables that have viewport width and height set
+  useEffect(() => {
+    document.documentElement.style.setProperty("--vh", `${height}px`);
+    document.documentElement.style.setProperty("--vw", `${width}px`);
+  }, [width, height]);
 
   return (
     <>

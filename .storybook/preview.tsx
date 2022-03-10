@@ -1,6 +1,8 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { addDecorator } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
+
+import { useViewport } from "../src/lib/react";
 
 import {
   ContextProgressProvider,
@@ -13,6 +15,13 @@ import "../src/App.css";
 
 addDecorator((story, ctx) => {
   const isDarkMode = useDarkMode();
+
+  const { height, width } = useViewport();
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--vh", `${height}px`);
+    document.documentElement.style.setProperty("--vw", `${width}px`);
+  }, [height]);
 
   // set theme on html element
   document.documentElement.setAttribute(
