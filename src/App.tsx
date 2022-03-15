@@ -19,7 +19,7 @@ import {
 
 import { DocumentViewPage } from "~/pages/DocumentViewPage";
 import { MainPage } from "~/pages/MainPage";
-import PDFViewPage from "~/pages/PDFViewPage";
+import PDFViewPage from "~/pages/PDFReaderPage";
 
 import "virtual:windi.css";
 import "./App.css";

@@ -10,7 +10,6 @@ import { PDFDisplayProxy } from "./PDFDisplay";
 import { TextHighlight } from "./TextHighlight";
 
 export interface PDFHighlightProps {
-  key: React.Key;
   pdfViewer: PDFDisplayProxy | null;
   highlight: PDFHighlight;
   selectedHighlight?: PDFHighlight;
@@ -23,7 +22,6 @@ export interface PDFHighlightProps {
 }
 
 export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
-  key,
   pdfViewer,
   highlight,
   selectedHighlight,
@@ -53,7 +51,7 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
 
     const newHighlight: PDFHighlight = {
       ...highlight,
-      content: { image, color: highlight.content.color },
+      content: { thumbnail: image, color: highlight.content.color },
       location: {
         ...highlight.location,
         boundingRect: viewportRectToScaledPageRect(
@@ -73,7 +71,6 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
 
   return highlight.content.text ? (
     <TextHighlight
-      key={key}
       tooltip={highlightTooltip}
       tooltipContainerClassName="z-10"
       textBlendMode={blendMode}
@@ -86,7 +83,6 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
     />
   ) : (
     <AreaHighlight
-      key={key}
       tooltip={highlightTooltip}
       selectedClassName="z-10"
       tooltipContainerClassName="z-10"

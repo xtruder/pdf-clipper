@@ -3,12 +3,14 @@ import {
   PDFPageProxy,
   getDocument as getPDFDocument,
 } from "pdfjs-dist";
+import { DocumentOutline, OutlineNode } from "~/models";
 
 import {
   asElement,
   getCanvasAreaAsPNG,
   isHTMLElement,
   getDocument,
+  Rect,
 } from "./dom";
 
 export interface PageView {
@@ -116,43 +118,53 @@ export function getPageHeight(page: PDFPageProxy, width: number): number {
 
 // creates screenshot of a page with selected width by rendering page in canvas
 // and converting canvas to png image
-export async function screenshotPage(
+export async function screenshotPageArea(
   page: PDFPageProxy,
-  width: number
-): Promise<string | null> {
-  const viewport = page.getViewport({ scale: 1 });
+  {
+    width,
+    scale = 1,
+    area,
+  }: {
+    width?: number;
+    scale?: number;
+    area?: Rect;
+  }
+): Promise<string | undefined> {
+  const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
 
-  canvas.width = width;
+  canvas.width = width || viewport.width;
 
-  const scale = width / viewport.width;
-  canvas.height = viewport.height * scale;
+  const ratio = canvas.width / viewport.width;
+  canvas.height = viewport.height * ratio;
 
   const canvasContext = canvas.getContext("2d");
-  if (!canvasContext) return null;
+  if (!canvasContext) return;
 
   await page.render({
     canvasContext,
-    viewport: page.getViewport({ scale }),
+    viewport: page.getViewport({ scale: scale * ratio }),
   }).promise;
 
-  return getCanvasAreaAsPNG(canvas);
+  return getCanvasAreaAsPNG(canvas, area);
 }
 
-type _OutlineNode = Awaited<ReturnType<PDFDocumentProxy["getOutline"]>>[number];
-export type OutlineNode = Omit<_OutlineNode, "items"> & {
-  items: OutlineNode[];
+type __OutlineNode = Awaited<
+  ReturnType<PDFDocumentProxy["getOutline"]>
+>[number];
+export type _OutlineNode = Omit<__OutlineNode, "items"> & {
+  items: _OutlineNode[];
   pageNumber?: number;
   top?: number;
 };
 
 export async function getDocumentOutline(
   document: PDFDocumentProxy
-): Promise<OutlineNode[]> {
-  const outline: OutlineNode[] = await document.getOutline();
+): Promise<DocumentOutline> {
+  const outline: _OutlineNode[] = await document.getOutline();
 
   const mapOutlineNodes = async (
-    nodes: OutlineNode[]
+    nodes: _OutlineNode[]
   ): Promise<OutlineNode[]> =>
     await Promise.all(
       nodes.map(async (node) => {
@@ -170,11 +182,17 @@ export async function getDocumentOutline(
         const ref = dest[0];
         const id = await document.getPageIndex(ref);
 
-        return { ...node, items, dest, pageNumber: id + 1, top: dest[2] };
+        return {
+          title: node.title,
+          items,
+          location: dest,
+          pageNumber: id + 1,
+          top: dest[2],
+        };
       })
     );
 
-  return mapOutlineNodes(outline);
+  return { items: await mapOutlineNodes(outline) };
 }
 
 export const loadPDF = async (

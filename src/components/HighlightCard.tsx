@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { HighlightColor } from "~/models";
@@ -129,5 +129,19 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
         </div>
       </div>
     </div>
+  );
+};
+
+export const HighlightCardList: React.FC<{
+  children: ReactElement<HighlightCardProps>[];
+}> = ({ children }) => {
+  return (
+    <ul>
+      {children.map((child) => (
+        <li key={child.key} className="mt-2">
+          {child}
+        </li>
+      ))}
+    </ul>
   );
 };

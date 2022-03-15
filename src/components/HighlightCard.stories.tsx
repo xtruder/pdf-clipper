@@ -1,7 +1,12 @@
 import React from "react";
 
 import { Story } from "@storybook/react";
-import { HighlightCard } from "./HighlightCard";
+import {
+  HighlightCard,
+  HighlightCardList,
+  HighlightCardProps,
+} from "./HighlightCard";
+import { HighlightColor } from "~/models";
 
 export default {
   title: "HighlightCard",
@@ -60,3 +65,63 @@ export const ThePhotoHighlightCard: Story = (args) => {
 };
 
 ThePhotoHighlightCard.argTypes = argTypes;
+
+export const TheHighlightCardList: Story = (args) => {
+  return (
+    <div className="w-100 h-full p-5">
+      <HighlightCardList>
+        {(args.highlights as HighlightCardProps[]).map((h, i) => (
+          <HighlightCard
+            key={i}
+            pageNumber={h.pageNumber}
+            text={h.text}
+            color={h.color}
+            image={h.image}
+          />
+        ))}
+      </HighlightCardList>
+    </div>
+  );
+};
+
+TheHighlightCardList.args = {
+  scrollToHighlight: "unknown",
+  highlights: [
+    {
+      id: "h1",
+      text: "some highlight text",
+      color: HighlightColor.BLUE,
+      pageNumber: 1,
+    },
+    {
+      id: "h2",
+      text: "some longer highlight text",
+      color: HighlightColor.YELLOW,
+      pageNumber: 2,
+    },
+    {
+      id: "h3",
+      image: "https://i.stack.imgur.com/P8iKH.png",
+      color: HighlightColor.RED,
+      pageNumber: 3,
+    },
+    {
+      id: "h4",
+      image: "https://i.stack.imgur.com/P8iKH.png",
+      color: HighlightColor.RED,
+      pageNumber: 3,
+    },
+    {
+      id: "h5",
+      image: "https://i.stack.imgur.com/P8iKH.png",
+      color: HighlightColor.RED,
+      pageNumber: 5,
+    },
+    {
+      id: "h6",
+      image: "https://i.stack.imgur.com/P8iKH.png",
+      color: HighlightColor.RED,
+      pageNumber: 4,
+    },
+  ],
+};

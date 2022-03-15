@@ -1,6 +1,22 @@
-import { Highlight, HighlightColor } from "./Highlight";
-
+import { PDFDocumentProxy } from "pdfjs-dist";
 import { ScaledPageRect } from "~/lib/pdf";
+
+import { DocumentOutline } from "./documents";
+import { HighlightColor, Highlight } from "./highlights";
+
+export interface PDFDocument {
+  progress: number;
+  document: Promise<PDFDocumentProxy>;
+}
+
+export interface PDFDocumentMeta {
+  pageCount: number;
+  title?: string;
+  author?: string;
+  keywords?: string;
+  firstPage?: string;
+  outline?: DocumentOutline;
+}
 
 // location of a highlight
 
@@ -17,7 +33,7 @@ export interface PDFHighlightLocation {
 
 export interface PDFHighlightContent {
   text?: string;
-  image?: string;
+  thumbnail?: string;
   color: HighlightColor;
 }
 

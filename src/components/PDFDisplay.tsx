@@ -175,7 +175,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     const page = getPageView(pageNumber);
     if (!page || !page.canvas) return null;
 
-    return getCanvasAreaAsPNG(page.canvas, area);
+    return getCanvasAreaAsPNG(page.canvas, area, window.devicePixelRatio);
   };
 
   // when selected text on pdf has changed

@@ -185,7 +185,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         rects: [],
         pageNumber: page.number,
       },
-      content: { image, color: highlightColor },
+      content: { thumbnail: image, color: highlightColor },
     };
 
     onHighlighting(highlight);
@@ -230,10 +230,10 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
           const pageNumber = Number(key);
 
           return (
-            <PDFLayerPage pageNumber={pageNumber}>
-              {pageHighlights.map((highlight, index) => (
+            <PDFLayerPage pageNumber={pageNumber} key={pageNumber}>
+              {pageHighlights.map((highlight) => (
                 <PDFHighlightComponent
-                  key={index}
+                  key={highlight.id}
                   highlight={highlight}
                   pdfViewer={pdfViewer}
                   selectedHighlight={selectedHighlight}

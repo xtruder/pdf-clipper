@@ -2,9 +2,14 @@ export enum DocumentType {
   PDF = "pdf",
 }
 
-export interface OutlineNode {
-  title: string;
+export interface OutlinePosition {
   pageNumber?: number;
+  location?: any;
+  top?: number;
+}
+
+export interface OutlineNode extends OutlinePosition {
+  title: string;
   items: OutlineNode[];
 }
 
@@ -16,14 +21,14 @@ export interface DocumentInfo {
   // sha256 hash of document (to be content addressable)
   id: string;
 
-  // type of the document (only pdf for now)
+  // url of the document
+  url: string;
+
+  // type of the document
   type: DocumentType;
 
-  // unique location where document is stored
-  url?: string;
-
   // document title
-  title: string;
+  title?: string;
 
   // document description
   description?: string;
@@ -44,16 +49,24 @@ export interface DocumentInfo {
   createdAt?: number;
 }
 
-export interface DocumentReadingInfo {
-  // document id
-  documentId: string;
+export interface DocumentSources {
+  // if of the document
+  id: string;
 
+  // type of the document
+  type: DocumentType;
+
+  // document source urls
+  sources: string[];
+}
+
+export interface DocumentReadingInfo {
   // last reading page
-  lastPage: number;
+  lastPage?: number;
 
   // screenshot of page
-  screenshot: string;
+  screenshot?: string;
 
   // information about reading location
-  location: any;
+  location?: any;
 }

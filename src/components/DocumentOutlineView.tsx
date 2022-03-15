@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
-
-import { PDFDocumentProxy } from "pdfjs-dist";
-import { getDocumentOutline, OutlineNode } from "~/lib/pdfjs";
+import React, { useState } from "react";
 
 import { ReactComponent as ChevronUpIcon } from "~/assets/icons/chevron-up-outline.svg";
 import { ReactComponent as ChevronDownIcon } from "~/assets/icons/chevron-down-outline.svg";
-import { ScrollPosition } from "./PDFDisplay";
+
+import { DocumentOutline, OutlineNode, OutlinePosition } from "~/models";
 
 /*
 node.dest:
@@ -18,7 +16,7 @@ node.dest:
 4: null
 */
 
-const PDFOutlineItem: React.FC<{
+const OutlineItem: React.FC<{
   node: OutlineNode;
   depth: number;
   onClick?: () => void;
@@ -63,25 +61,15 @@ const PDFOutlineItem: React.FC<{
   );
 };
 
-export interface PDFOutlineListViewProps {
-  document: PDFDocumentProxy;
-  onOutlineNodeClicked?: (position: ScrollPosition) => void;
+export interface DocumentOutlineViewProps {
+  outline: DocumentOutline;
+  onOutlineNodeClicked?: (position: OutlinePosition) => void;
 }
 
-export const PDFOutlineListView: React.FC<PDFOutlineListViewProps> = ({
-  document,
+export const DocumentOutlineView: React.FC<DocumentOutlineViewProps> = ({
+  outline,
   onOutlineNodeClicked = () => null,
 }) => {
-  const [outline, setOutline] = useState<OutlineNode[]>();
-
-  useEffect(
-    (async () => {
-      const outline = await getDocumentOutline(document);
-      setOutline(outline);
-    }) as any,
-    []
-  );
-
   const renderOutlineNodes = (
     nodes: OutlineNode[],
     depth: number = 0
@@ -90,25 +78,25 @@ export const PDFOutlineListView: React.FC<PDFOutlineListViewProps> = ({
       const childNodes = renderOutlineNodes(node.items, depth + 1);
 
       return (
-        <PDFOutlineItem
+        <OutlineItem
           key={i}
           node={node}
           depth={depth}
           onClick={() =>
             onOutlineNodeClicked({
               pageNumber: node.pageNumber!,
-              destArray: node.dest as any[],
+              location: node.location,
             })
           }
         >
           {childNodes.length > 0 && childNodes}
-        </PDFOutlineItem>
+        </OutlineItem>
       );
     });
 
   return (
     <ul className="inline-block">
-      {outline ? renderOutlineNodes(outline) : <></>}
+      {outline ? renderOutlineNodes(outline.items) : <></>}
     </ul>
   );
 };

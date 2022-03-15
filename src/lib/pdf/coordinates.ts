@@ -1,33 +1,28 @@
 import { PageRect, ScaledRect, ScaledPageRect } from "./types";
 
 import { Rect, isDOMRectInside } from "~/lib/dom";
-import { PageElement, Viewport } from "~/lib/pdfjs";
+import { PageElement } from "~/lib/pdfjs";
 
-const pdfToViewport = (rect: Rect, viewport: Viewport): Rect => {
-  const [x1, y1, x2, y2] = viewport.convertToViewportRectangle([
-    rect.left,
-    rect.top,
-    rect.left + rect.width,
-    rect.top + rect.height,
-  ]);
+// const pdfToViewport = (rect: Rect, viewport: Viewport): Rect => {
+//   const [x1, y1, x2, y2] = viewport.convertToViewportRectangle([
+//     rect.left,
+//     rect.top,
+//     rect.left + rect.width,
+//     rect.top + rect.height,
+//   ]);
 
-  return {
-    left: x1,
-    top: y1,
-    width: x2 - x1,
-    height: y2 - y1,
-  };
-};
+//   return {
+//     left: x1,
+//     top: y1,
+//     width: x2 - x1,
+//     height: y2 - y1,
+//   };
+// };
 
 export const scaledRectToViewportRect = (
   rect: ScaledRect,
-  viewport: Viewport,
-  usePdfCoordinates: boolean = false
+  viewport: { width: number; height: number }
 ): Rect => {
-  if (usePdfCoordinates) {
-    return pdfToViewport(rect, viewport);
-  }
-
   const factorX = viewport.width / rect.scaleX;
   const factorY = viewport.height / rect.scaleY;
 
@@ -41,7 +36,7 @@ export const scaledRectToViewportRect = (
 
 export const viewportRectToScaledPageRect = (
   rect: PageRect,
-  viewport: Viewport
+  viewport: { width: number; height: number }
 ): ScaledPageRect => ({
   left: rect.left,
   top: rect.top,

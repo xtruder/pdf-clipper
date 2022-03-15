@@ -36,7 +36,8 @@ export const asElement = (x: any): HTMLElement => x;
 // gets canvas area as png data url
 export const getCanvasAreaAsPNG = (
   canvas: HTMLCanvasElement,
-  rect?: Rect
+  rect?: Rect,
+  devicePixelRatio: number = 1
 ): string => {
   // if no rect provided, capture whole canvas area as image/png
   if (!rect) {
@@ -57,10 +58,10 @@ export const getCanvasAreaAsPNG = (
   // draws image to convas on area from existing canvas image source
   imgCanvasContext.drawImage(
     canvas,
-    left * window.devicePixelRatio,
-    top * window.devicePixelRatio,
-    width * window.devicePixelRatio,
-    height * window.devicePixelRatio,
+    left * devicePixelRatio,
+    top * devicePixelRatio,
+    width * devicePixelRatio,
+    height * devicePixelRatio,
     0,
     0,
     width,

@@ -1,29 +1,22 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilValue } from "recoil";
+import { DocumentListContainer } from "~/containers/DocumentListContainer";
 
-import { DocumentInfoCard } from "~/components/DocumentInfoCard";
 import { StateCtx } from "~/state/state";
 
 export interface MainPageProps {}
 
 export const MainPage: React.FC<MainPageProps> = ({}) => {
   const navigate = useNavigate();
-  const { documentInfoList } = useContext(StateCtx);
-  const documentInfos = useRecoilValue(documentInfoList);
+
+  const { currentAccount } = useContext(StateCtx);
+  const { documentIds } = useRecoilValue(currentAccount);
 
   return (
-    <ul>
-      {documentInfos.map((info) => (
-        <li key={info.id}>
-          <DocumentInfoCard
-            title={info.title}
-            description={info.description}
-            cover={info.cover}
-            onOpen={() => navigate(`/viewpdf/${info.id}`)}
-          />
-        </li>
-      ))}
-    </ul>
+    <DocumentListContainer
+      documentIds={documentIds}
+      onOpen={(docId) => navigate(`/document/${docId}`)}
+    />
   );
 };

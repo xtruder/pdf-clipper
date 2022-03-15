@@ -235,7 +235,7 @@ export const ExpandButton: React.FC<{
   );
 };
 
-export type SidebarTabNames = "pages" | "outline" | "annotations";
+export type SidebarTabNames = "pages" | "outline" | "highlights";
 
 const sidebarTabs: {
   name: SidebarTabNames;
@@ -255,8 +255,8 @@ const sidebarTabs: {
     Icon: DocumentTextIcon,
   },
   {
-    name: "annotations",
-    title: "Annotations",
+    name: "highlights",
+    title: "Highlights",
     Icon: AnnotationIcon,
   },
 ];
@@ -269,7 +269,7 @@ export const SidebarTabSelector: React.FC<{
   return (
     <div className={`tabs tabs-boxed justify-center ${className}`}>
       {sidebarTabs.map((tab) => (
-        <a
+        <button
           key={tab.name}
           className={`tab ${selectedTab === tab.name ? "tab-active" : ""}`}
           title={tab.title}
@@ -277,7 +277,7 @@ export const SidebarTabSelector: React.FC<{
         >
           <tab.Icon className="inline-block w-4 h-4 stroke-current mr-1" />
           <a className="hidden md:inline">{tab.title}</a>
-        </a>
+        </button>
       ))}
     </div>
   );
