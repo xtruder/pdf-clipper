@@ -65,6 +65,7 @@ export const RadialProgressIndicator: React.FC<
 };
 
 export interface TopbarProgessIndicatorProps extends ProgressIndicatorProps {
+  loadingText?: string;
   className?: string;
   progressClassName?: string;
 }
@@ -72,6 +73,7 @@ export interface TopbarProgessIndicatorProps extends ProgressIndicatorProps {
 export const TopbarProgressIndicator: React.FC<TopbarProgessIndicatorProps> = ({
   progress,
   message,
+  loadingText = "Loading",
   className = "",
   progressClassName = "",
 }) => {
@@ -86,7 +88,7 @@ export const TopbarProgressIndicator: React.FC<TopbarProgessIndicatorProps> = ({
       />
       <div className="mt-2">
         <span>
-          Loading {progressPct}%{message && <>: {message}</>}
+          {loadingText} {progressPct}%{message && <>: {message}</>}
         </span>
       </div>
     </div>
