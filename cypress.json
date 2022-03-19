@@ -1,0 +1,5 @@
+{
+  "componentFolder": "src",
+  "integrationFolder": "src",
+  "testFiles": ["**/*.spec.ts", "**/*.spec.tsx"]
+}

@@ -6,11 +6,21 @@ import svgr from "vite-plugin-svgr";
 
 import merge from "ts-deepmerge";
 
-export const baseConfig: UserConfig = {
+/**
+ * @returns {UserConfig}
+ */
+export const baseConfig = {
   plugins: [tsConfigPaths(), windiCSS(), svgr()],
+  build: {
+    minify: "esbuild",
+    target: "esnext",
+  },
 };
 
-const extraConfig: UserConfig = {
+/**
+ * @returns {UserConfig}
+ */
+const extraConfig = {
   plugins: [reactRefresh()],
 };
 
