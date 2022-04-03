@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 
 import { v4 as uuidv4 } from "uuid";
+import { debug as _debug } from "debug";
 
 import { currentAccount, documentInfo, fileInfo } from "~/state";
 
@@ -12,6 +13,8 @@ import { DocumentType } from "~/models";
 import { sha256 } from "~/lib/crypto";
 import { getPrivateDirectory } from "~/state/state";
 import { paths } from "~/state/const";
+
+const debug = _debug("main");
 
 export interface MainPageProps {}
 
@@ -38,6 +41,8 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
   const onUpload = async (file: ArrayBuffer) => {
     // get sha256 of file and use it as file id
     const fileId = await sha256(file);
+
+    debug("file hash: ", fileId);
 
     // get uuid of document
     const documentId = uuidv4();

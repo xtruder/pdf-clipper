@@ -1,4 +1,6 @@
 import { debug as _debug, Debugger } from "debug";
+import * as localForage from "localforage";
+
 import {
   AccountInfo,
   DocumentInfo,
@@ -9,7 +11,15 @@ import { FileInfo } from "~/models/files";
 
 import { Persistence, SyncableResource } from "./persistence";
 
-const debug = _debug("persistence:memory");
+localForage.config({
+  driver: localForage.INDEXEDDB, // Force WebSQL; same as using setDriver()
+  name: "pdf-clipper",
+  version: 1.0,
+  storeName: "state", // Should be alphanumeric, with underscores.
+  description: "pdf-clipper storage",
+});
+
+const debug = _debug("persistence:keyvalue");
 
 export class MemoryResource<T> implements SyncableResource<T> {
   private subscribers: Array<(value: T) => Promise<any> | any> = [];
@@ -55,31 +65,33 @@ export class LocalStorageResource<T> implements SyncableResource<T> {
   ) {
     this.debug = debug.extend(this.name);
 
-    if (localStorage.getItem(`${this.name}-${this.key}`)) return;
-    else if (value)
-      localStorage.setItem(`${this.name}-${this.key}`, JSON.stringify(value));
+    (async () => {
+      if (await localForage.getItem(`${this.name}-${this.key}`)) return;
+      else if (value)
+        localStorage.setItem(`${this.name}-${this.key}`, JSON.stringify(value));
+    })();
   }
 
   async get(): Promise<T | null> {
-    const value = localStorage.getItem(`${this.name}-${this.key}`);
+    const value = await localForage.getItem<T>(`${this.name}-${this.key}`);
     this.debug("getting value", this.key, value);
 
     if (!value) return null;
 
-    return JSON.parse(value);
+    return value;
   }
 
   async write(value: T) {
     this.debug("setting value", value);
 
-    if (!value) localStorage.removeItem(`${this.name}-${this.key}`);
+    if (!value) await localForage.removeItem(`${this.name}-${this.key}`);
 
-    localStorage.setItem(`${this.name}-${this.key}`, JSON.stringify(value));
+    await localForage.setItem(`${this.name}-${this.key}`, value);
   }
 
   async reset() {
     this.debug("value reset called", this.value);
-    localStorage.removeItem(`${this.name}-${this.key}`);
+    await localForage.removeItem(`${this.name}-${this.key}`);
   }
 
   async subscribe(fn: (value: T) => void) {

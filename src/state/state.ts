@@ -1,7 +1,7 @@
 import { debug as _debug } from "debug";
 
 import { NativeFS } from "~/lib/nativefs";
-import { KVPersistence, LocalStorageResource } from "~/persistence/memory";
+import { KVPersistence, LocalStorageResource } from "~/persistence/keyvalue";
 import { Persistence } from "~/persistence/persistence";
 
 // create persistent storage

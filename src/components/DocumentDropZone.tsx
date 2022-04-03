@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 
 import { ReactComponent as ExclamationCircleIcon } from "../assets/icons/exclamation-circle-outline.svg";
 
-import { useDropzone } from "react-dropzone";
+import { FileRejection, useDropzone } from "react-dropzone";
 
 export interface DocumentDropZoneProps {
   onFile?: (file: ArrayBuffer) => void;
@@ -16,25 +16,29 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
   const [readerErrorStr, setReaderErrorStr] = useState<string | null>(null);
   //const [file, setFile] = useState<File | null>(null);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
+  const onDrop = useCallback(
+    async (acceptedFiles: File[], fileRejections: FileRejection[]) => {
+      console.log(fileRejections);
+      const file = acceptedFiles[0];
 
-    const reader = new FileReader();
+      const reader = new FileReader();
 
-    reader.onabort = () => setReaderErrorStr("file reading was aborted");
-    reader.onerror = () => setReaderErrorStr("error reading files");
-    reader.onload = () => {
-      onFile && onFile(reader.result as ArrayBuffer);
-      setReaderErrorStr(null);
-    };
+      reader.onabort = () => setReaderErrorStr("file reading was aborted");
+      reader.onerror = () => setReaderErrorStr("error reading files");
+      reader.onload = () => {
+        onFile && onFile(reader.result as ArrayBuffer);
+        setReaderErrorStr(null);
+      };
 
-    reader.readAsArrayBuffer(file);
-  }, []);
+      reader.readAsArrayBuffer(file);
+    },
+    []
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     multiple: false, // only one file for now
-    maxSize: 100 * 100000, // 100 MB for now, so we don't eat all memory
+    maxSize: 100 * 1000000, // 100 MB for now, so we don't eat all memory
     accept: "application/pdf", // accept only pdf for now
   });
 
