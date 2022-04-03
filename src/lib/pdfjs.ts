@@ -3,8 +3,10 @@ import {
   PDFPageProxy,
   getDocument as getPDFDocument,
 } from "pdfjs-dist";
-import { DocumentOutline, OutlineNode } from "~/models";
+import { TypedArray } from "pdfjs-dist/types/src/display/api";
+import { debug as _debug } from "debug";
 
+import { DocumentOutline, OutlineNode } from "~/models";
 import {
   asElement,
   getCanvasAreaAsPNG,
@@ -12,6 +14,8 @@ import {
   getDocument,
   Rect,
 } from "./dom";
+
+const debug = _debug("pdfjs");
 
 export interface PageView {
   viewport: Viewport;
@@ -129,7 +133,7 @@ export async function screenshotPageArea(
     scale?: number;
     area?: Rect;
   }
-): Promise<string | undefined> {
+): Promise<string> {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
 
@@ -139,7 +143,7 @@ export async function screenshotPageArea(
   canvas.height = viewport.height * ratio;
 
   const canvasContext = canvas.getContext("2d");
-  if (!canvasContext) return;
+  if (!canvasContext) throw new Error("error getting canvas context");
 
   await page.render({
     canvasContext,
@@ -192,15 +196,20 @@ export async function getDocumentOutline(
       })
     );
 
+  if (!outline) return { items: [] };
+
   return { items: await mapOutlineNodes(outline) };
 }
 
 export const loadPDF = async (
-  url: string,
+  source: string | TypedArray,
   onProgress: (progress: number) => void = () => null
 ) => {
+  debug("loading pdf", source);
+
   const loadingTask = getPDFDocument({
-    url,
+    ...(typeof source === "string" && { url: source }),
+    ...(typeof source !== "string" && { data: source }),
     cMapUrl: new URL("/public/cmaps", window.location.toString()).href,
     cMapPacked: true,
   });
@@ -209,5 +218,9 @@ export const loadPDF = async (
     onProgress(args.loaded / args.total);
   };
 
-  return await loadingTask.promise;
+  const pdf = await loadingTask.promise;
+
+  debug("pdf loaded", pdf._pdfInfo);
+
+  return pdf;
 };
