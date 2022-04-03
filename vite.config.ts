@@ -1,4 +1,5 @@
 import { UserConfig } from "vite";
+
 import reactRefresh from "@vitejs/plugin-react-refresh";
 import tsConfigPaths from "vite-tsconfig-paths";
 import windiCSS from "vite-plugin-windicss";
@@ -6,10 +7,7 @@ import svgr from "vite-plugin-svgr";
 
 import merge from "ts-deepmerge";
 
-/**
- * @returns {UserConfig}
- */
-export const baseConfig = {
+export const baseConfig: UserConfig = {
   plugins: [tsConfigPaths(), windiCSS(), svgr()],
   build: {
     minify: "esbuild",
@@ -17,10 +15,7 @@ export const baseConfig = {
   },
 };
 
-/**
- * @returns {UserConfig}
- */
-const extraConfig = {
+const extraConfig: UserConfig = {
   plugins: [reactRefresh()],
 };
 
