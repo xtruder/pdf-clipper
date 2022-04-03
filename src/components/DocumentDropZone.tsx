@@ -4,13 +4,17 @@ import { ReactComponent as ExclamationCircleIcon } from "../assets/icons/exclama
 
 import { useDropzone } from "react-dropzone";
 
-export interface DocumentDropZoneProps {}
+export interface DocumentDropZoneProps {
+  onFile?: (file: ArrayBuffer) => void;
+}
 
-export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({}) => {
+export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
+  onFile,
+}) => {
   const [readerErrorStr, setReaderErrorStr] = useState<string | null>(null);
   //const [file, setFile] = useState<File | null>(null);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
 
     const reader = new FileReader();
@@ -18,8 +22,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({}) => {
     reader.onabort = () => setReaderErrorStr("file reading was aborted");
     reader.onerror = () => setReaderErrorStr("error reading files");
     reader.onload = () => {
-      //const binaryStr = reader.result;
-
+      onFile && onFile(reader.result as ArrayBuffer);
       setReaderErrorStr(null);
     };
 
