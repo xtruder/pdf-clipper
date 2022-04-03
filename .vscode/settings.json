@@ -17,5 +17,9 @@
   "files.exclude": {
     "node_modules": true
   },
-  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix"
+  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+  "search.exclude": {
+    "**/node_modules": true,
+    "package-lock.json": true
+  }
 }
