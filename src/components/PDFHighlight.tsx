@@ -62,6 +62,7 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
           viewport
         ),
       },
+      timestamp: Date.now(),
     };
 
     onHighlightUpdated(newHighlight);

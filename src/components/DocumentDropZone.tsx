@@ -6,10 +6,12 @@ import { useDropzone } from "react-dropzone";
 
 export interface DocumentDropZoneProps {
   onFile?: (file: ArrayBuffer) => void;
+  className?: string;
 }
 
 export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
   onFile,
+  className,
 }) => {
   const [readerErrorStr, setReaderErrorStr] = useState<string | null>(null);
   //const [file, setFile] = useState<File | null>(null);
@@ -49,7 +51,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
   return (
     <div
       {...getRootProps()}
-      className="flex bg-base-200 rounded-lg p-2 h-full w-full p-2"
+      className={`flex bg-base-200 rounded-lg p-2 p-2 ${className}`}
     >
       <input {...getInputProps()} />
 

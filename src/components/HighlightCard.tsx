@@ -82,7 +82,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
     highlight = (
       <img
         src={image}
-        className="h-auto w-full block hover:cursor-pointer"
+        className="h-initial w-full block hover:cursor-pointer"
         onClick={() => onClicked()}
       />
     );

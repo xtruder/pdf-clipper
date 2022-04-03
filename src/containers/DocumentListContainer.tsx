@@ -1,59 +1,51 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 
 import {
   DocumentInfoCard,
   DocumentInfoCardList,
 } from "~/components/DocumentInfoCard";
 import { ErrorFallback } from "~/components/ErrorFallback";
-import { useStateCtx } from "~/state/state";
 
-const DocumentInfoCardContainer: React.FC<{
+import { accountDocuments, documentInfo } from "~/state";
+
+const DocumentInfoCardWrapper: React.FC<{
   documentId: string;
   onOpen: () => void;
 }> = ({ documentId, onOpen }) => {
-  const { documentInfo } = useStateCtx();
+  const DocumentInfoCardContainer: React.FC = useCallback(() => {
+    const [{ title, description, cover, pageCount }, setDocumentInfo] =
+      useRecoilState(documentInfo(documentId));
+    const setAccountDocuments = useSetRecoilState(accountDocuments);
 
-  const { title, description, cover, pageCount } = useRecoilValue(
-    documentInfo(documentId)
-  );
-
-  const setDocumentInfo = useSetRecoilState(documentInfo(documentId));
-
-  return (
-    <DocumentInfoCard
-      title={title}
-      description={description}
-      cover={cover}
-      pages={pageCount}
-      onOpen={onOpen}
-      onDescriptionChanged={(description) =>
-        setDocumentInfo((info) => ({ ...info, description }))
-      }
-      onTitleChanged={(title) =>
-        setDocumentInfo((info) => ({ ...info, title }))
-      }
-    />
-  );
-};
-
-const DocumentInfoCardWrapper: React.FC<{ documentId: string }> = ({
-  documentId,
-  children,
-}) => {
-  const { documentLoadProgress: pdfDocumentLoadProgress } = useStateCtx();
-
-  const progress = useRecoilValue(pdfDocumentLoadProgress(documentId));
+    return (
+      <DocumentInfoCard
+        title={title}
+        description={description}
+        cover={cover}
+        pages={pageCount}
+        onOpen={onOpen}
+        // remove self from account documents
+        onDeleteClicked={() =>
+          setAccountDocuments((docs) => docs.filter((d) => d.id !== documentId))
+        }
+        onDescriptionChanged={(description) =>
+          setDocumentInfo((info) => ({ ...info, description }))
+        }
+        onTitleChanged={(title) =>
+          setDocumentInfo((info) => ({ ...info, title }))
+        }
+      />
+    );
+  }, [documentId]);
 
   return (
     <Suspense
-      fallback={
-        <DocumentInfoCard isLoading={true} loadingProgress={progress} />
-      }
+      fallback={<DocumentInfoCard isLoading={true} loadingProgress={0} />}
     >
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        {children}
+        <DocumentInfoCardContainer />
       </ErrorBoundary>
     </Suspense>
   );
@@ -61,17 +53,17 @@ const DocumentInfoCardWrapper: React.FC<{ documentId: string }> = ({
 
 export const DocumentListContainer: React.FC<{
   documentIds: string[];
+  className?: string;
   onOpen?: (documentId: string) => void;
-}> = ({ documentIds, onOpen }) => {
+}> = ({ className, documentIds, onOpen }) => {
   return (
-    <DocumentInfoCardList>
+    <DocumentInfoCardList className={className}>
       {documentIds.map((documentId) => (
-        <DocumentInfoCardWrapper documentId={documentId} key={documentId}>
-          <DocumentInfoCardContainer
-            documentId={documentId}
-            onOpen={() => onOpen && onOpen(documentId)}
-          />
-        </DocumentInfoCardWrapper>
+        <DocumentInfoCardWrapper
+          key={documentId}
+          documentId={documentId}
+          onOpen={() => onOpen && onOpen(documentId)}
+        />
       ))}
     </DocumentInfoCardList>
   );

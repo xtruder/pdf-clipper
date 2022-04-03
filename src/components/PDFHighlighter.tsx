@@ -151,6 +151,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         pageNumber,
       },
       content: { text, color: highlightColor },
+      timestamp: Date.now(),
     };
 
     onHighlighting(highlight);
@@ -186,6 +187,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         pageNumber: page.number,
       },
       content: { thumbnail: image, color: highlightColor },
+      timestamp: Date.now(),
     };
 
     onHighlighting(highlight);

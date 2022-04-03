@@ -17,18 +17,24 @@ export interface DocumentOutline {
   items: OutlineNode[];
 }
 
+/**Document info provides information about document, like associated file,
+ * document type, metadata like author, title, description, cover and such.
+ */
 export interface DocumentInfo {
-  // sha256 hash of document (to be content addressable)
+  // id of the document
   id: string;
 
-  // url of the document
-  url: string;
+  // id of the file for document
+  fileId?: string;
 
   // type of the document
-  type: DocumentType;
+  type?: DocumentType;
 
   // document title
   title?: string;
+
+  // document author
+  author?: string;
 
   // document description
   description?: string;
@@ -49,18 +55,16 @@ export interface DocumentInfo {
   createdAt?: number;
 }
 
-export interface DocumentSources {
-  // if of the document
-  id: string;
-
-  // type of the document
-  type: DocumentType;
-
-  // document source urls
-  sources: string[];
-}
-
+/**Document reading info provides reading information associated with
+ * account/document
+ */
 export interface DocumentReadingInfo {
+  // id of the account
+  accountId: string;
+
+  // id of the document
+  docId: string;
+
   // last reading page
   lastPage?: number;
 

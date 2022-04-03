@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useRecoilCallback, useRecoilValue } from "recoil";
 
-import { useStateCtx } from "~/state/state";
 import { getPageHeight } from "~/lib/pdfjs";
 
+import { documentInfo, pdfPages, pdfPageThumbnail } from "~/state";
 import {
   PageThumbnailView,
   PageThumbnailsList,
@@ -16,21 +16,21 @@ const PageThumbnailViewContainer: React.FC<{
   height: number;
   onClick: () => void;
 }> = ({ documentId, pageNumber, width, height, onClick }) => {
-  const { pdfPageThumbnail } = useStateCtx();
-
   const [image, setImage] = useState<string>();
+
+  const { fileId } = useRecoilValue(documentInfo(documentId));
+  if (!fileId) throw new Error("missing fileId");
 
   const loadThumbnail = useRecoilCallback(
     ({ snapshot }) =>
       async () => {
+        // if image has already be retrieved, do nothing
         if (image) return;
 
         const release = snapshot.retain();
         try {
           setImage(
-            await snapshot.getPromise(
-              pdfPageThumbnail([documentId, pageNumber])
-            )
+            await snapshot.getPromise(pdfPageThumbnail([fileId, pageNumber]))
           );
         } finally {
           release();
@@ -64,9 +64,10 @@ export const PageThumbnailsContainer: React.FC<PageThumbnailsContainer> = ({
   onPageClick = () => null,
   width = 300,
 }) => {
-  const { pdfDocumentPages } = useStateCtx();
+  const { fileId } = useRecoilValue(documentInfo(documentId));
+  if (!fileId) throw new Error("missing fileId");
 
-  const pages = useRecoilValue(pdfDocumentPages(documentId));
+  const pages = useRecoilValue(pdfPages(fileId));
 
   const thumbs = pages.map((page) => {
     const height = getPageHeight(page, width);

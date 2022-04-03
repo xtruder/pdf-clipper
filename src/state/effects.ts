@@ -1,39 +1,48 @@
-import { AtomEffect } from "recoil";
+import { AtomEffect, DefaultValue } from "recoil";
+import { MutableResource, SyncableResource } from "~/persistence/persistence";
 
-import { scaledRectToViewportRect } from "~/lib/pdf";
-import { screenshotPageArea } from "~/lib/pdfjs";
+export const localStorageEffect: (key: string) => AtomEffect<any> =
+  (key) =>
+  ({ setSelf, onSet }) => {
+    const savedValue = localStorage.getItem(key);
+    if (savedValue != null) {
+      setSelf(JSON.parse(savedValue));
+    }
 
-import { documentHighlights, pdfPageProxy } from "./localState";
+    onSet((newValue, _, isReset) => {
+      isReset
+        ? localStorage.removeItem(key)
+        : localStorage.setItem(key, JSON.stringify(newValue));
+    });
+  };
 
-export const screenshotHighlight: (
-  docId: string,
-  highlightId: string
-) => AtomEffect<string | undefined> =
-  (docId, highlightId) =>
-  ({ node, trigger, getPromise, setSelf }) => {
+export const resourceEffect: <T>(
+  resource: SyncableResource<T> | MutableResource<T>
+) => AtomEffect<T> =
+  (syncable) =>
+  ({ setSelf, onSet, trigger }) => {
+    // load initial value from syncable resource
     if (trigger === "get") {
-      getPromise(node).then(async (image) => {
-        if (image) return;
+      setSelf(
+        syncable.get().then((value) => {
+          if (value) return value;
+          else return new DefaultValue();
+        })
+      );
+    }
 
-        const highlights = await getPromise(documentHighlights(docId));
+    // when value is updated write it to syncable
+    onSet(async (newValue, oldValue, isReset) => {
+      if (isReset) {
+        return syncable.reset();
+      }
+      if (newValue === oldValue) return;
 
-        const highlight = highlights.find((h) => h.id === highlightId);
-        if (!highlight) return;
+      await syncable.write(newValue);
+    });
 
-        if (highlight.deleted || highlight.content.text) return;
-
-        const page = await getPromise(
-          pdfPageProxy([docId, highlight.location.pageNumber - 1])
-        );
-
-        const viewport = page.getViewport({ scale: 5 });
-
-        const area = scaledRectToViewportRect(
-          highlight.location.boundingRect,
-          viewport
-        );
-
-        setSelf(await screenshotPageArea(page, { scale: 5, area }));
-      });
+    if ("subscribe" in syncable) {
+      // subscribe to changes in syncable
+      syncable.subscribe((newValue) => setSelf(newValue));
     }
   };

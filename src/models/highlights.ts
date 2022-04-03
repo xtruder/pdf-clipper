@@ -28,4 +28,7 @@ export interface Highlight {
   content: any;
   meta?: HighlightMeta;
   deleted?: boolean;
+
+  // last highlight update timestamp
+  timestamp: number;
 }

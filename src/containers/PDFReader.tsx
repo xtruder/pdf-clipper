@@ -5,8 +5,14 @@ import { FullScreen } from "@chiragrupani/fullscreen-react";
 import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
-import { useStateCtx } from "~/state/state";
 import { PDFHighlight, HighlightColor } from "~/models";
+
+import {
+  documentHighlights,
+  documentInfo,
+  pdfDocumentProxy,
+  currentAccount,
+} from "~/state";
 
 import { PDFHighlighter } from "~/components/PDFHighlighter";
 import {
@@ -19,6 +25,7 @@ import {
 } from "~/components/PDFControls";
 import { PDFDisplayProxy, ScrollPosition } from "~/components/PDFDisplay";
 import { DocumentOutlineView } from "~/components/DocumentOutlineView";
+
 import { PageThumbnailsContainer } from "./PageThumbnailsContainer";
 import { HighlightListContainer } from "./HighlightListContainer";
 
@@ -39,16 +46,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   isDarkMode = false,
   selectOnCreate = true,
 }) => {
-  const { currentAccount, documentInfo, documentHighlights, pdfDocumentProxy } =
-    useStateCtx();
-
-  const [docInfo, setDocInfo] = useRecoilState(documentInfo(documentId));
-  if (!documentInfo) throw new Error("Missing document");
-
-  const pdfDocument = useRecoilValue(pdfDocumentProxy(documentId));
-  if (!pdfDocument) throw new Error("Missing document");
-
   const account = useRecoilValue(currentAccount);
+  const [docInfo, setDocInfo] = useRecoilState(documentInfo(documentId));
+  if (!docInfo.fileId) throw new Error("missing file associated with document");
+
+  const pdfDocument = useRecoilValue(pdfDocumentProxy(docInfo.fileId));
 
   const [highlights, setHighlights] = useRecoilState(
     documentHighlights(documentId)

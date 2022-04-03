@@ -2,13 +2,10 @@ import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { ErrorBoundary } from "react-error-boundary";
-import { RecoilRoot } from "recoil";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import useDarkMode from "@utilityjs/use-dark-mode";
-import { useViewport } from "./lib/react";
 
-import { StateCtx } from "./state/state";
-import { localState } from "./state/localState";
+import { useViewport } from "./lib/react";
 
 import { ErrorFallback } from "~/components/ErrorFallback";
 import {
@@ -65,8 +62,6 @@ const AppRouter: React.FC = () => {
 };
 
 export function App(): JSX.Element {
-  const state = localState;
-
   const { isDarkMode } = useDarkMode({});
   const { height, width } = useViewport();
 
@@ -94,13 +89,9 @@ export function App(): JSX.Element {
           />
         </Helmet>
       </HelmetProvider>
-      <RecoilRoot>
-        <StateCtx.Provider value={state}>
-          <ErrorBoundary FallbackComponent={ErrorFallback}>
-            <AppRouter />
-          </ErrorBoundary>
-        </StateCtx.Provider>
-      </RecoilRoot>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <AppRouter />
+      </ErrorBoundary>
     </>
   );
 }

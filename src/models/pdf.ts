@@ -1,13 +1,7 @@
-import { PDFDocumentProxy } from "pdfjs-dist";
 import { ScaledPageRect } from "~/lib/pdf";
 
 import { DocumentOutline } from "./documents";
 import { HighlightColor, Highlight } from "./highlights";
-
-export interface PDFDocument {
-  progress: number;
-  document: Promise<PDFDocumentProxy>;
-}
 
 export interface PDFDocumentMeta {
   pageCount: number;

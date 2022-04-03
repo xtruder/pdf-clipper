@@ -1,4 +1,6 @@
 import React, { Suspense, useEffect } from "react";
+import { RecoilRoot } from "recoil";
+
 import { addDecorator } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
 
@@ -10,16 +12,10 @@ import {
   TopbarProgressIndicator,
 } from "../src/components/ProgressIndicator";
 
-import { StateCtx } from "../src/state/state";
-import { localState } from "../src/state/localState";
-
 import "virtual:windi.css";
 import "../src/App.css";
-import { RecoilRoot } from "recoil";
 
 addDecorator((story, ctx) => {
-  const state = localState;
-
   const isDarkMode = useDarkMode();
 
   const { height, width } = useViewport();
@@ -27,7 +23,7 @@ addDecorator((story, ctx) => {
   useEffect(() => {
     document.documentElement.style.setProperty("--vh", `${height}px`);
     document.documentElement.style.setProperty("--vw", `${width}px`);
-  }, [height]);
+  }, [width, height]);
 
   // set theme on html element
   document.documentElement.setAttribute(
@@ -49,11 +45,9 @@ addDecorator((story, ctx) => {
 
   const StoryWrapper: React.FC = ({ children }) => (
     <RecoilRoot>
-      <StateCtx.Provider value={state}>
-        <ContextProgressProvider>
-          <Suspense fallback={<ShowProgress />}>{children}</Suspense>
-        </ContextProgressProvider>
-      </StateCtx.Provider>
+      <ContextProgressProvider>
+        <Suspense fallback={<ShowProgress />}>{children}</Suspense>
+      </ContextProgressProvider>
     </RecoilRoot>
   );
 

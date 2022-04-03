@@ -1,26 +1,24 @@
-import React, { useContext, useEffect } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRecoilValue } from "recoil";
-import { useContextProgress } from "~/components/ProgressIndicator";
 
-import { PDFReader } from "~/containers/PDFReader";
-import { ReaderLayout } from "~/layouts/ReaderLayout";
-import { StateCtx } from "~/state/state";
+//import { StateCtx } from "~/state/state";
 //import useDarkMode from "@utilityjs/use-dark-mode";
+
+import { useContextProgress } from "~/components/ProgressIndicator";
+import { ReaderLayout } from "~/layouts/ReaderLayout";
+import { PDFReader } from "~/containers/PDFReader";
 
 const PDFReaderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { documentLoadProgress: pdfDocumentLoadProgress } =
-    useContext(StateCtx);
 
   const { documentId } = useParams();
   if (!documentId) throw new Error("Missing document ID");
 
-  const progress = useRecoilValue(pdfDocumentLoadProgress(documentId));
+  //  const progress = useRecoilValue(documentLoadProgress(documentId));
 
-  const { setProgress } = useContextProgress();
+  useContextProgress();
 
-  useEffect(() => setProgress(progress), [progress]);
+  // useEffect(() => setProgress(progress), [progress]);
 
   return (
     <PDFReader

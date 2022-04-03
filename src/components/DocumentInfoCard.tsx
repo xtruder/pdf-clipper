@@ -177,11 +177,14 @@ export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
 
 export const DocumentInfoCardList: React.FC<{
   children: ReactElement[];
-}> = ({ children }) => {
+  className?: string;
+}> = ({ children, className }) => {
   return (
-    <ul>
+    <ul className={`overflow-scroll ${className}`}>
       {children.map((child) => (
-        <li key={child.key}>{child}</li>
+        <li key={child.key} className="pt-2">
+          {child}
+        </li>
       ))}
     </ul>
   );

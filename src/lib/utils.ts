@@ -48,3 +48,7 @@ export const setRandomInterval = <F extends Function>(
 
   return () => clearTimeout(timer);
 };
+
+export const waitError = <T>(promise: Promise<T>): Promise<Error | null> => {
+  return promise.then(() => null).catch((err) => err);
+};
