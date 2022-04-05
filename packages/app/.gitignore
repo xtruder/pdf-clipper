@@ -1,0 +1,6 @@
+dist
+dist-ssr
+
+# cypress
+cypress/screenshots
+cypress/videos

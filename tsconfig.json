@@ -3,14 +3,10 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "jsx": "react",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "node", "cypress"],
     "strict": true,
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
@@ -22,10 +18,6 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "downlevelIteration": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    }
-  },
-  "include": ["src"]
+    "composite": true
+  }
 }

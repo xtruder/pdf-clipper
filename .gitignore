@@ -1,12 +1,6 @@
 node_modules
 .DS_Store
-dist
-dist-ssr
 *.local
 .eslintcache
 graphql-schema.json
 *.bak
-
-# cypress
-cypress/screenshots
-cypress/videos
