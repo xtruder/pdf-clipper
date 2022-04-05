@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useRecoilValue } from "recoil";
-import { DocumentType } from "~/models";
+import { DocumentType } from "~/types";
 import { documentInfo } from "~/state";
 
 export interface DocumentViewPageProps {}

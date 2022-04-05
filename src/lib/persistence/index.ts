@@ -3,11 +3,11 @@ import { syncedStore, getYjsValue } from "@syncedstore/core";
 import { WebrtcProvider } from "y-webrtc";
 //import { IndexeddbPersistence } from "y-indexeddb";
 
-import { Highlight } from "~/models";
+import { DocumentHighlight } from "~/types";
 
 export function highlightSyncedStore(id: string) {
   const store = syncedStore({
-    highlights: [] as Highlight[],
+    highlights: [] as DocumentHighlight[],
     fragment: "text",
   });
 

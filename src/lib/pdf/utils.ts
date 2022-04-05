@@ -1,6 +1,6 @@
 import { groupBy, unique } from "~/lib/utils";
 
-import { PartialPDFHighlight } from "~/models";
+import { PartialPDFHighlight } from "~/types";
 
 // get highlights per page, that are on that page or have rects on page
 export const groupHighlightsByPage = <T extends PartialPDFHighlight>(
@@ -38,10 +38,13 @@ export const groupHighlightsByPage = <T extends PartialPDFHighlight>(
         ...pageHighlights,
       ]);
 
-      return highlightsOnPage.map((h) => ({ ...h, displayPage: pageNumber }));
+      return highlightsOnPage.map((h) => ({
+        ...h,
+        location: { ...h.location, displayPage: pageNumber },
+      }));
     })
     .flat();
 
   // group by display page number
-  return groupBy(pageSpecificHighlights, (h) => h.displayPage);
+  return groupBy(pageSpecificHighlights, (h) => h.location.displayPage);
 };

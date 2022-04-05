@@ -1,17 +1,24 @@
 import React, { useEffect } from "react";
 import useState from "react-usestateref";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilCallback, useRecoilState, useRecoilValue } from "recoil";
 import { FullScreen } from "@chiragrupani/fullscreen-react";
+
 import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
-import { PDFHighlight, HighlightColor } from "~/models";
+import {
+  PDFHighlight,
+  DocumentHighlightColor,
+  DocumentHighlight,
+} from "~/types";
 
 import {
   documentHighlights,
   documentInfo,
   pdfDocumentProxy,
   currentAccount,
+  documentHighlight,
+  documentHighlightIds,
 } from "~/state";
 
 import { PDFHighlighter } from "~/components/PDFHighlighter";
@@ -51,10 +58,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   if (!docInfo.fileId) throw new Error("missing file associated with document");
 
   const pdfDocument = useRecoilValue(pdfDocumentProxy(docInfo.fileId));
-
-  const [highlights, setHighlights] = useRecoilState(
-    documentHighlights(documentId)
-  );
+  const highlights = useRecoilValue(documentHighlights(documentId));
 
   const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
     useState<PDFHighlight>();
@@ -66,8 +70,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [scrollToPage, setScrollToPage] = useState<number>();
   const [scrollToPosition, setScrollToPosition] = useState<ScrollPosition>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
-  const [highlightColor, setHighlightColor] = useState<HighlightColor>(
-    HighlightColor.YELLOW
+  const [highlightColor, setHighlightColor] = useState<DocumentHighlightColor>(
+    DocumentHighlightColor.YELLOW
   );
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
   const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
@@ -87,49 +91,67 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     setSelectedHighlight(undefined);
   };
 
-  const createHighlight = (highlight?: PDFHighlight): void => {
-    if (!highlight) return;
+  const createHighlight = useRecoilCallback(
+    ({ set }) =>
+      (pdfHighlight?: PDFHighlight): void => {
+        if (!pdfHighlight) return;
 
-    highlight.meta = {
-      owner: account.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+        const highlight: DocumentHighlight = {
+          author: account.id,
+          docId: documentId,
+          ...pdfHighlight,
+        };
 
-    setHighlights((highlights) => [...highlights, highlight]);
+        set(documentHighlight([documentId, highlight.id]), highlight);
+        set(documentHighlightIds(documentId), (ids) => [
+          ...ids,
+          pdfHighlight.id,
+        ]);
 
-    if (selectOnCreate) {
-      setSelectedHighlight(highlight);
-    } else {
-      setSelectedHighlight(undefined);
-    }
+        if (selectOnCreate) {
+          setSelectedHighlight(pdfHighlight);
+        } else {
+          setSelectedHighlight(undefined);
+        }
 
-    // clear selection and in progress highlight
-    clearSelection();
-    setInProgressHighlight(undefined);
-  };
+        // clear selection and in progress highlight
+        clearSelection();
+        setInProgressHighlight(undefined);
+      },
+    []
+  );
 
-  const deleteHighlight = (highlight?: PDFHighlight): void => {
-    if (!highlight) return;
+  const deleteHighlight = useRecoilCallback(
+    ({ reset, set }) =>
+      (highlight?: PDFHighlight): void => {
+        if (!highlight) return;
 
-    // unselect highlight
-    setSelectedHighlight(undefined);
+        // unselect highlight
+        setSelectedHighlight(undefined);
 
-    setHighlights((highlights) =>
-      highlights.map((h) =>
-        h.id === highlight.id ? { ...highlight, deleted: true } : h
-      )
-    );
-  };
+        // remove highlight from ids of document highlights
+        set(documentHighlightIds(documentId), (ids) =>
+          ids.filter((id) => id !== highlight.id)
+        );
+        reset(documentHighlight([documentId, highlight.id]));
+      },
+    []
+  );
 
-  const updateHighlight = (highlight?: PDFHighlight): void => {
-    if (!highlight) return;
+  const updateHighlight = useRecoilCallback(
+    ({ set }) =>
+      (pdfHighlight?: PDFHighlight): void => {
+        if (!pdfHighlight) return;
 
-    // update existing highlight
-    setHighlights((highlights) =>
-      highlights.map((h) => (h.id === highlight.id ? highlight : h))
-    );
-  };
+        // update existing highlight
+        set(documentHighlight([documentId, pdfHighlight.id]), (highlight) => ({
+          ...highlight,
+          ...pdfHighlight,
+          docId: documentId,
+        }));
+      },
+    []
+  );
 
   const changeTitle = (title: string): void =>
     setDocInfo((docInfo) => ({ ...docInfo, title }));
@@ -176,7 +198,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   useEffect(() => setIsDarkReader(isDarkMode), [isDarkMode]);
 
-  const currentHighlights = highlights.filter((h) => !h.deleted);
+  const currentHighlights = highlights;
 
   const sidebar = (
     <Sidebar

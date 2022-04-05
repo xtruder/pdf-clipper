@@ -1,6 +1,6 @@
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useRecoilState, useResetRecoilState, useSetRecoilState } from "recoil";
 
 import {
   DocumentInfoCard,
@@ -17,6 +17,7 @@ const DocumentInfoCardWrapper: React.FC<{
   const DocumentInfoCardContainer: React.FC = useCallback(() => {
     const [{ title, description, cover, pageCount }, setDocumentInfo] =
       useRecoilState(documentInfo(documentId));
+    const resetDocument = useResetRecoilState(documentInfo(documentId));
     const setAccountDocuments = useSetRecoilState(accountDocuments);
 
     return (
@@ -27,9 +28,12 @@ const DocumentInfoCardWrapper: React.FC<{
         pages={pageCount}
         onOpen={onOpen}
         // remove self from account documents
-        onDeleteClicked={() =>
-          setAccountDocuments((docs) => docs.filter((d) => d.id !== documentId))
-        }
+        onDeleteClicked={() => {
+          setAccountDocuments((docs) =>
+            docs.filter((d) => d.id !== documentId)
+          );
+          resetDocument();
+        }}
         onDescriptionChanged={(description) =>
           setDocumentInfo((info) => ({ ...info, description }))
         }

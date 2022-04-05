@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "ESNext",
     "moduleResolution": "Node",
     "jsx": "react",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],

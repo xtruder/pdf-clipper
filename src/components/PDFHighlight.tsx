@@ -4,7 +4,7 @@ import {
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
 } from "~/lib/pdf";
-import { PDFHighlight } from "~/models";
+import { PDFHighlight } from "~/types";
 import { AreaHighlight } from "./AreaHighlight";
 import { PDFDisplayProxy } from "./PDFDisplay";
 import { TextHighlight } from "./TextHighlight";
@@ -62,7 +62,6 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
           viewport
         ),
       },
-      timestamp: Date.now(),
     };
 
     onHighlightUpdated(newHighlight);

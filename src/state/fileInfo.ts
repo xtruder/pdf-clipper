@@ -1,8 +1,9 @@
 import { atomFamily } from "recoil";
 
-import { FileInfo } from "~/models/files";
+import { FileInfo } from "~/types";
+
 import { resourceEffect } from "./effects";
-import { persistence } from "./state";
+import { persistence } from "./persistence";
 
 export const fileInfo = atomFamily<FileInfo, string>({
   key: "fileSources",

@@ -3,30 +3,30 @@ import { useInView } from "react-intersection-observer";
 import { Rnd } from "react-rnd";
 
 import { Rect } from "~/lib/dom";
-import { HighlightColor } from "~/models";
+import { DocumentHighlightColor } from "~/types";
 
 import { TooltipContainer } from "./TooltipContainer";
 
-const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200",
-  [HighlightColor.YELLOW]: "bg-yellow-200",
-  [HighlightColor.GREEN]: "bg-green-200",
-  [HighlightColor.BLUE]: "bg-blue-200",
+const colorToClass: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "bg-red-200",
+  [DocumentHighlightColor.YELLOW]: "bg-yellow-200",
+  [DocumentHighlightColor.GREEN]: "bg-green-200",
+  [DocumentHighlightColor.BLUE]: "bg-blue-200",
 };
 
-const selectedColorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-300",
-  [HighlightColor.YELLOW]: "bg-yellow-300",
-  [HighlightColor.GREEN]: "bg-green-300",
-  [HighlightColor.BLUE]: "bg-blue-300",
+const selectedColorToClass: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "bg-red-300",
+  [DocumentHighlightColor.YELLOW]: "bg-yellow-300",
+  [DocumentHighlightColor.GREEN]: "bg-green-300",
+  [DocumentHighlightColor.BLUE]: "bg-blue-300",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = DocumentHighlightColor.YELLOW;
 
 export interface AreaHighlightProps {
   className?: string;
   boundingRect: Rect;
-  color?: HighlightColor;
+  color?: DocumentHighlightColor;
   isSelected?: boolean;
   selectedClassName?: string;
   tooltipContainerClassName?: string;

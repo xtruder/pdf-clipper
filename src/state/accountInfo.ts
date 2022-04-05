@@ -2,11 +2,11 @@ import { selector, atom, waitForAll, DefaultValue } from "recoil";
 import { v4 as uuidv4 } from "uuid";
 import { debug as _debug } from "debug";
 
-import { AccountInfo, DocumentInfo } from "~/models";
+import { AccountInfo, DocumentInfo } from "~/types";
 
 import { resourceEffect } from "./effects";
-import { persistence } from "./state";
-import { documentInfo } from "./documents";
+import { persistence } from "./persistence";
+import { documentInfo } from "./documentInfo";
 
 const debug = _debug("state:account");
 
@@ -17,7 +17,9 @@ const generateNewAccount = selector<AccountInfo>({
 
     debug("generating new account", accountInfo);
 
-    await persistence.accountInfo().write(accountInfo);
+    // persist intial account
+    await persistence.accountInfo(accountInfo.id).write(accountInfo);
+    localStorage.setItem("currentAccount", accountInfo.id);
 
     return accountInfo;
   },
@@ -27,7 +29,11 @@ const generateNewAccount = selector<AccountInfo>({
 export const currentAccount = atom<AccountInfo>({
   key: "currentAccount",
   default: generateNewAccount,
-  effects: [resourceEffect(persistence.accountInfo())],
+  effects: [
+    resourceEffect(
+      persistence.accountInfo(localStorage.getItem("currentAccount") || "")
+    ),
+  ],
 });
 
 export const accountDocuments = selector<DocumentInfo[]>({

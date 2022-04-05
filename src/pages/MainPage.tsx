@@ -9,9 +9,9 @@ import { currentAccount, documentInfo, fileInfo } from "~/state";
 
 import { DocumentListContainer } from "~/containers/DocumentListContainer";
 import { DocumentDropZone } from "~/components/DocumentDropZone";
-import { DocumentType } from "~/models";
+import { DocumentType } from "~/types";
 import { sha256 } from "~/lib/crypto";
-import { getPrivateDirectory } from "~/state/state";
+import { fs } from "~/state";
 import { paths } from "~/state/const";
 
 const debug = _debug("main");
@@ -60,9 +60,10 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
         return;
 
       // save uploaded file locally
-      await (
-        await getPrivateDirectory()
-      ).saveFile(paths.file(uploadState.fileId, "pdf"), uploadState.file);
+      await fs.saveFile(
+        paths.file(uploadState.fileId, "pdf"),
+        uploadState.file
+      );
 
       setFileInfo({
         id: uploadState.fileId,

@@ -1,8 +1,12 @@
-import React, { useCallback } from "react";
-import { useRecoilValue, useRecoilValueLoadable } from "recoil";
+import React, { useCallback, useEffect } from "react";
+import {
+  useRecoilValue,
+  useRecoilValueLoadable,
+  useResetRecoilState,
+} from "recoil";
 import { HighlightCard, HighlightCardList } from "~/components/HighlightCard";
 
-import { Highlight, PDFHighlight } from "~/models";
+import { DocumentHighlight, PDFHighlight } from "~/types";
 import { documentHighlightImage, documentHighlights } from "~/state";
 
 export interface HighlightListContainerProps {
@@ -24,7 +28,7 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
   onHighlightEditClicked = () => null,
   onHighlightPageClicked = () => null,
 }) => {
-  const HighlightCardContainer: React.FC<{ highlight: Highlight }> =
+  const HighlightCardContainer: React.FC<{ highlight: DocumentHighlight }> =
     useCallback(
       ({ highlight }) => {
         const selected = highlight.id === selectedHighlight?.id;
@@ -34,7 +38,10 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
           documentHighlightImage([
             documentId,
             highlight.id,
-            highlight.timestamp,
+            (highlight.updatedAt
+              ? new Date(highlight.updatedAt)
+              : new Date()
+            ).getTime(),
           ])
         );
 
@@ -67,9 +74,9 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
 
   return (
     <HighlightCardList>
-      {sortedHighlights.map((h) => (
-        <HighlightCardContainer highlight={h} key={h.id} />
-      ))}
+      {sortedHighlights.map((h) => {
+        return <HighlightCardContainer highlight={h} key={h.id} />;
+      })}
     </HighlightCardList>
   );
 };

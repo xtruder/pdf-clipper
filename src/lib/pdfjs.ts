@@ -6,7 +6,7 @@ import {
 import { TypedArray } from "pdfjs-dist/types/src/display/api";
 import { debug as _debug } from "debug";
 
-import { DocumentOutline, OutlineNode } from "~/models";
+import { DocumentOutline, OutlineNode } from "~/types";
 import {
   asElement,
   getCanvasAreaAsPNG,

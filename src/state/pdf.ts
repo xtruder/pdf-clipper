@@ -7,11 +7,11 @@ import { ScaledPageRect, scaledRectToViewportRect } from "~/lib/pdf";
 import { getDocumentOutline, loadPDF, screenshotPageArea } from "~/lib/pdfjs";
 import { TypedArray } from "~/lib/nativefs";
 
-import { DocumentInfo, PDFDocumentMeta } from "~/models";
+import { DocumentInfo, PDFDocumentMeta } from "~/types";
 
 import { paths } from "./const";
-import { getPrivateDirectory } from "./state";
-import { fileInfo } from "./files";
+import { fs } from "./persistence";
+import { fileInfo } from "./fileInfo";
 
 const debug = _debug("state:pdf");
 
@@ -32,12 +32,11 @@ export const pdfDocumentProxy = selectorFamily<PDFDocumentProxy, string>({
       const path = paths.file(fileId, "pdf");
 
       const info = get(fileInfo(fileId));
-      const privateDir = await getPrivateDirectory();
 
       // try to load local file, if it does not exist load from actual source
       let source: string | TypedArray;
       try {
-        const file = await privateDir.getFile(path);
+        const file = await fs.getFile(path);
         source = new Uint8Array(await file.arrayBuffer());
       } catch (err: any) {
         if (err.name !== "NotFoundError") throw err;
@@ -50,7 +49,7 @@ export const pdfDocumentProxy = selectorFamily<PDFDocumentProxy, string>({
 
       // save pdf document locally
       const pdfData = await pdf.getData();
-      await privateDir.saveFile(path, pdfData);
+      await fs.saveFile(path, pdfData);
 
       return pdf;
     },

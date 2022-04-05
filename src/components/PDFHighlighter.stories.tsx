@@ -4,7 +4,7 @@ import { suspend } from "suspend-react";
 
 import { Story } from "@storybook/react";
 
-import { PDFHighlight } from "~/models";
+import { PDFHighlight } from "~/types";
 import { loadPDF } from "~/lib/pdfjs";
 
 import { PDFHighlighter } from "./PDFHighlighter";

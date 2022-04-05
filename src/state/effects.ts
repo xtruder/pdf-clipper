@@ -43,6 +43,11 @@ export const resourceEffect: <T>(
 
     if ("subscribe" in syncable) {
       // subscribe to changes in syncable
-      syncable.subscribe((newValue) => setSelf(newValue));
+      syncable.subscribe((newValue) => {
+        // reset to default value if newValue is null
+        if (newValue === null) return setSelf(new DefaultValue());
+
+        setSelf(newValue);
+      });
     }
   };

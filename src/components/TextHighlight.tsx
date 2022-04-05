@@ -1,30 +1,30 @@
 import React, { useMemo, useRef } from "react";
 
 import { getBoundingRectForRects, Rect } from "~/lib/dom";
-import { HighlightColor } from "~/models";
+import { DocumentHighlightColor } from "~/types";
 
 import { TooltipContainer } from "./TooltipContainer";
 
-const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200 text-red-800",
-  [HighlightColor.YELLOW]: "bg-yellow-200 text-yellow-800",
-  [HighlightColor.GREEN]: "bg-green-200 text-green-800",
-  [HighlightColor.BLUE]: "bg-blue-200 text-blue-800",
+const colorToClass: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "bg-red-200 text-red-800",
+  [DocumentHighlightColor.YELLOW]: "bg-yellow-200 text-yellow-800",
+  [DocumentHighlightColor.GREEN]: "bg-green-200 text-green-800",
+  [DocumentHighlightColor.BLUE]: "bg-blue-200 text-blue-800",
 };
 
-const selectedColorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-300",
-  [HighlightColor.YELLOW]: "bg-yellow-300",
-  [HighlightColor.GREEN]: "bg-green-300",
-  [HighlightColor.BLUE]: "bg-blue-300",
+const selectedColorToClass: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "bg-red-300",
+  [DocumentHighlightColor.YELLOW]: "bg-yellow-300",
+  [DocumentHighlightColor.GREEN]: "bg-green-300",
+  [DocumentHighlightColor.BLUE]: "bg-blue-300",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = DocumentHighlightColor.YELLOW;
 
 export interface TextHighlightProps {
   className?: string;
   rects: Rect[];
-  color?: HighlightColor;
+  color?: DocumentHighlightColor;
   isSelected?: boolean;
   showTooltip?: boolean;
   tooltip?: JSX.Element;

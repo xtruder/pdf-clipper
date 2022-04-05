@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { ReactComponent as ChevronUpIcon } from "~/assets/icons/chevron-up-outline.svg";
 import { ReactComponent as ChevronDownIcon } from "~/assets/icons/chevron-down-outline.svg";
 
-import { DocumentOutline, OutlineNode, OutlinePosition } from "~/models";
+import { DocumentOutline, OutlineNode, OutlinePosition } from "~/types";
 
 /*
 node.dest:

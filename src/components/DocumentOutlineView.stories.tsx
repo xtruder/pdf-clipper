@@ -1,7 +1,7 @@
 import React from "react";
 import { Story } from "@storybook/react";
 
-import { DocumentOutline } from "~/models";
+import { DocumentOutline } from "~/types";
 
 import { DocumentOutlineView } from "./DocumentOutlineView";
 

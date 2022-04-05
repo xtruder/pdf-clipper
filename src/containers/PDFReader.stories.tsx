@@ -3,7 +3,7 @@ import { Story } from "@storybook/react";
 import React, { useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 
-import { DocumentType } from "~/models";
+import { DocumentType } from "~/types";
 import { documentInfo, fileInfo } from "~/state";
 
 import { PDFReader } from "./PDFReader";

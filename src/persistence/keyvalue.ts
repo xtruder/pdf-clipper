@@ -5,9 +5,9 @@ import {
   AccountInfo,
   DocumentInfo,
   DocumentReadingInfo,
-  Highlight,
-} from "~/models";
-import { FileInfo } from "~/models/files";
+  DocumentHighlight,
+  FileInfo,
+} from "~/types";
 
 import { Persistence, SyncableResource } from "./persistence";
 
@@ -111,7 +111,11 @@ export class KVPersistence implements Persistence {
   private _documentInfo: Record<string, SyncableResource<DocumentInfo>> = {};
   private _readingInfo: Record<string, SyncableResource<DocumentReadingInfo>> =
     {};
-  private _documentHighlights: Record<string, SyncableResource<Highlight[]>> =
+  private _documentHighlight: Record<
+    string,
+    SyncableResource<DocumentHighlight>
+  > = {};
+  private _documentHighlightIds: Record<string, SyncableResource<string[]>> =
     {};
   private _highlightImage: Record<string, SyncableResource<string>> = {};
   private _fileInfo: Record<string, SyncableResource<FileInfo>> = {};
@@ -134,20 +138,37 @@ export class KVPersistence implements Persistence {
     return store[key];
   };
 
-  accountInfo = () =>
-    this.memoized("accountInfo", this._accountInfo, "main", null);
+  accountInfo = (accountId: string) =>
+    this.memoized("accountInfo", this._accountInfo, accountId, null);
 
   documentInfo = (docId: string) =>
-    this.memoized("docInfo", this._documentInfo, docId, { id: docId });
+    this.memoized("docInfo", this._documentInfo, docId, {
+      id: docId,
+    });
 
-  readingInfo = (accountId: string, docId: string) =>
+  documentReadingInfo = (accountId: string, docId: string) =>
     this.memoized("readingInfo", this._readingInfo, `${accountId}-${docId}`, {
+      id: `${accountId}|${docId}`,
       accountId,
       docId,
     });
 
-  documentHighlights = (docId: string) =>
-    this.memoized("documentHighlights", this._documentHighlights, docId, []);
+  documentHighlight = (docId: string, highlightId: string) =>
+    this.memoized(
+      "documentHighlight",
+      this._documentHighlight,
+      `${docId}-${highlightId}`,
+      null
+    );
+
+  documentHighlightIds(docId: string): SyncableResource<string[]> {
+    return this.memoized(
+      "documentHighlightIds",
+      this._documentHighlightIds,
+      docId,
+      [] as string[]
+    );
+  }
 
   highlightImage = (docId: string, highlightId: string, timestamp: number) =>
     this.memoized(

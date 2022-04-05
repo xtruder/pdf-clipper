@@ -1,7 +1,7 @@
 import { ScaledPageRect } from "~/lib/pdf";
 
-import { DocumentOutline } from "./documents";
-import { HighlightColor, Highlight } from "./highlights";
+import { DocumentOutline } from "./documentInfo";
+import { DocumentHighlightColor, DocumentHighlight } from "./documentHighlight";
 
 export interface PDFDocumentMeta {
   pageCount: number;
@@ -28,10 +28,11 @@ export interface PDFHighlightLocation {
 export interface PDFHighlightContent {
   text?: string;
   thumbnail?: string;
-  color: HighlightColor;
+  color: DocumentHighlightColor;
 }
 
-export interface PDFHighlight extends Highlight {
+export interface PDFHighlight {
+  id: string;
   location: PDFHighlightLocation;
   content: PDFHighlightContent;
 }

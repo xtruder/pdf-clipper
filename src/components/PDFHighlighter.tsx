@@ -5,8 +5,9 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { v4 as uuid } from "uuid";
 
-import { PDFHighlight, HighlightColor } from "~/models";
+import { PDFHighlight, DocumentHighlightColor } from "~/types";
 import {
   groupHighlightsByPage,
   getHighlightedRectsWithinPages,
@@ -18,7 +19,6 @@ import {
 
 import { Rect, clearRangeSelection } from "~/lib/dom";
 import { getPageFromElement, getPagesFromRange } from "~/lib/pdfjs";
-import { s4 } from "~/lib/utils";
 
 import {
   PDFLayer,
@@ -34,21 +34,21 @@ import { PDFHighlightComponent } from "./PDFHighlight";
 
 import "./PDFHighlighter.css";
 
-const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "textLayer__selection_red",
-  [HighlightColor.YELLOW]: "textLayer__selection_yellow",
-  [HighlightColor.GREEN]: "textLayer__selection_green",
-  [HighlightColor.BLUE]: "textLayer__selection_blue",
+const colorToRangeSelectionClassName: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "textLayer__selection_red",
+  [DocumentHighlightColor.YELLOW]: "textLayer__selection_yellow",
+  [DocumentHighlightColor.GREEN]: "textLayer__selection_green",
+  [DocumentHighlightColor.BLUE]: "textLayer__selection_blue",
 };
 
-const colorToClassName: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200",
-  [HighlightColor.YELLOW]: "bg-yellow-200",
-  [HighlightColor.GREEN]: "bg-green-200",
-  [HighlightColor.BLUE]: "bg-blue-200",
+const colorToClassName: Record<DocumentHighlightColor, string> = {
+  [DocumentHighlightColor.RED]: "bg-red-200",
+  [DocumentHighlightColor.YELLOW]: "bg-yellow-200",
+  [DocumentHighlightColor.GREEN]: "bg-green-200",
+  [DocumentHighlightColor.BLUE]: "bg-blue-200",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = DocumentHighlightColor.YELLOW;
 
 interface PDFHighlighterEvents {
   // onHighlighting is triggered when highlight selection is still in progress
@@ -74,7 +74,7 @@ export interface PDFHighlighterProps
   scrollToHighlight?: PDFHighlight;
 
   // color to use for highlight selection
-  highlightColor?: HighlightColor;
+  highlightColor?: DocumentHighlightColor;
 
   // tooltip used for highlight
   highlightTooltip?: JSX.Element;
@@ -142,7 +142,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
     // create a new highlight
     const highlight: PDFHighlight = {
-      id: s4(),
+      id: uuid(),
       location: {
         boundingRect: viewportRectToScaledPageRect(boundingRect, page.viewport),
         rects: rects.map((rect) =>
@@ -151,7 +151,6 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         pageNumber,
       },
       content: { text, color: highlightColor },
-      timestamp: Date.now(),
     };
 
     onHighlighting(highlight);
@@ -180,14 +179,13 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
     // create a new higlightwith image content
     const highlight: PDFHighlight = {
-      id: s4(),
+      id: uuid(),
       location: {
         boundingRect: viewportRectToScaledPageRect(pageBoundingRect, viewport),
         rects: [],
         pageNumber: page.number,
       },
       content: { thumbnail: image, color: highlightColor },
-      timestamp: Date.now(),
     };
 
     onHighlighting(highlight);
