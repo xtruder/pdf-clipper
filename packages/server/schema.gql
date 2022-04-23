@@ -1,0 +1,190 @@
+type Query {
+  feedAccountInfo(id: String, updatedAt: Float, limit: Int!): [AccountInfo!]!
+  feedDocumentInfo(id: String, updatedAt: Float, limit: Int!): [DocumentInfo!]!
+  feedDocumentReadingInfo(id: String, updatedAt: Float, limit: Int!): [DocumentReadingInfo!]!
+  feedDocumentHighlight(id: String, updatedAt: Float, limit: Int!): [DocumentHighlight!]!
+  feedFileInfo(id: String, updatedAt: Float, limit: Int!): [FileInfo!]!
+}
+
+type Mutation {
+  setAccountInfo(accountInfo: AccountInfoInput): AccountInfo
+  setDocumentInfo(documentInfo: DocumentInfoInput): DocumentInfo
+  setDocumentReadingInfo(documentReadingInfo: DocumentReadingInfoInput): DocumentReadingInfo
+  setDocumentHighlight(documentHighlight: DocumentHighlightInput): DocumentHighlight
+  setFileInfo(fileInfo: FileInfoInput): FileInfo
+}
+
+type Subscription {
+  changedAccountInfo(token: String!): AccountInfo
+  changedDocumentInfo(token: String!): DocumentInfo
+  changedDocumentReadingInfo(token: String!): DocumentReadingInfo
+  changedDocumentHighlight(token: String!): DocumentHighlight
+  changedFileInfo(token: String!): FileInfo
+}
+
+type AccountInfo {
+  name: String
+  documentIds: [String]
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+type DocumentInfo {
+  fileId: String
+  type: String
+  title: String
+  author: String
+  description: String
+  cover: String
+  pageCount: Float
+  outline: String
+  creator: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+type DocumentReadingInfo {
+  accountId: String!
+  docId: String!
+  lastPage: Float
+  screenshot: String
+  location: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+type DocumentHighlightT0LocationT0RectsT0T0 {
+  pageNumber: Float
+  left: Float
+  top: Float
+  width: Float
+  height: Float
+  scaleX: Float
+  scaleY: Float
+}
+type DocumentHighlightT0LocationT0BoundingRectT0 {
+  pageNumber: Float
+  left: Float
+  top: Float
+  width: Float
+  height: Float
+  scaleX: Float
+  scaleY: Float
+}
+type DocumentHighlightT0LocationT0 {
+  pageNumber: Float
+  rects: [DocumentHighlightT0LocationT0RectsT0T0]
+  boundingRect: DocumentHighlightT0LocationT0BoundingRectT0
+}
+type DocumentHighlightT0ContentT0 {
+  text: String
+  thumbnail: String
+  color: String
+}
+type DocumentHighlight {
+  docId: String!
+  location: DocumentHighlightT0LocationT0
+  content: DocumentHighlightT0ContentT0
+  author: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+type FileInfo {
+  mimeType: String
+  sources: [String]
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+input AccountInfoInput {
+  name: String
+  documentIds: [String]
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+input DocumentInfoInput {
+  fileId: String
+  type: String
+  title: String
+  author: String
+  description: String
+  cover: String
+  pageCount: Float
+  outline: String
+  creator: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+input DocumentReadingInfoInput {
+  accountId: String!
+  docId: String!
+  lastPage: Float
+  screenshot: String
+  location: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+input DocumentHighlightInputT0LocationT0RectsT0T0 {
+  pageNumber: Float
+  left: Float
+  top: Float
+  width: Float
+  height: Float
+  scaleX: Float
+  scaleY: Float
+}
+input DocumentHighlightInputT0LocationT0BoundingRectT0 {
+  pageNumber: Float
+  left: Float
+  top: Float
+  width: Float
+  height: Float
+  scaleX: Float
+  scaleY: Float
+}
+input DocumentHighlightInputT0LocationT0 {
+  pageNumber: Float
+  rects: [DocumentHighlightInputT0LocationT0RectsT0T0]
+  boundingRect: DocumentHighlightInputT0LocationT0BoundingRectT0
+}
+input DocumentHighlightInputT0ContentT0 {
+  text: String
+  thumbnail: String
+  color: String
+}
+input DocumentHighlightInput {
+  docId: String!
+  location: DocumentHighlightInputT0LocationT0
+  content: DocumentHighlightInputT0ContentT0
+  author: String
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+input FileInfoInput {
+  mimeType: String
+  sources: [String]
+  id: String!
+  createdAt: Float
+  updatedAt: Float
+  deleted: Boolean!
+}
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
