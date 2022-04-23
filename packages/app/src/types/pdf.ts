@@ -1,7 +1,7 @@
 import { ScaledPageRect } from "~/lib/pdf";
 
 import { DocumentOutline } from "./documentInfo";
-import { DocumentHighlightColor, DocumentHighlight } from "./documentHighlight";
+import { DocumentHighlightColor } from "./documentHighlight";
 
 export interface PDFDocumentMeta {
   pageCount: number;

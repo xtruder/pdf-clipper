@@ -1,9 +1,5 @@
-import React, { useCallback, useEffect } from "react";
-import {
-  useRecoilValue,
-  useRecoilValueLoadable,
-  useResetRecoilState,
-} from "recoil";
+import React, { useCallback } from "react";
+import { useRecoilValue, useRecoilValueLoadable } from "recoil";
 import { HighlightCard, HighlightCardList } from "~/components/HighlightCard";
 
 import { DocumentHighlight, PDFHighlight } from "~/types";
@@ -65,7 +61,7 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
 
   const highlights: PDFHighlight[] = useRecoilValue(
     documentHighlights(documentId)
-  ).filter((h) => !h.deleted);
+  );
 
   // sort highlights by page number
   const sortedHighlights = [...highlights].sort(
@@ -75,7 +71,12 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
   return (
     <HighlightCardList>
       {sortedHighlights.map((h) => {
-        return <HighlightCardContainer highlight={h} key={h.id} />;
+        return (
+          <HighlightCardContainer
+            highlight={{ ...h, docId: h.id }}
+            key={h.id}
+          />
+        );
       })}
     </HighlightCardList>
   );
