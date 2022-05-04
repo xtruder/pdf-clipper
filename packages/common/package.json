@@ -1,0 +1,7 @@
+{
+  "name": "@pdf-clipper/common",
+  "description": "PDF clipper common stuff",
+  "dependencies": {
+    "ajv": "^8.11.0"
+  }
+}

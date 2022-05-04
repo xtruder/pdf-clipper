@@ -1,0 +1,122 @@
+scalar DateTime
+
+enum DocumentType {
+  PDF
+}
+
+type Account {
+  id: String!
+  name: String
+  membership: [DocumentMember!]
+  documents: [DocumentInfo!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AccountInfo {
+  id: String!
+  name: String
+}
+
+input AccountInput {
+  id: String
+  name: String
+}
+
+enum FileSourceType {
+  URL
+}
+
+input FileSourceInput {
+  type: FileSourceType!
+  url: String!
+}
+
+input FileInfoInput {
+  hash: String!
+  sources: [FileSourceInput!]
+}
+
+type FileSource {
+  type: FileSourceType!
+  url: String!
+}
+
+type FileInfo {
+  hash: String!
+  sources: [FileSource!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OutlinePosition {
+  pageInt: Int
+  top: Int
+  location: String
+}
+
+type OutlineNode {
+  title: String!
+  position: OutlinePosition!
+  items: [OutlineNode!]
+}
+
+type DocumentOutline {
+  items: [OutlineNode!]!
+}
+
+enum DocumentRole {
+  OWNER
+  CONTRIBUTOR
+  READER
+}
+
+type DocumentMember {
+  documentId: String!
+  document: DocumentInfo
+  accountId: String!
+  account: AccountInfo
+  role: DocumentRole!
+  createdAt: DateTime!
+}
+
+type DocumentInfo {
+  id: String!
+  type: DocumentType!
+  file: FileInfo
+  fileId: String
+  author: String
+  title: String
+  description: String
+  cover: String
+  pageCount: Int
+  outline: DocumentOutline
+  members: [DocumentMember!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input DocumentInfoInput {
+  docType: DocumentType!
+  fileId: String
+  author: String
+  title: String
+  description: String
+  cover: String
+}
+
+type Query {
+  account: Account
+  document(id: String!): DocumentInfo
+}
+
+type Subscription {
+  account: Account!
+  document(id: String!): DocumentInfo!
+}
+
+type Mutation {
+  setAccount(account: AccountInput!): Account!
+  setFileInfo(file: FileInfoInput!): FileInfo!
+  setDocumentInfo(document: DocumentInfoInput): DocumentInfo!
+}

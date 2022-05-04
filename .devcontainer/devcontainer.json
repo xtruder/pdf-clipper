@@ -5,14 +5,14 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "dev",
   "workspaceFolder": "/workspace",
-  
+
   "userEnvProbe": "loginShell",
   "updateRemoteUserUID": false,
 
   "onCreateCommand": "nix-shell --command 'echo done building nix dev environment'",
 
   "settings": {
-    "nix.enableLanguageServer": true,
+    "nix.enableLanguageServer": true
   },
 
   "extensions": [
@@ -23,6 +23,7 @@
     "voorjaar.windicss-intellisense",
     "antfu.vite",
     "simonsiefke.svg-preview",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "GraphQL.vscode-graphql"
   ]
 }

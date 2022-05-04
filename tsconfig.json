@@ -19,5 +19,10 @@
     "importHelpers": true,
     "downlevelIteration": true,
     "composite": true
-  }
+  },
+  "references": [
+    { "path": "./packages/app" },
+    { "path": "./packages/common" },
+    { "path": "./packages/server" }
+  ]
 }
