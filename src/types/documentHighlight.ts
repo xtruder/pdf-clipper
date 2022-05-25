@@ -1,52 +1,24 @@
-import type { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
+export type HighlightColor = "red" | "yellow" | "green" | "blue";
 
-import { BaseResource, baseSchemaProps } from "./base";
+export interface DocumentHighlight {
+  /**unique id of document highlight */
+  id: string;
 
-export enum DocumentHighlightColor {
-  RED = "red",
-  YELLOW = "yellow",
-  GREEN = "green",
-  BLUE = "blue",
-}
+  /**id of the document that highlight is associated with */
+  documentId?: string;
 
-export interface DocumentHighlight extends BaseResource {
-  docId: string;
+  /**document highlight creation time */
+  createdAt: Date;
+
+  /**document highlight last update time */
+  updatedAt: Date;
 
   /** location of a highlight (depends on document type) */
-  location: any;
+  location?: any;
 
   /** content associated with highlight (depends of document type) */
-  content: any;
+  content?: any;
 
-  /** owner who created the highlight */
-  author?: string;
+  /** id of account that created the highlight */
+  createdBy?: string;
 }
-
-export const documentHighlightSchema: RxJsonSchema<DocumentHighlight> = {
-  title: "document highlight schema",
-  description: "schema for document highlights",
-  version: 0,
-  keyCompression: true,
-  primaryKey: "id",
-  type: "object",
-  properties: {
-    docId: {
-      type: "string",
-    },
-    location: {
-      type: "object",
-    },
-    content: {
-      type: "object",
-    },
-    author: {
-      type: "string",
-    },
-    ...baseSchemaProps,
-  },
-  required: ["id", "docId"],
-} as const;
-
-export type DocumentHighlightDocument = RxDocument<DocumentHighlight>;
-
-export type DocumentHighlightCollection = RxCollection<DocumentHighlight>;

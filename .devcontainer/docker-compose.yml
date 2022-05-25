@@ -10,11 +10,81 @@ services:
     environment:
       DOCKER_HOST: tcp://localhost:2375
       PRELOAD_EXTENSIONS: "arrterian.nix-env-selector"
+      HASURA_GRAPHQL_ENDPOINT: http://localhost:8080
+      HASURA_GRAPHQL_ADMIN_SECRET: hello123
     volumes:
       - ..:/workspace:cached
       - nix:/nix
     security_opt:
       - label:disable
+    network_mode: "service:docker"
+
+  postgres:
+    image: postgres:12
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./initdb.d:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+    network_mode: "service:docker"
+
+  graphql-engine:
+    image: hasura/graphql-engine:v2.6.1
+    depends_on:
+    - "postgres"
+    restart: always
+    environment:
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@localhost:5432/postgres
+      ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
+      PG_DATABASE_URL: postgres://postgres:postgrespassword@localhost:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## set unauthorized role
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: public
+      HASURA_GRAPHQL_JWT_SECRET: ${HASURA_GRAPHQL_JWT_SECRET}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET}
+    network_mode: "service:docker"
+
+  hasura-auth:
+    image: nhost/hasura-auth:latest
+    depends_on:
+      - postgres
+      - graphql-engine
+    env_file:
+      - .env
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@localhost:5432/postgres
+      HASURA_GRAPHQL_GRAPHQL_URL: http://localhost:8080/v1/graphql
+      AUTH_ANONYMOUS_USERS_ENABLED: "true"
+    network_mode: "service:docker"
+
+  # http://localhost:6080/plain/s3://images/my-image.png
+  imgproxy:
+    image: darthsim/imgproxy:latest
+    environment:
+      IMGPROXY_BIND: ":6080"
+      IMGPROXY_USE_S3: "true"
+      IMGPROXY_S3_ENDPOINT: "http://localhost:9000"
+      IMGPROXY_DEVELOPMENT_ERRORS_MODE: "true"
+      IMGPROXY_ALLOWED_SOURCES: s3://images
+      IMGPROXY_ALLOW_ORIGIN: "*"
+      AWS_ACCESS_KEY_ID: qo3SQTpHuE2IMfU7
+      AWS_SECRET_ACCESS_KEY: PaHQqhz1p9ZZQvLFbhM5PQhAUILaJmLw
+    network_mode: "service:docker"
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio:/data
     network_mode: "service:docker"
 
   docker:
@@ -34,3 +104,5 @@ services:
 volumes:
   nix:
   docker:
+  db_data:
+  minio:

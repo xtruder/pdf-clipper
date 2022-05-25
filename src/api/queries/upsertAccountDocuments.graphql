@@ -1,0 +1,12 @@
+mutation upsertAccountDocuments($objects: [accountDocuments_insert_input!] = []) {
+  insertAccountDocuments(objects: $objects) {
+    affected_rows
+    returning {
+      accountId
+      documentId
+      role
+      acceptedAt
+      createdAt
+    }
+  }
+}

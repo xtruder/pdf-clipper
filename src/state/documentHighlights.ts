@@ -1,80 +1,108 @@
-import { atomFamily, selectorFamily, waitForAll } from "recoil";
+import { atomFamily, selectorFamily } from "recoil";
 
-import { DocumentType, DocumentHighlight, PDFHighlight } from "~/types";
-import { notEmpty } from "~/lib/utils";
+import { DocumentHighlight, PDFHighlight } from "~/types";
 
 import { pdfPageAreaImage } from "./pdf";
-import { resourceEffect } from "./effects";
-import { persistence } from "./persistence";
-import { documentInfo } from "./documentInfo";
+import { graphqlEffect } from "./effects";
+import { api } from "~/api";
+import { fileInfo } from "./fileInfo";
+import { document } from "./document";
 
-/**Atom for highlight associated with document */
-export const documentHighlight = atomFamily<
-  DocumentHighlight | null,
-  [docId: string, highlightId: string]
+/**Atom for a list of document highlights associated with document */
+export const documentHighlights = atomFamily<
+  {
+    id: string;
+    updatedAt: Date;
+  }[],
+  string
 >({
-  key: "documentHighlight",
-  default: null,
-  effects: ([docId, highlightId]) => [
-    resourceEffect(persistence.documentHighlight(docId, highlightId)),
+  key: "documentHighlights",
+  default: [],
+  effects: (documentId) => [
+    graphqlEffect({
+      get: () => api.getDocumentHighlights(documentId),
+      subscribe: () => api.subscribeHighlights(documentId),
+    }),
   ],
 });
 
-/**Atom keeping ids of highlights per document */
-export const documentHighlightIds = atomFamily<string[], string>({
-  key: "documentHighlightIds",
-  default: [],
-  effects: (docId: string) => [
-    resourceEffect(persistence.documentHighlightIds(docId)),
+/**Atom for document highlight items, keyed by highlightId and updatedAt time */
+export const documentHighlight = atomFamily<DocumentHighlight, string>({
+  key: "documentHighlight",
+  default: (id) => ({ id, createdAt: new Date(), updatedAt: new Date() }),
+  effects: (id) => [
+    graphqlEffect<DocumentHighlight>({
+      get: () => api.getDocumentHighlight(id),
+      write: async (newValue) =>
+        newValue && api.upsertDocumentHighlight(newValue),
+    }),
   ],
 });
 
 /**Selector that filters single document highlight */
-export const documentHighlights = selectorFamily<DocumentHighlight[], string>({
-  key: "documentHighlights",
-  get:
-    (docId) =>
-    ({ get }) => {
-      const highlightIds = get(documentHighlightIds(docId));
+// export const documentHighlights = selectorFamily<DocumentHighlight[], string>({
+//   key: "documentHighlights",
+//   get:
+//     (docId) =>
+//     ({ get }) => {
+//       const highlightIds = get(documentHighlightIds(docId));
 
-      const highlights = get(
-        waitForAll(highlightIds.map((id) => documentHighlight([docId, id])))
-      );
+//       const highlights = get(
+//         waitForAll(highlightIds.map((id) => documentHighlight([docId, id])))
+//       );
 
-      return highlights.filter(notEmpty);
-    },
-});
+//       return highlights.filter(notEmpty);
+//     },
+// });
 
+/**gets highlight image associated with document and highlight with timestamp */
 export const documentHighlightImage = atomFamily<
-  string,
-  [docId: string, highlightId: string, timestamp: number]
+  string | null,
+  [highlightId: string, updatedAt: number]
 >({
   key: "documentHighlightImage",
-  default: selectorFamily({
+  default: selectorFamily<
+    string | null,
+    [highlightId: string, updatedAt: number]
+  >({
     key: "documentHighlightImage/default",
     get:
-      ([docId, highlightId, _timestamp]) =>
+      ([highlightId, _updatedAt]) =>
       ({ get }) => {
-        const { type, fileId } = get(documentInfo(docId));
-        if (!fileId) throw new Error("missing document fileId");
+        // get information about highlight
+        const { documentId, ...highlight } = get(
+          documentHighlight(highlightId)
+        );
 
-        const highlight = get(documentHighlight([docId, highlightId]));
-        if (!highlight) throw new Error("missing highlight: " + highlightId);
+        // if no documentId has be defined there is nothing to extract highlight
+        // image from
+        if (!documentId) return null;
+
+        // get information about document
+        const doc = get(document(documentId));
 
         let image: string;
-        if (type === DocumentType.PDF) {
+        if (doc.type === "pdf") {
           const pdfHighlight: PDFHighlight = highlight;
 
+          // if no location has been defined yet, we don't have information
+          // where to extract highlight image
+          if (!pdfHighlight.location) return null;
+
           image = get(
-            pdfPageAreaImage([fileId, pdfHighlight.location.boundingRect, 5])
+            pdfPageAreaImage([
+              documentId,
+              pdfHighlight.location.boundingRect,
+              5,
+            ])
           );
         } else {
-          throw new Error("invalid document type: " + type);
+          throw new Error("invalid document type: " + doc.type);
         }
 
         if (!image)
           throw new Error(
-            `error getting highlight image for ${docId}/${highlightId}`
+            `error getting highlight image for ${documentId}/${highlightId}`
           );
 
         return image;

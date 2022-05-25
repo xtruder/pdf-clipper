@@ -1,0 +1,159 @@
+table:
+  schema: public
+  name: documents
+configuration:
+  custom_root_fields:
+    insert: insertDocuments
+    select_aggregate: documentsAggregate
+    insert_one: insertDocument
+    select_by_pk: document
+    select: documents
+    delete: deleteDocuments
+    update: updateDocuments
+    delete_by_pk: deleteDocument
+    update_by_pk: updateDocument
+  custom_name: documents
+  column_config:
+    file_id:
+      custom_name: fileId
+    author_id:
+      custom_name: authorId
+    deleted_at:
+      custom_name: deletedAt
+    created_at:
+      custom_name: createdAt
+  custom_column_names:
+    file_id: fileId
+    author_id: authorId
+    deleted_at: deletedAt
+    created_at: createdAt
+object_relationships:
+  - name: author
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: accounts
+        insertion_order: null
+        column_mapping:
+          author_id: id
+  - name: file
+    using:
+      foreign_key_constraint_on: file_id
+  - name: info
+    using:
+      foreign_key_constraint_on:
+        column: document_id
+        table:
+          schema: public
+          name: document_info
+array_relationships:
+  - name: highlights
+    using:
+      foreign_key_constraint_on:
+        column: document_id
+        table:
+          schema: public
+          name: document_highlights
+  - name: members
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: accounts_documents
+        insertion_order: null
+        column_mapping:
+          id: document_id
+insert_permissions:
+  - role: anonymous
+    permission:
+      check: {}
+      set:
+        author_id: x-hasura-User-Id
+      columns:
+        - file_id
+        - type
+      backend_only: false
+  - role: user
+    permission:
+      check: {}
+      set:
+        author_id: x-hasura-User-Id
+      columns:
+        - file_id
+        - type
+      backend_only: false
+select_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - type
+        - created_at
+        - author_id
+        - file_id
+        - id
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - account_id:
+                    _eq: X-Hasura-User-Id
+                - role:
+                    _in:
+                      - viewer
+                      - editor
+                      - admin
+                - accepted_at:
+                    _is_null: false
+  - role: user
+    permission:
+      columns:
+        - type
+        - created_at
+        - author_id
+        - file_id
+        - id
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - account_id:
+                    _eq: X-Hasura-User-Id
+                - role:
+                    _in:
+                      - viewer
+                      - editor
+                      - admin
+                - accepted_at:
+                    _is_null: false
+delete_permissions:
+  - role: anonymous
+    permission:
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - role:
+                    _in:
+                      - admin
+                - accepted_at:
+                    _is_null: false
+  - role: user
+    permission:
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - role:
+                    _in:
+                      - admin
+                - accepted_at:
+                    _is_null: false

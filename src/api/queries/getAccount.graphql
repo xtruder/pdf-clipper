@@ -1,0 +1,14 @@
+query getAccount($accountId: uuid!) {
+  account(id: $accountId) {
+    id
+    name
+    createdAt
+    updatedAt
+    documents {
+      documentId
+      role
+      createdAt
+      acceptedAt
+    }
+  }
+}

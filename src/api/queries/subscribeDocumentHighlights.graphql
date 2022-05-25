@@ -1,0 +1,7 @@
+subscription subscribeDocumentHighlights($documentId: uuid!) {
+  documentHighlights(where: {documentId:{_eq:$documentId}}) {
+    id
+    updatedAt
+    documentId
+  }
+}

@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 
 import { DocumentType } from "~/types";
-import { documentInfo, fileInfo } from "~/state";
+import { document, fileInfo } from "~/state";
 
 import { PDFReader } from "./PDFReader";
 
@@ -17,7 +17,7 @@ export const ThePDFReader: Story = (args) => {
   const docId = "100";
 
   const setFileInfo = useSetRecoilState(fileInfo(fileId));
-  const setDocumentInfo = useSetRecoilState(documentInfo(docId));
+  const setDocumentInfo = useSetRecoilState(document(docId));
 
   useEffect(() => {
     console.log("effect handler");

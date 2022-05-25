@@ -1,0 +1,8 @@
+- "!include public_account_document_roles.yaml"
+- "!include public_accounts.yaml"
+- "!include public_accounts_documents.yaml"
+- "!include public_document_highlights.yaml"
+- "!include public_document_info.yaml"
+- "!include public_documents.yaml"
+- "!include public_documents_admin.yaml"
+- "!include public_files.yaml"

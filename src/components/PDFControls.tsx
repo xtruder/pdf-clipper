@@ -17,7 +17,7 @@ import { ReactComponent as BookmarkIcon } from "~/assets/icons/bookmark-outline.
 import { ReactComponent as ShareIcon } from "~/assets/icons/share-outline.svg";
 import { ReactComponent as ArrowsExpandIcon } from "~/assets/icons/arrows-expand-outline.svg";
 
-import { DocumentHighlightColor } from "~/types";
+import { HighlightColor } from "~/types";
 import { EditableText } from "./EditableText";
 
 const preventFocus = (e: React.FocusEvent) => {
@@ -36,24 +36,24 @@ const roundPlaces = (value: number, places: number): number => {
 };
 
 const highlightColors = [
-  DocumentHighlightColor.RED,
-  DocumentHighlightColor.GREEN,
-  DocumentHighlightColor.BLUE,
-  DocumentHighlightColor.YELLOW,
+  HighlightColor.RED,
+  HighlightColor.GREEN,
+  HighlightColor.BLUE,
+  HighlightColor.YELLOW,
 ];
 
-const colorToClass: Record<DocumentHighlightColor, string> = {
-  [DocumentHighlightColor.RED]: "bg-red-300",
-  [DocumentHighlightColor.YELLOW]: "bg-yellow-300",
-  [DocumentHighlightColor.GREEN]: "bg-green-300",
-  [DocumentHighlightColor.BLUE]: "bg-blue-300",
+const colorToClass: Record<HighlightColor, string> = {
+  [HighlightColor.RED]: "bg-red-300",
+  [HighlightColor.YELLOW]: "bg-yellow-300",
+  [HighlightColor.GREEN]: "bg-green-300",
+  [HighlightColor.BLUE]: "bg-blue-300",
 };
 
 export const ActionButton: React.FC<{
   className?: string;
   scale?: number;
   isDark?: boolean;
-  onColorSelect?: (color: DocumentHighlightColor) => void;
+  onColorSelect?: (color: HighlightColor) => void;
   onScaleValueChange?: (value: string) => void;
   onDarkChange?: (value: boolean) => void;
   onFullScreen?: () => void;
@@ -67,8 +67,8 @@ export const ActionButton: React.FC<{
   onFullScreen = () => null,
 }) => {
   const [opened, setOpened] = useState(false);
-  const [selectedColor, setSelectedColor] = useState<DocumentHighlightColor>(
-    DocumentHighlightColor.YELLOW
+  const [selectedColor, setSelectedColor] = useState<HighlightColor>(
+    HighlightColor.YELLOW
   );
   const [selectedScaleValue, setSelectedScaleValue] = useState("auto");
   const [currentScale, setCurrentScale] = useState(scale);

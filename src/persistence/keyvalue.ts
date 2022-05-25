@@ -2,7 +2,7 @@ import { debug as _debug, Debugger } from "debug";
 import * as localForage from "localforage";
 
 import {
-  AccountInfo,
+  AccountPublic,
   DocumentInfo,
   DocumentReadingInfo,
   DocumentHighlight,
@@ -107,7 +107,7 @@ type ResourceConstructor = <T>(
 ) => SyncableResource<T>;
 
 export class KVPersistence implements Persistence {
-  private _accountInfo: Record<string, SyncableResource<AccountInfo>> = {};
+  private _accountInfo: Record<string, SyncableResource<AccountPublic>> = {};
   private _documentInfo: Record<string, SyncableResource<DocumentInfo>> = {};
   private _readingInfo: Record<string, SyncableResource<DocumentReadingInfo>> =
     {};
@@ -141,7 +141,7 @@ export class KVPersistence implements Persistence {
   accountInfo = (accountId: string) =>
     this.memoized("accountInfo", this._accountInfo, accountId, null);
 
-  documentInfo = (docId: string) =>
+  document = (docId: string) =>
     this.memoized("docInfo", this._documentInfo, docId, {
       id: docId,
     });

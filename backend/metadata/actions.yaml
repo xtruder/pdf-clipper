@@ -1,0 +1,24 @@
+actions:
+  - name: createFile
+    definition:
+      kind: synchronous
+      handler: http://localhost:5000/actions/createFile
+      forward_client_headers: true
+    permissions:
+      - role: user
+      - role: anonymous
+    comment: Create file method to generate minio presigned url for upload
+  - name: createFileDownloadUrl
+    definition:
+      kind: synchronous
+      handler: http://localhost:5000/actions/createFileDownloadUrl
+      forward_client_headers: true
+    comment: Creates file download url
+custom_types:
+  enums: []
+  input_objects: []
+  objects:
+    - name: CreateFileOutput
+    - name: FileUrlOutput
+    - name: FileDownloadUrlOutput
+  scalars: []

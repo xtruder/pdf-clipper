@@ -1,0 +1,16 @@
+mutation upsertDocumentHighlight($highlight: documentHighlights_insert_input!, $updatedAt:timestamptz! = "1970-01-01 00:00:00+00") {
+  insertDocumentHighlight(object: $highlight, on_conflict: {constraint: document_highlights_pkey, update_columns: [location, content, thumbnailImage], where: {updatedAt: {_gt: $updatedAt}}}) {
+    id
+    documentId
+    createdAt
+    updatedAt
+    content
+    location
+    thumbnailImage
+    createdBy
+    creator {
+      id
+      name
+    }
+  }
+}

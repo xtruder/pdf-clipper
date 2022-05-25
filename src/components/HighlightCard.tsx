@@ -1,24 +1,24 @@
 import React, { ReactElement, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
-import { DocumentHighlightColor } from "~/types";
+import { HighlightColor } from "~/types";
 
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 import { ReactComponent as TrashIcon } from "~/assets/icons/trash-outline.svg";
 import { ReactComponent as ChevronDoubleDownIcon } from "~/assets/icons/chevron-double-down-outline.svg";
 import { ReactComponent as ChevronDoubleUpIcon } from "~/assets/icons/chevron-double-up-outline.svg";
 
-const colorToClass: Record<DocumentHighlightColor, string> = {
-  [DocumentHighlightColor.RED]: "bg-red-200",
-  [DocumentHighlightColor.YELLOW]: "bg-yellow-200",
-  [DocumentHighlightColor.GREEN]: "bg-green-200",
-  [DocumentHighlightColor.BLUE]: "bg-blue-200",
+const colorToClass: Record<HighlightColor, string> = {
+  [HighlightColor.RED]: "bg-red-200",
+  [HighlightColor.YELLOW]: "bg-yellow-200",
+  [HighlightColor.GREEN]: "bg-green-200",
+  [HighlightColor.BLUE]: "bg-blue-200",
 };
 
 export interface HighlightCardProps {
   text?: string;
   image?: string;
-  color?: DocumentHighlightColor;
+  color?: HighlightColor;
   pageNumber: number;
   maxLength?: number;
   scrollIntoView?: boolean;
@@ -45,7 +45,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
   const [showMore, setShowMore] = useState(false);
   const { ref, inView, entry } = useInView({ threshold: 1 });
 
-  const colorCls = colorToClass[color || DocumentHighlightColor.YELLOW];
+  const colorCls = colorToClass[color || HighlightColor.YELLOW];
 
   let textLength = text?.length || 0;
   let highlight: JSX.Element = <a>Empty highlight</a>;

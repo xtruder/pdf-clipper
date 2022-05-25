@@ -1,0 +1,4 @@
+table:
+  schema: public
+  name: account_document_roles
+is_enum: true

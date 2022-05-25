@@ -1,5 +1,5 @@
-export * from "./accountInfo";
-export * from "./documentInfo";
+export * from "./account";
+export * from "./document";
 export * from "./documentHighlights";
 export * from "./documentReadingInfo";
 export * from "./fileInfo";

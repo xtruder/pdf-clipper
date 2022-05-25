@@ -8,7 +8,7 @@ import {
 } from "~/components/DocumentInfoCard";
 import { ErrorFallback } from "~/components/ErrorFallback";
 
-import { accountDocuments, documentInfo } from "~/state";
+import { accountDocuments, document } from "~/state";
 
 const DocumentInfoCardWrapper: React.FC<{
   documentId: string;
@@ -16,8 +16,8 @@ const DocumentInfoCardWrapper: React.FC<{
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardContainer: React.FC = useCallback(() => {
     const [{ title, description, cover, pageCount }, setDocumentInfo] =
-      useRecoilState(documentInfo(documentId));
-    const resetDocument = useResetRecoilState(documentInfo(documentId));
+      useRecoilState(document(documentId));
+    const resetDocument = useResetRecoilState(document(documentId));
     const setAccountDocuments = useSetRecoilState(accountDocuments);
 
     return (

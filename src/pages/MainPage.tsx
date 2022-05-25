@@ -5,7 +5,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import { v4 as uuidv4 } from "uuid";
 import { debug as _debug } from "debug";
 
-import { currentAccount, documentInfo, fileInfo } from "~/state";
+import { currentAccount, document, fileInfo } from "~/state";
 
 import { DocumentListContainer } from "~/containers/DocumentListContainer";
 import { DocumentDropZone } from "~/components/DocumentDropZone";
@@ -34,9 +34,7 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
   });
 
   const setFileInfo = useSetRecoilState(fileInfo(uploadState.fileId));
-  const setDocumentInfo = useSetRecoilState(
-    documentInfo(uploadState.documentId)
-  );
+  const setDocumentInfo = useSetRecoilState(document(uploadState.documentId));
 
   const onUpload = async (file: ArrayBuffer) => {
     // get sha256 of file and use it as file id

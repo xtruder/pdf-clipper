@@ -1,0 +1,10 @@
+mutation upsertDocument($object: documents_insert_input!, $updatedAt: timestamptz = "1970-01-01 00:00:00+00") {
+  insertDocument(object: $object, on_conflict: {constraint: documents_pkey, update_columns: [fileId, type, meta], where: {updatedAt: {_gt: $updatedAt}}}) {
+    id
+    createdAt
+    updatedAt
+    fileId
+    type
+    meta
+  }
+}

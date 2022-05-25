@@ -3,7 +3,7 @@ import { useRecoilCallback, useRecoilValue } from "recoil";
 
 import { getPageHeight } from "~/lib/pdfjs";
 
-import { documentInfo, pdfPages, pdfPageThumbnail } from "~/state";
+import { document, pdfPages, pdfPageThumbnail } from "~/state";
 import {
   PageThumbnailView,
   PageThumbnailsList,
@@ -18,7 +18,7 @@ const PageThumbnailViewContainer: React.FC<{
 }> = ({ documentId, pageNumber, width, height, onClick }) => {
   const [image, setImage] = useState<string>();
 
-  const { fileId } = useRecoilValue(documentInfo(documentId));
+  const { fileId } = useRecoilValue(document(documentId));
   if (!fileId) throw new Error("missing fileId");
 
   const loadThumbnail = useRecoilCallback(
@@ -64,7 +64,7 @@ export const PageThumbnailsContainer: React.FC<PageThumbnailsContainer> = ({
   onPageClick = () => null,
   width = 300,
 }) => {
-  const { fileId } = useRecoilValue(documentInfo(documentId));
+  const { fileId } = useRecoilValue(document(documentId));
   if (!fileId) throw new Error("missing fileId");
 
   const pages = useRecoilValue(pdfPages(fileId));

@@ -2,7 +2,7 @@ import { AtomEffect, atomFamily, DefaultValue } from "recoil";
 
 import { debug as _debug } from "debug";
 
-import { DocumentInfo, DocumentType } from "~/types";
+import { DocumentInfo } from "~/types";
 
 import { pdfDocumentMeta } from "./pdf";
 import { resourceEffect } from "./effects";
@@ -11,20 +11,21 @@ import { persistence } from "./persistence";
 const debug = _debug("state:documents");
 
 /**Document info atom keyed by documentId */
-export const documentInfo = atomFamily<DocumentInfo, string>({
+export const document = atomFamily<DocumentInfo, string>({
   key: "documentInfo",
-  default: (docId) => ({
-    id: docId,
-    highlightIds: [],
+  default: (documentId) => ({
+    id: documentId,
+    members: [],
+    meta: {},
   }),
-  effects: (docId) => [
-    resourceEffect(persistence.documentInfo(docId)),
-    getDocumentInfoEffect,
+  effects: (documentId) => [
+    resourceEffect(persistence.document(documentId)),
+    getDocumentMetaEffect,
   ],
 });
 
 /**Gets info about document by extracting it from file */
-const getDocumentInfoEffect: AtomEffect<DocumentInfo> = ({
+const getDocumentMetaEffect: AtomEffect<DocumentInfo> = ({
   node,
   getPromise,
   onSet,
@@ -32,27 +33,29 @@ const getDocumentInfoEffect: AtomEffect<DocumentInfo> = ({
   trigger,
 }) => {
   const getDocumentInfo = async () => {
-    const docInfo = await getPromise(node);
-    if (!docInfo) return;
+    const doc = await getPromise(node);
+    if (!doc) return;
 
-    let { fileId, type, title, author, pageCount, outline, cover } = docInfo;
+    let { title, author, pageCount, outline, cover } = doc.meta || {};
 
     if (pageCount || outline || cover) return;
 
     debug("updating doc info");
 
-    if (!fileId || !type) return;
+    if (!doc.fileId || !doc.type) return;
 
-    if (type === DocumentType.PDF) {
-      const pdfMeta = await getPromise(pdfDocumentMeta(fileId));
+    if (doc.type === "pdf") {
+      const pdfMeta = await getPromise(pdfDocumentMeta(doc.fileId));
 
       setSelf((val) => ({
         ...(val as DocumentInfo),
-        title: title || pdfMeta.title,
-        author: author || pdfMeta.author,
-        pageCount: pageCount || pdfMeta.pageCount,
-        outline: outline || pdfMeta.outline,
-        cover: cover || pdfMeta.firstPage,
+        meta: {
+          title: title || pdfMeta.author,
+          author: author || pdfMeta.author,
+          cover: cover || pdfMeta.firstPage,
+          pageCount: pageCount || pdfMeta.pageCount,
+          outline: outline || pdfMeta.outline,
+        },
       }));
     }
   };

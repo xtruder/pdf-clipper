@@ -1,0 +1,16 @@
+query getDocumentHighlights($documentId: uuid!) {
+  documentHighlights(where: {documentId:{_eq:$documentId}}, order_by:{updatedAt:desc}) {
+    id
+    documentId
+    createdAt
+    updatedAt
+    createdBy
+    creator {
+      id
+      name
+    }
+    location
+    content
+    thumbnailImage
+  }
+}

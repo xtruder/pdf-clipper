@@ -1,5 +1,5 @@
 import {
-  AccountInfo,
+  AccountPublic,
   DocumentInfo,
   DocumentReadingInfo,
   DocumentHighlight,
@@ -29,10 +29,12 @@ export interface MutableResource<T>
     WritableResource<T> {}
 
 export interface Persistence {
-  accountInfo(accountId: string): SyncableResource<AccountInfo>;
+  accountInfo(accountId: string): SyncableResource<AccountPublic>;
+
+  accountDocuments(accountId: string): SyncableResource<DocumentInfo[]>;
 
   /**information about document */
-  documentInfo(docId: string): SyncableResource<DocumentInfo>;
+  document(documentId: string): SyncableResource<DocumentInfo>;
 
   /**A single highlight for a document by id */
   documentHighlight(

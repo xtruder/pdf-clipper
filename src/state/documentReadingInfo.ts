@@ -4,18 +4,16 @@ import { resourceEffect } from "./effects";
 import { persistence } from "./persistence";
 
 /**Reading information for document */
-
 export const documentReadingInfo = atomFamily<
   DocumentReadingInfo,
-  [string, string]
+  [accountId: string, documentId: string]
 >({
   key: "documentReadingInfo",
-  default: ([accountId, docId]) => ({
-    id: `${accountId}|${docId}`,
+  default: ([accountId, documentId]) => ({
     accountId,
-    docId,
+    documentId,
   }),
-  effects: ([accountId, docId]) => [
-    resourceEffect(persistence.documentReadingInfo(accountId, docId)),
+  effects: ([accountId, documentId]) => [
+    resourceEffect(persistence.documentReadingInfo(accountId, documentId)),
   ],
 });

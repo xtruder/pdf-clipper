@@ -1,0 +1,23 @@
+table:
+  schema: public
+  name: accounts
+configuration:
+  custom_root_fields:
+    insert: inserAccounts
+    select_aggregate: accountsAggregate
+    insert_one: insertAccount
+    select_by_pk: account
+    select: accounts
+    delete: deleteAccounts
+    update: updateAccounts
+    delete_by_pk: deleteAccount
+    update_by_pk: updateAccount
+  custom_name: accounts
+  column_config:
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+  custom_column_names:
+    updated_at: updatedAt
+    created_at: createdAt

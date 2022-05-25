@@ -1,0 +1,24 @@
+query getDocument($documentId: uuid!) {
+  document(id: $documentId) {
+    id
+    createdAt
+    updatedAt
+    fileId
+    type
+    creator {
+      id
+      name
+    }
+    members {
+      accountId
+      role
+      createdAt
+      acceptedAt
+      account {
+        id
+        name
+      }
+    }
+    meta
+  }
+}

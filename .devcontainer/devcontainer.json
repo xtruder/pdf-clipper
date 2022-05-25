@@ -5,14 +5,14 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "dev",
   "workspaceFolder": "/workspace",
-  
+
   "userEnvProbe": "loginShell",
   "updateRemoteUserUID": false,
 
   "onCreateCommand": "nix-shell --command 'echo done building nix dev environment'",
 
   "settings": {
-    "nix.enableLanguageServer": true,
+    "nix.enableLanguageServer": true
   },
 
   "extensions": [
@@ -24,5 +24,28 @@
     "antfu.vite",
     "simonsiefke.svg-preview",
     "editorconfig.editorconfig"
-  ]
+],
+"portsAttributes": {
+	"3000": {
+		"label": "vite"
+	},
+	"4000": {
+		"label": "hasura-auth"
+	},
+	"6000": {
+		"label": "imgproxy"
+	},
+	"6080": {
+		"label": "imgproxy"
+	},
+	"8080": {
+		"label": "hasura"
+	},
+	"9000": {
+		"label": "minio"
+	},
+	"9001": {
+		"label": "minio-web"
+	}
+}
 }

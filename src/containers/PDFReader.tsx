@@ -6,15 +6,11 @@ import { FullScreen } from "@chiragrupani/fullscreen-react";
 import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
-import {
-  PDFHighlight,
-  DocumentHighlightColor,
-  DocumentHighlight,
-} from "~/types";
+import { PDFHighlight, HighlightColor, DocumentHighlight } from "~/types";
 
 import {
   documentHighlights,
-  documentInfo,
+  document,
   pdfDocumentProxy,
   currentAccount,
   documentHighlight,
@@ -54,7 +50,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   selectOnCreate = true,
 }) => {
   const account = useRecoilValue(currentAccount);
-  const [docInfo, setDocInfo] = useRecoilState(documentInfo(documentId));
+  const [docInfo, setDocInfo] = useRecoilState(document(documentId));
   if (!docInfo.fileId) throw new Error("missing file associated with document");
 
   const pdfDocument = useRecoilValue(pdfDocumentProxy(docInfo.fileId));
@@ -70,8 +66,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [scrollToPage, setScrollToPage] = useState<number>();
   const [scrollToPosition, setScrollToPosition] = useState<ScrollPosition>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
-  const [highlightColor, setHighlightColor] = useState<DocumentHighlightColor>(
-    DocumentHighlightColor.YELLOW
+  const [highlightColor, setHighlightColor] = useState<HighlightColor>(
+    HighlightColor.YELLOW
   );
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
   const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
@@ -98,7 +94,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
         const highlight: DocumentHighlight = {
           author: account.id,
-          docId: documentId,
+          documentId: documentId,
           ...pdfHighlight,
         };
 
@@ -147,7 +143,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         set(documentHighlight([documentId, pdfHighlight.id]), (highlight) => ({
           ...highlight,
           ...pdfHighlight,
-          docId: documentId,
+          documentId: documentId,
         }));
       },
     []

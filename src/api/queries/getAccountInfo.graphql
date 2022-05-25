@@ -1,0 +1,6 @@
+query getAccountInfo($accountId: uuid!) {
+  account(id: $accountId) {
+    id
+    name
+  }
+}

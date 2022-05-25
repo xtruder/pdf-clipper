@@ -1,0 +1,6 @@
+mutation createDocumentImagePostPolicy($documentId:uuid!) {
+  createDocumentImagePostPolicy(documentId:$documentId) {
+    formData
+    postURL
+  }
+}

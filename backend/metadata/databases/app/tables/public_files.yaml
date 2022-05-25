@@ -1,0 +1,70 @@
+table:
+  schema: public
+  name: files
+configuration:
+  custom_root_fields:
+    insert: insertFiles
+    select_aggregate: filesAggregate
+    insert_one: insertFile
+    select_by_pk: file
+    select: files
+    delete: deleteFiles
+    update: updateFiles
+    delete_by_pk: deleteFile
+    update_by_pk: updateFile
+  custom_name: files
+  column_config:
+    created_by:
+      custom_name: createdBy
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+  custom_column_names:
+    created_by: createdBy
+    updated_at: updatedAt
+    created_at: createdAt
+insert_permissions:
+  - role: anonymous
+    permission:
+      check: {}
+      set:
+        created_by: x-hasura-User-Id
+      columns:
+        - hash
+        - size
+        - sources
+      backend_only: false
+  - role: user
+    permission:
+      check: {}
+      set:
+        created_by: x-hasura-User-Id
+      columns:
+        - hash
+        - size
+        - sources
+      backend_only: false
+select_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - hash
+        - size
+        - sources
+        - created_at
+        - updated_at
+        - created_by
+        - id
+      filter: {}
+  - role: user
+    permission:
+      columns:
+        - id
+        - created_at
+        - updated_at
+        - sources
+        - created_by
+        - hash
+        - size
+      filter: {}

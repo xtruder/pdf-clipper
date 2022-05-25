@@ -1,0 +1,16 @@
+query getDocumentHighlight($highlightId: uuid!) {
+  documentHighlight(id: $highlightId) {
+    id
+    documentId
+    createdAt
+    updatedAt
+    createdBy
+    creator {
+      id
+      name
+    }
+    location
+    content
+    thumbnailImage
+  }
+}

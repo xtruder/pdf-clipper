@@ -1,0 +1,28 @@
+type Mutation {
+  createFile(
+    sources: jsonb
+  ): CreateFileOutput
+}
+
+type Mutation {
+  createFileDownloadUrl(
+    fileId: uuid!
+  ): FileUrlOutput
+}
+
+type CreateFileOutput {
+  id: uuid!
+  sources: jsonb!
+  uploadUrl: String!
+}
+
+type FileUrlOutput {
+  id: uuid!
+  url: String!
+}
+
+type FileDownloadUrlOutput {
+  id: uuid!
+  url: String!
+}
+

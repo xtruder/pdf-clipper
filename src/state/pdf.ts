@@ -135,7 +135,7 @@ export const pdfPageThumbnail = selectorFamily<
 /**Selector to get area of pdf page */
 export const pdfPageAreaImage = selectorFamily<
   string,
-  [docId: string, rect: Readonly<ScaledPageRect>, scale?: number]
+  [fileId: string, rect: Readonly<ScaledPageRect>, scale?: number]
 >({
   key: "pdfPageArea",
   get:

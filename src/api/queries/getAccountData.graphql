@@ -1,0 +1,38 @@
+query getAccountData($accountId: uuid!) {
+  account(id: $accountId) {
+    id
+    name
+    createdAt
+    updatedAt
+    documents {
+      documentId
+      role
+      createdAt
+      acceptedAt
+      readingInfo {
+        createdAt
+        updatedAt
+        lastPage
+        location
+      }
+      document {
+        id
+        createdAt
+        updatedAt
+        fileId
+        type
+        creator {
+          id
+          name
+        }
+        members {
+          accountId
+          role
+          createdAt
+          acceptedAt
+        }
+        meta
+      }
+    }
+  }
+}

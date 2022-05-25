@@ -16,8 +16,12 @@ in pkgs.mkShell {
     # nodejs
     nodejs-17_x
 
+    # cypress
     cypress
     xorg.xorgserver
+
+    # hasura
+    postgresql
   ];
 
   hardeningDisable = [ "all" ];

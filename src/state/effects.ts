@@ -1,4 +1,5 @@
-import { AtomEffect, DefaultValue } from "recoil";
+import { AtomEffect, DefaultValue, SerializableParam } from "recoil";
+import Observable from "zen-observable";
 import { MutableResource, SyncableResource } from "~/persistence/persistence";
 
 export const localStorageEffect: (key: string) => AtomEffect<any> =
@@ -14,6 +15,40 @@ export const localStorageEffect: (key: string) => AtomEffect<any> =
         ? localStorage.removeItem(key)
         : localStorage.setItem(key, JSON.stringify(newValue));
     });
+  };
+
+export const graphqlEffect: <T>(methods: {
+  get: () => Promise<T | null>;
+  reset?: (oldValue: T | DefaultValue) => Promise<any>;
+  write?: (newValue: T, oldValue: T | DefaultValue) => Promise<T | null>;
+  subscribe?: () => Observable<T>;
+}) => AtomEffect<T> =
+  ({ get, write, reset, subscribe }) =>
+  ({ setSelf, onSet, trigger }) => {
+    if (trigger === "get") {
+      setSelf(
+        get().then((value) => {
+          if (value) return value;
+          else return new DefaultValue();
+        })
+      );
+    }
+
+    onSet(async (newValue, oldValue, isReset) => {
+      if (isReset && reset) {
+        return await reset(oldValue);
+      }
+
+      if (!newValue) return;
+      if (newValue === oldValue || !write) return;
+      if (newValue instanceof DefaultValue) return;
+
+      const writeResult = await write(newValue, oldValue);
+
+      if (writeResult) setSelf(writeResult);
+    });
+
+    if (subscribe) subscribe().forEach((value) => setSelf(value));
   };
 
 export const resourceEffect: <T>(
