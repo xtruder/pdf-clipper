@@ -6,19 +6,14 @@ import { FullScreen } from "@chiragrupani/fullscreen-react";
 import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
-import {
-  PDFHighlight,
-  DocumentHighlightColor,
-  DocumentHighlight,
-} from "~/types";
+import { PDFHighlight, HighlightColor, DocumentHighlight } from "~/types";
 
 import {
-  documentHighlights,
   documentInfo,
   pdfDocumentProxy,
   currentAccount,
   documentHighlight,
-  documentHighlightIds,
+  documentHighlights,
 } from "~/state";
 
 import { PDFHighlighter } from "~/components/PDFHighlighter";
@@ -55,9 +50,10 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 }) => {
   const account = useRecoilValue(currentAccount);
   const [docInfo, setDocInfo] = useRecoilState(documentInfo(documentId));
-  if (!docInfo.fileId) throw new Error("missing file associated with document");
+  if (!docInfo.fileHash)
+    throw new Error("missing file associated with document");
 
-  const pdfDocument = useRecoilValue(pdfDocumentProxy(docInfo.fileId));
+  const pdfDocument = useRecoilValue(pdfDocumentProxy(docInfo.fileHash));
   const highlights = useRecoilValue(documentHighlights(documentId));
 
   const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
@@ -70,8 +66,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [scrollToPage, setScrollToPage] = useState<number>();
   const [scrollToPosition, setScrollToPosition] = useState<ScrollPosition>();
   const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
-  const [highlightColor, setHighlightColor] = useState<DocumentHighlightColor>(
-    DocumentHighlightColor.YELLOW
+  const [highlightColor, setHighlightColor] = useState<HighlightColor>(
+    HighlightColor.YELLOW
   );
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
   const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
@@ -97,16 +93,13 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         if (!pdfHighlight) return;
 
         const highlight: DocumentHighlight = {
-          author: account.id,
-          docId: documentId,
           ...pdfHighlight,
+          createdBy: account.id,
+          documentId: documentId,
         };
 
         set(documentHighlight([documentId, highlight.id]), highlight);
-        set(documentHighlightIds(documentId), (ids) => [
-          ...ids,
-          pdfHighlight.id,
-        ]);
+        set(documentHighlights(documentId), (h) => [...h, pdfHighlight]);
 
         if (selectOnCreate) {
           setSelectedHighlight(pdfHighlight);
@@ -130,8 +123,8 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         setSelectedHighlight(undefined);
 
         // remove highlight from ids of document highlights
-        set(documentHighlightIds(documentId), (ids) =>
-          ids.filter((id) => id !== highlight.id)
+        set(documentHighlights(documentId), (h) =>
+          h.filter((h) => h.id !== highlight.id)
         );
         reset(documentHighlight([documentId, highlight.id]));
       },
@@ -147,14 +140,14 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         set(documentHighlight([documentId, pdfHighlight.id]), (highlight) => ({
           ...highlight,
           ...pdfHighlight,
-          docId: documentId,
+          documentId: documentId,
         }));
       },
     []
   );
 
   const changeTitle = (title: string): void =>
-    setDocInfo((docInfo) => ({ ...docInfo, title }));
+    setDocInfo((docInfo) => ({ ...docInfo, meta: { ...docInfo.meta, title } }));
 
   const onKeyDown = (event: KeyboardEvent) => {
     switch (event.code) {
@@ -204,7 +197,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     <Sidebar
       header={
         <SidebarNavbar
-          title={docInfo.title}
+          title={docInfo.meta.title}
           onTitleChange={changeTitle}
           onBackClicked={onClose}
         />
@@ -231,14 +224,14 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               setScrollToHighlight(h);
               setSelectedHighlight(h);
             }}
-            onHighlightPageClicked={(h) =>
-              setScrollToPage(h.location.pageNumber)
-            }
+            onHighlightPageClicked={(h) => {
+              if (h.location) setScrollToPage(h.location.pageNumber);
+            }}
           />
         ),
-        outline: docInfo.outline ? (
+        outline: docInfo.meta.outline ? (
           <DocumentOutlineView
-            outline={docInfo.outline}
+            outline={docInfo.meta.outline}
             onOutlineNodeClicked={(position) =>
               setScrollToPosition({
                 pageNumber: position.pageNumber!,

@@ -1,0 +1,20 @@
+table:
+  schema: public
+  name: file_info
+insert_permissions:
+  - role: anonymous
+    permission:
+      check: {}
+      set:
+        created_by: x-hasura-User-Id
+      columns:
+        - sources
+      backend_only: false
+  - role: user
+    permission:
+      check: {}
+      set:
+        created_by: x-hasura-User-Id
+      columns:
+        - sources
+      backend_only: false

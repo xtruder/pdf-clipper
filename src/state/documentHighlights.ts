@@ -1,48 +1,39 @@
-import { atomFamily, selectorFamily, waitForAll } from "recoil";
+import { atomFamily, selectorFamily } from "recoil";
 
 import { DocumentType, DocumentHighlight, PDFHighlight } from "~/types";
-import { notEmpty } from "~/lib/utils";
 
 import { pdfPageAreaImage } from "./pdf";
-import { resourceEffect } from "./effects";
-import { persistence } from "./persistence";
+import { rxDocumentEffect, rxQueryEffect } from "./effects";
+import { currentAccountId, db } from "./persistence";
 import { documentInfo } from "./documentInfo";
 
 /**Atom for highlight associated with document */
 export const documentHighlight = atomFamily<
-  DocumentHighlight | null,
-  [docId: string, highlightId: string]
+  DocumentHighlight,
+  [documentId: string, highlightId: string]
 >({
   key: "documentHighlight",
-  default: null,
-  effects: ([docId, highlightId]) => [
-    resourceEffect(persistence.documentHighlight(docId, highlightId)),
+  default: ([documentId, id]) => ({
+    id,
+    documentId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    location: null,
+    content: null,
+    createdBy: currentAccountId,
+  }),
+  effects: ([documentId, id]) => [
+    rxDocumentEffect(db.document_highlight, `${documentId}|${id}`),
   ],
 });
 
-/**Atom keeping ids of highlights per document */
-export const documentHighlightIds = atomFamily<string[], string>({
-  key: "documentHighlightIds",
-  default: [],
-  effects: (docId: string) => [
-    resourceEffect(persistence.documentHighlightIds(docId)),
-  ],
-});
-
-/**Selector that filters single document highlight */
-export const documentHighlights = selectorFamily<DocumentHighlight[], string>({
+/**Atom keeping all highlights for particular document */
+export const documentHighlights = atomFamily<DocumentHighlight[], string>({
   key: "documentHighlights",
-  get:
-    (docId) =>
-    ({ get }) => {
-      const highlightIds = get(documentHighlightIds(docId));
-
-      const highlights = get(
-        waitForAll(highlightIds.map((id) => documentHighlight([docId, id])))
-      );
-
-      return highlights.filter(notEmpty);
-    },
+  default: [],
+  effects: (documentId: string) => [
+    rxQueryEffect(db.document_highlight.find().where({ documentId })),
+  ],
 });
 
 export const documentHighlightImage = atomFamily<
@@ -55,7 +46,10 @@ export const documentHighlightImage = atomFamily<
     get:
       ([docId, highlightId, _timestamp]) =>
       ({ get }) => {
-        const { type, fileId } = get(documentInfo(docId));
+        const docInfo = get(documentInfo(docId));
+        if (!docInfo) throw new Error("missing document: " + docId);
+
+        const { type, fileHash: fileId } = docInfo;
         if (!fileId) throw new Error("missing document fileId");
 
         const highlight = get(documentHighlight([docId, highlightId]));
@@ -64,6 +58,9 @@ export const documentHighlightImage = atomFamily<
         let image: string;
         if (type === DocumentType.PDF) {
           const pdfHighlight: PDFHighlight = highlight;
+
+          if (!pdfHighlight.location)
+            throw new Error("missing highlight location");
 
           image = get(
             pdfPageAreaImage([fileId, pdfHighlight.location.boundingRect, 5])

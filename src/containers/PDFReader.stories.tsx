@@ -28,7 +28,7 @@ export const ThePDFReader: Story = (args) => {
 
     setDocumentInfo({
       id: docId,
-      fileId,
+      fileHash: fileId,
       title: "A brief histroy of time",
       type: DocumentType.PDF,
     });

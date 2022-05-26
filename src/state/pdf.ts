@@ -32,6 +32,7 @@ export const pdfDocumentProxy = selectorFamily<PDFDocumentProxy, string>({
       const path = paths.file(fileId, "pdf");
 
       const info = get(fileInfo(fileId));
+      if (!info) throw new Error("missing file info");
 
       // try to load local file, if it does not exist load from actual source
       let source: string | TypedArray;
@@ -160,7 +161,6 @@ export const extractPDFMetaEffect: (
   ({ node, trigger, getPromise, setSelf, onSet }) => {
     const updateDocInfo = async () => {
       const docInfo = await getPromise(node);
-      if (docInfo.outline) return;
 
       const { outline, author, title, firstPage, pageCount } = await getPromise(
         pdfDocumentMeta(docId)
@@ -168,11 +168,13 @@ export const extractPDFMetaEffect: (
 
       setSelf({
         ...docInfo,
-        outline,
-        pageCount,
-        cover: firstPage,
-        title,
-        author,
+        meta: {
+          outline,
+          pageCount,
+          cover: firstPage,
+          title,
+          author,
+        },
       });
     };
 

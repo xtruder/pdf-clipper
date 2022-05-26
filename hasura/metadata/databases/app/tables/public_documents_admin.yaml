@@ -1,0 +1,54 @@
+table:
+  schema: public
+  name: documents_admin
+array_relationships:
+  - name: members
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: accounts_documents
+        insertion_order: null
+        column_mapping:
+          id: document_id
+update_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - deleted_at
+        - fileId
+        - type
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - account_id:
+                    _eq: X-Hasura-User-Id
+                - role:
+                    _in:
+                      - admin
+                - accepted_at:
+                    _is_null: false
+      check: null
+  - role: user
+    permission:
+      columns:
+        - deleted_at
+        - fileId
+        - type
+      filter:
+        _or:
+          - author_id:
+              _eq: X-Hasura-User-Id
+          - members:
+              _and:
+                - account_id:
+                    _eq: X-Hasura-User-Id
+                - role:
+                    _in:
+                      - admin
+                - accepted_at:
+                    _is_null: false
+      check: null

@@ -1,23 +1,30 @@
-import type { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
+import type { RxJsonSchema } from "rxdb";
 
-import { BaseResource, baseSchemaProps } from "./base";
-
-/**Document reading info provides reading information associated with
+/**DocumentReadingInfo provides reading information associated with
  * account/document */
-export interface DocumentReadingInfo extends BaseResource {
-  // id of the account
+export interface DocumentReadingInfo {
+  /**unique account id */
+  id?: string;
+
+  /**account creation time */
+  createdAt: string;
+
+  /**account last update time */
+  updatedAt: string;
+
+  /**id of associated document */
+  documentId: string;
+
+  /**id of associated account */
   accountId: string;
 
-  // id of the document
-  docId: string;
-
-  // last reading page
+  /**last reading page */
   lastPage?: number;
 
-  // screenshot of page
+  /**screenshot url of page */
   screenshot?: string;
 
-  // information about reading location
+  /**information of reading location */
   location?: any;
 }
 
@@ -29,16 +36,27 @@ export const documentReadingInfoSchema: RxJsonSchema<DocumentReadingInfo> = {
     // where should the composed string be stored
     key: "id",
     // fields that will be used to create the composed key
-    fields: ["accountId", "docId"] as string[],
+    fields: ["accountId", "documentId"] as string[],
     // separator which is used to concat the fields values.
     separator: "|",
   },
   type: "object",
   properties: {
+    id: {
+      type: "string",
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
     accountId: {
       type: "string",
     },
-    docId: {
+    documentId: {
       type: "string",
     },
     lastPage: {
@@ -50,11 +68,6 @@ export const documentReadingInfoSchema: RxJsonSchema<DocumentReadingInfo> = {
     location: {
       type: "object",
     },
-    ...baseSchemaProps,
   },
-  required: ["id", "accountId", "docId"],
+  required: ["accountId", "documentId"],
 } as const;
-
-export type DocumentReadingInfoDocument = RxDocument<DocumentReadingInfo>;
-
-export type DocumentReadingInfoCollection = RxCollection<DocumentReadingInfo>;

@@ -1,0 +1,20 @@
+table:
+  schema: public
+  name: document_type
+is_enum: true
+configuration:
+  custom_root_fields:
+    insert: insertDocumentTypes
+    select_aggregate:
+      name: null
+      comment: ""
+    insert_one: insertDocumentType
+    select_by_pk: documentType
+    select: documentTypes
+    delete: deleteDocumentTypes
+    update: updateDocumentTypes
+    delete_by_pk: deleteDocumentType
+    update_by_pk: updateDocumentType
+  custom_name: documentType
+  column_config: {}
+  custom_column_names: {}

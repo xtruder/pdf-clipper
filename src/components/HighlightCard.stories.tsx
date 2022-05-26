@@ -6,7 +6,7 @@ import {
   HighlightCardList,
   HighlightCardProps,
 } from "./HighlightCard";
-import { DocumentHighlightColor } from "~/types";
+import { HighlightColor } from "~/types";
 
 export default {
   title: "HighlightCard",
@@ -90,37 +90,37 @@ TheHighlightCardList.args = {
     {
       id: "h1",
       text: "some highlight text",
-      color: DocumentHighlightColor.BLUE,
+      color: HighlightColor.BLUE,
       pageNumber: 1,
     },
     {
       id: "h2",
       text: "some longer highlight text",
-      color: DocumentHighlightColor.YELLOW,
+      color: HighlightColor.YELLOW,
       pageNumber: 2,
     },
     {
       id: "h3",
       image: "https://i.stack.imgur.com/P8iKH.png",
-      color: DocumentHighlightColor.RED,
+      color: HighlightColor.RED,
       pageNumber: 3,
     },
     {
       id: "h4",
       image: "https://i.stack.imgur.com/P8iKH.png",
-      color: DocumentHighlightColor.RED,
+      color: HighlightColor.RED,
       pageNumber: 3,
     },
     {
       id: "h5",
       image: "https://i.stack.imgur.com/P8iKH.png",
-      color: DocumentHighlightColor.RED,
+      color: HighlightColor.RED,
       pageNumber: 5,
     },
     {
       id: "h6",
       image: "https://i.stack.imgur.com/P8iKH.png",
-      color: DocumentHighlightColor.RED,
+      color: HighlightColor.RED,
       pageNumber: 4,
     },
   ],

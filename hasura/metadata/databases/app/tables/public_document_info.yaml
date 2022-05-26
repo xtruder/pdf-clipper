@@ -1,0 +1,178 @@
+table:
+  schema: public
+  name: document_info
+configuration:
+  custom_root_fields:
+    insert: insertDocumentInfos
+    select_aggregate: documentInfoAggregate
+    insert_one: insertDocumentInfo
+    select_by_pk: documentInfo
+    select: documentInfos
+    delete: deleteDocumentInfos
+    update: updateDocumentInfos
+    delete_by_pk: deleteDocumentInfo
+    update_by_pk: updateDocumentInfo
+  custom_name: documentInfo
+  column_config:
+    page_count:
+      custom_name: pageCount
+    document_id:
+      custom_name: documentId
+  custom_column_names:
+    page_count: pageCount
+    document_id: documentId
+object_relationships:
+  - name: document
+    using:
+      foreign_key_constraint_on: document_id
+insert_permissions:
+  - role: anonymous
+    permission:
+      check:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+      columns:
+        - document_id
+        - title
+        - description
+        - page_count
+        - outline
+        - cover
+        - author
+      backend_only: false
+  - role: user
+    permission:
+      check:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+      columns:
+        - document_id
+        - title
+        - description
+        - page_count
+        - outline
+        - cover
+        - author
+      backend_only: false
+select_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - page_count
+        - outline
+        - author
+        - cover
+        - description
+        - title
+        - document_id
+      filter:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                        - viewer
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      columns:
+        - page_count
+        - outline
+        - author
+        - cover
+        - description
+        - title
+        - document_id
+      filter:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                        - viewer
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+update_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - author
+        - cover
+        - description
+        - outline
+        - page_count
+        - title
+      filter:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+      check: null
+  - role: user
+    permission:
+      columns:
+        - author
+        - cover
+        - description
+        - outline
+        - page_count
+        - title
+      filter:
+        _or:
+          - document:
+              author_id:
+                _eq: X-Hasura-User-Id
+          - document:
+              members:
+                _and:
+                  - role:
+                      _in:
+                        - editor
+                        - admin
+                  - account_id:
+                      _eq: X-Hasura-User-Id
+      check: null

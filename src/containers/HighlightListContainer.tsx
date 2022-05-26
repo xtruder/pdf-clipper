@@ -65,11 +65,11 @@ export const HighlightListContainer: React.FC<HighlightListContainerProps> = ({
 
   const highlights: PDFHighlight[] = useRecoilValue(
     documentHighlights(documentId)
-  ).filter((h) => !h.deleted);
+  ).filter((h) => h.location);
 
   // sort highlights by page number
   const sortedHighlights = [...highlights].sort(
-    (h1, h2) => h1.location.pageNumber - h2.location.pageNumber
+    (h1, h2) => h1.location!.pageNumber - h2.location!.pageNumber
   );
 
   return (

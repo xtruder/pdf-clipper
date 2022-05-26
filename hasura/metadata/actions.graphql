@@ -1,0 +1,34 @@
+type Mutation {
+  createDocumentImagePostPolicy(
+    documentId: uuid!
+  ): DocumentImagePostPolicyOutput!
+}
+
+type Mutation {
+  createFile(
+    sources: jsonb
+  ): CreateFileOutput
+}
+
+type Mutation {
+  createFileDownloadUrl(
+    fileId: uuid!
+  ): FileDownloadUrlOutput
+}
+
+type CreateFileOutput {
+  id: uuid!
+  sources: jsonb!
+  uploadUrl: String!
+}
+
+type FileDownloadUrlOutput {
+  id: uuid!
+  url: String!
+}
+
+type DocumentImagePostPolicyOutput {
+  postURL: String!
+  formData: jsonb!
+}
+

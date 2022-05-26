@@ -8,17 +8,21 @@ import {
 } from "~/components/DocumentInfoCard";
 import { ErrorFallback } from "~/components/ErrorFallback";
 
-import { accountDocuments, documentInfo } from "~/state";
+import { currentAccount, documentInfo } from "~/state";
 
 const DocumentInfoCardWrapper: React.FC<{
   documentId: string;
   onOpen: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardContainer: React.FC = useCallback(() => {
-    const [{ title, description, cover, pageCount }, setDocumentInfo] =
-      useRecoilState(documentInfo(documentId));
+    const [
+      {
+        meta: { title, description, cover, pageCount },
+      },
+      setDocumentInfo,
+    ] = useRecoilState(documentInfo(documentId));
     const resetDocument = useResetRecoilState(documentInfo(documentId));
-    const setAccountDocuments = useSetRecoilState(accountDocuments);
+    const setAccountInfo = useSetRecoilState(currentAccount);
 
     return (
       <DocumentInfoCard
@@ -29,16 +33,26 @@ const DocumentInfoCardWrapper: React.FC<{
         onOpen={onOpen}
         // remove self from account documents
         onDeleteClicked={() => {
-          setAccountDocuments((docs) =>
-            docs.filter((d) => d.id !== documentId)
-          );
+          setAccountInfo((info) => ({
+            ...info,
+            documents: info.documents.filter(
+              (doc) => doc.documentId !== documentId
+            ),
+          }));
           resetDocument();
         }}
         onDescriptionChanged={(description) =>
-          setDocumentInfo((info) => ({ ...info, description }))
+          setDocumentInfo((info) => ({
+            ...info,
+            meta: { ...info?.meta, description },
+          }))
         }
         onTitleChanged={(title) =>
-          setDocumentInfo((info) => ({ ...info, title }))
+          setDocumentInfo((info) => ({
+            ...info,
+            updatedAt: new Date().toISOString(),
+            meta: { ...info.meta, title },
+          }))
         }
       />
     );

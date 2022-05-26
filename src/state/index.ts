@@ -1,4 +1,4 @@
-export * from "./accountInfo";
+export * from "./currentAccount";
 export * from "./documentInfo";
 export * from "./documentHighlights";
 export * from "./documentReadingInfo";

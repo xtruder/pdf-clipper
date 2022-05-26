@@ -5,26 +5,30 @@ import { debug as _debug } from "debug";
 import { DocumentInfo, DocumentType } from "~/types";
 
 import { pdfDocumentMeta } from "./pdf";
-import { resourceEffect } from "./effects";
-import { persistence } from "./persistence";
+import { rxDocumentEffect } from "./effects";
+import { currentAccountId, db } from "./persistence";
 
 const debug = _debug("state:documents");
 
 /**Document info atom keyed by documentId */
 export const documentInfo = atomFamily<DocumentInfo, string>({
   key: "documentInfo",
-  default: (docId) => ({
-    id: docId,
-    highlightIds: [],
+  default: (documentId) => ({
+    id: documentId,
+    meta: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: currentAccountId,
+    members: [],
   }),
-  effects: (docId) => [
-    resourceEffect(persistence.documentInfo(docId)),
-    getDocumentInfoEffect,
+  effects: (documentId) => [
+    rxDocumentEffect(db.document_info, documentId),
+    getDocumentMetaEffect,
   ],
 });
 
 /**Gets info about document by extracting it from file */
-const getDocumentInfoEffect: AtomEffect<DocumentInfo> = ({
+const getDocumentMetaEffect: AtomEffect<DocumentInfo> = ({
   node,
   getPromise,
   onSet,
@@ -35,24 +39,27 @@ const getDocumentInfoEffect: AtomEffect<DocumentInfo> = ({
     const docInfo = await getPromise(node);
     if (!docInfo) return;
 
-    let { fileId, type, title, author, pageCount, outline, cover } = docInfo;
+    const { fileHash: fileId, type } = docInfo;
+    if (!fileId || !type) return;
+
+    let { title, author, pageCount, outline, cover } = docInfo.meta || {};
 
     if (pageCount || outline || cover) return;
 
     debug("updating doc info");
-
-    if (!fileId || !type) return;
 
     if (type === DocumentType.PDF) {
       const pdfMeta = await getPromise(pdfDocumentMeta(fileId));
 
       setSelf((val) => ({
         ...(val as DocumentInfo),
-        title: title || pdfMeta.title,
-        author: author || pdfMeta.author,
-        pageCount: pageCount || pdfMeta.pageCount,
-        outline: outline || pdfMeta.outline,
-        cover: cover || pdfMeta.firstPage,
+        meta: {
+          title: title || pdfMeta.title,
+          author: author || pdfMeta.author,
+          pageCount: pageCount || pdfMeta.pageCount,
+          outline: outline || pdfMeta.outline,
+          cover: cover || pdfMeta.firstPage,
+        },
       }));
     }
   };
@@ -63,7 +70,7 @@ const getDocumentInfoEffect: AtomEffect<DocumentInfo> = ({
 
   onSet((newValue, oldValue) => {
     if (oldValue instanceof DefaultValue) return;
-    if (newValue.fileId === oldValue.fileId) return;
+    if (newValue?.fileHash === oldValue?.fileHash) return;
     getDocumentInfo();
   });
 };

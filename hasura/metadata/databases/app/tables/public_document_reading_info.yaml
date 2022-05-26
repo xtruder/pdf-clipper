@@ -1,0 +1,35 @@
+table:
+  schema: public
+  name: document_reading_info
+configuration:
+  custom_root_fields:
+    insert: insertDocumentReadingInfos
+    select_aggregate: documentReadingInfoAggregate
+    insert_one: insertDocumentReadingInfo
+    select_by_pk: documentReadingInfo
+    select: documentReadingInfos
+    delete: deleteDocumentReadingInfos
+    update: updateDocumentReadingInfos
+    delete_by_pk: deleteDocumentReadingInfo
+    update_by_pk: updateDocumentReadingInfo
+  custom_name: documentReadingInfo
+  column_config:
+    location:
+      custom_name: location
+    document_id:
+      custom_name: documentId
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+    account_id:
+      custom_name: accountId
+    last_page:
+      custom_name: lastPage
+  custom_column_names:
+    location: location
+    document_id: documentId
+    updated_at: updatedAt
+    created_at: createdAt
+    account_id: accountId
+    last_page: lastPage

@@ -1,9 +1,9 @@
 import React from "react";
 
-import { DocumentHighlightColor } from "~/types";
+import { HighlightColor } from "~/types";
 
 export interface HighlightMenuProps {
-  color: DocumentHighlightColor;
+  color: HighlightColor;
 }
 
 export const HighlightMenu: React.FC<HighlightMenuProps> = ({}) => {

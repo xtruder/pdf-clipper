@@ -1,0 +1,106 @@
+table:
+  schema: public
+  name: accounts_documents
+configuration:
+  custom_root_fields:
+    insert: insertAccountDocuments
+    select_aggregate: accountDocumentsAggregate
+    insert_one: insertAccountDocument
+    select_by_pk: accountDocument
+    select: accountDocuments
+    delete: deleteAccountDocuments
+    update: updateAccountDocuments
+    delete_by_pk: deleteAccountDocument
+    update_by_pk: updateAccountDocument
+  custom_name: accountDocuments
+  column_config:
+    document_id:
+      custom_name: documentId
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+    account_id:
+      custom_name: accountId
+    accepted_at:
+      custom_name: acceptedAt
+  custom_column_names:
+    document_id: documentId
+    updated_at: updatedAt
+    created_at: createdAt
+    account_id: accountId
+    accepted_at: acceptedAt
+object_relationships:
+  - name: account
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: accounts
+        insertion_order: null
+        column_mapping:
+          account_id: id
+  - name: document
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: documents
+        insertion_order: null
+        column_mapping:
+          document_id: id
+  - name: readingInfo
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: document_reading_info
+        insertion_order: null
+        column_mapping:
+          document_id: document_id
+          account_id: account_id
+insert_permissions:
+  - role: anonymous
+    permission:
+      check:
+        account_id:
+          _eq: X-Hasura-User-Id
+      set:
+        account_id: x-hasura-User-Id
+      columns:
+        - document_id
+      backend_only: false
+  - role: user
+    permission:
+      check:
+        account_id:
+          _eq: X-Hasura-User-Id
+      set:
+        account_id: x-hasura-User-Id
+      columns:
+        - document_id
+      backend_only: false
+select_permissions:
+  - role: me
+    permission:
+      columns:
+        - accepted_at
+        - role
+        - created_at
+        - account_id
+        - document_id
+      filter:
+        account:
+          id:
+            _eq: X-Hasura-User-Id
+delete_permissions:
+  - role: anonymous
+    permission:
+      filter:
+        account_id:
+          _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      filter:
+        account_id:
+          _eq: X-Hasura-User-Id

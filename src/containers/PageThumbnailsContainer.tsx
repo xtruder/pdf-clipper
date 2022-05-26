@@ -18,7 +18,7 @@ const PageThumbnailViewContainer: React.FC<{
 }> = ({ documentId, pageNumber, width, height, onClick }) => {
   const [image, setImage] = useState<string>();
 
-  const { fileId } = useRecoilValue(documentInfo(documentId));
+  const { fileHash: fileId } = useRecoilValue(documentInfo(documentId));
   if (!fileId) throw new Error("missing fileId");
 
   const loadThumbnail = useRecoilCallback(
@@ -64,7 +64,7 @@ export const PageThumbnailsContainer: React.FC<PageThumbnailsContainer> = ({
   onPageClick = () => null,
   width = 300,
 }) => {
-  const { fileId } = useRecoilValue(documentInfo(documentId));
+  const { fileHash: fileId } = useRecoilValue(documentInfo(documentId));
   if (!fileId) throw new Error("missing fileId");
 
   const pages = useRecoilValue(pdfPages(fileId));

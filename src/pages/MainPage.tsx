@@ -5,7 +5,12 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import { v4 as uuidv4 } from "uuid";
 import { debug as _debug } from "debug";
 
-import { currentAccount, documentInfo, fileInfo } from "~/state";
+import {
+  currentAccount,
+  currentAccountId,
+  documentInfo,
+  fileInfo,
+} from "~/state";
 
 import { DocumentListContainer } from "~/containers/DocumentListContainer";
 import { DocumentDropZone } from "~/components/DocumentDropZone";
@@ -21,19 +26,21 @@ export interface MainPageProps {}
 export const MainPage: React.FC<MainPageProps> = ({}) => {
   const navigate = useNavigate();
 
-  const { documentIds } = useRecoilValue(currentAccount);
+  const accountInfo = useRecoilValue(currentAccount);
   const setCurrentAccout = useSetRecoilState(currentAccount);
 
+  const documentIds = accountInfo?.documents.map((doc) => doc.documentId) || [];
+
   const [uploadState, setUploadState] = useState<{
-    fileId: string;
+    fileHash: string;
     documentId: string;
     file?: ArrayBuffer;
   }>({
-    fileId: "",
+    fileHash: "",
     documentId: "",
   });
 
-  const setFileInfo = useSetRecoilState(fileInfo(uploadState.fileId));
+  const setFileInfo = useSetRecoilState(fileInfo(uploadState.fileHash));
   const setDocumentInfo = useSetRecoilState(
     documentInfo(uploadState.documentId)
   );
@@ -48,7 +55,7 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
     const documentId = uuidv4();
 
     setUploadState({
-      fileId,
+      fileHash: fileId,
       documentId,
       file,
     });
@@ -56,32 +63,48 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
 
   useEffect(
     (async () => {
-      if (!uploadState.documentId || !uploadState.fileId || !uploadState.file)
+      if (!uploadState.documentId || !uploadState.fileHash || !uploadState.file)
         return;
 
       // save uploaded file locally
       await fs.saveFile(
-        paths.file(uploadState.fileId, "pdf"),
+        paths.file(uploadState.fileHash, "pdf"),
         uploadState.file
       );
 
       setFileInfo({
-        id: uploadState.fileId,
+        hash: uploadState.fileHash,
 
         // no sources defined until file is uploaded somewhere, will use local
         // saved file
         sources: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+
+        createdBy: currentAccountId,
       });
 
       setDocumentInfo({
         id: uploadState.documentId,
         type: DocumentType.PDF,
-        fileId: uploadState.fileId,
+        fileHash: uploadState.fileHash,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: currentAccountId,
+        meta: {},
+        members: [],
       });
 
       setCurrentAccout((val) => ({
         ...val,
-        documentIds: [uploadState.documentId, ...val.documentIds],
+        documents: [
+          ...val?.documents,
+          {
+            createdAt: new Date().toISOString(),
+            documentId: uploadState.documentId,
+            role: "admin",
+          },
+        ],
       }));
     }) as any,
     [uploadState]

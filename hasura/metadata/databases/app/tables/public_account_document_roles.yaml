@@ -1,0 +1,18 @@
+table:
+  schema: public
+  name: account_document_roles
+is_enum: true
+configuration:
+  custom_root_fields:
+    insert: insertAccountDocumentRoles
+    select_aggregate: accountDocumentRolesAggregate
+    insert_one: insertAccountDocumentRole
+    select_by_pk: accountDocumentRole
+    select: accountDocumentRoles
+    delete: deleteAccountDocumentRoles
+    update: updateAccountDocumentRoles
+    delete_by_pk: deleteAccountDocumentRole
+    update_by_pk: updateAccountDocumentRole
+  custom_name: accountDocumentRoles
+  column_config: {}
+  custom_column_names: {}

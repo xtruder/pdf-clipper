@@ -1,24 +1,46 @@
-import { RxJsonSchema, RxDocument, RxCollection } from "rxdb";
-import { BaseResource, baseSchemaProps } from "./base";
+import { RxJsonSchema } from "rxdb";
 
 /**File info resource provides information about file like mime type and
  * sources where file is located
  */
-export interface FileInfo extends BaseResource {
-  // mimetype of a file
+export interface FileInfo {
+  /**unique file hash */
+  hash: string;
+
+  /**account creation time */
+  createdAt: string;
+
+  /**account last update time */
+  updatedAt: string;
+
+  /**mimetype of file */
   mimeType?: string;
 
-  // file source urls
+  /**sources where file is located */
   sources: string[];
+
+  /**id of account that file was created by */
+  createdBy: string;
 }
 
 export const fileInfoSchema: RxJsonSchema<FileInfo> = {
   title: "file info",
   version: 0,
   keyCompression: true,
-  primaryKey: "id",
+  primaryKey: "hash",
   type: "object",
   properties: {
+    hash: {
+      type: "string",
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
     mimeType: {
       type: "string",
     },
@@ -28,11 +50,9 @@ export const fileInfoSchema: RxJsonSchema<FileInfo> = {
         type: "string",
       },
     },
-    ...baseSchemaProps,
+    createdBy: {
+      type: "string",
+    },
   },
-  required: ["id"],
+  required: ["hash", "createdBy", "createdAt", "updatedAt"],
 } as const;
-
-export type FileInfoDocument = RxDocument<FileInfo>;
-
-export type FileInfoCollection = RxCollection<FileInfo>;

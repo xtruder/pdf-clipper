@@ -1,0 +1,92 @@
+table:
+  schema: public
+  name: accounts
+configuration:
+  custom_root_fields:
+    insert: inserAccounts
+    select_aggregate: accountsAggregate
+    insert_one: insertAccount
+    select_by_pk: account
+    select: accounts
+    delete: deleteAccounts
+    update: updateAccounts
+    delete_by_pk: deleteAccount
+    update_by_pk: updateAccount
+  custom_name: accounts
+  column_config:
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+  custom_column_names:
+    updated_at: updatedAt
+    created_at: createdAt
+array_relationships:
+  - name: documents
+    using:
+      foreign_key_constraint_on:
+        column: account_id
+        table:
+          schema: public
+          name: accounts_documents
+  - name: readingInfo
+    using:
+      foreign_key_constraint_on:
+        column: account_id
+        table:
+          schema: public
+          name: document_reading_info
+select_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - id
+        - name
+      filter:
+        documents:
+          document:
+            members:
+              _and:
+                - accepted_at:
+                    _is_null: false
+                - document:
+                    members:
+                      account_id:
+                        _eq: X-Hasura-User-Id
+      limit: 50
+  - role: me
+    permission:
+      columns:
+        - name
+        - created_at
+        - updated_at
+        - id
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      columns:
+        - id
+        - name
+      filter:
+        documents:
+          document:
+            members:
+              _and:
+                - accepted_at:
+                    _is_null: false
+                - document:
+                    members:
+                      account_id:
+                        _eq: X-Hasura-User-Id
+      limit: 0
+update_permissions:
+  - role: me
+    permission:
+      columns:
+        - name
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+      check: null

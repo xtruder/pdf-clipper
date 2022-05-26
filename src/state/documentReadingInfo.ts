@@ -1,21 +1,24 @@
 import { atomFamily } from "recoil";
+
 import { DocumentReadingInfo } from "~/types";
-import { resourceEffect } from "./effects";
-import { persistence } from "./persistence";
+
+import { rxDocumentEffect } from "./effects";
+import { db } from "./persistence";
 
 /**Reading information for document */
-
 export const documentReadingInfo = atomFamily<
   DocumentReadingInfo,
   [string, string]
 >({
   key: "documentReadingInfo",
-  default: ([accountId, docId]) => ({
-    id: `${accountId}|${docId}`,
+  default: ([accountId, documentId]) => ({
+    id: `${accountId}|${documentId}`,
     accountId,
-    docId,
+    documentId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }),
-  effects: ([accountId, docId]) => [
-    resourceEffect(persistence.documentReadingInfo(accountId, docId)),
+  effects: ([accountId, documentId]) => [
+    rxDocumentEffect(db.document_reading_info, `${accountId}|${documentId}`),
   ],
 });

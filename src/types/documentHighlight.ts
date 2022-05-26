@@ -1,25 +1,36 @@
-import type { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
+import type { RxJsonSchema } from "rxdb";
 
-import { BaseResource, baseSchemaProps } from "./base";
-
-export enum DocumentHighlightColor {
+export enum HighlightColor {
   RED = "red",
   YELLOW = "yellow",
   GREEN = "green",
   BLUE = "blue",
 }
 
-export interface DocumentHighlight extends BaseResource {
-  docId: string;
+export interface DocumentHighlight {
+  /**unique document highlight id */
+  id: string;
 
-  /** location of a highlight (depends on document type) */
-  location: any;
+  /**highlight creation time */
+  createdAt: string;
 
-  /** content associated with highlight (depends of document type) */
-  content: any;
+  /**highlight last update time */
+  updatedAt: string;
 
-  /** owner who created the highlight */
-  author?: string;
+  /**highlight deletion time */
+  deletedAt?: string;
+
+  /**id of document that highlight is for */
+  documentId: string;
+
+  /**location of a highlight (depends on document type) */
+  location?: any;
+
+  /**content associated with highlight (depends of document type) */
+  content?: any;
+
+  /**user who created the highlight */
+  createdBy: string;
 }
 
 export const documentHighlightSchema: RxJsonSchema<DocumentHighlight> = {
@@ -30,7 +41,22 @@ export const documentHighlightSchema: RxJsonSchema<DocumentHighlight> = {
   primaryKey: "id",
   type: "object",
   properties: {
-    docId: {
+    id: {
+      type: "string",
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
+    deletedAt: {
+      type: "string",
+      format: "date-time",
+    },
+    documentId: {
       type: "string",
     },
     location: {
@@ -39,14 +65,10 @@ export const documentHighlightSchema: RxJsonSchema<DocumentHighlight> = {
     content: {
       type: "object",
     },
-    author: {
+    createdBy: {
       type: "string",
+      ref: "users",
     },
-    ...baseSchemaProps,
   },
-  required: ["id", "docId"],
+  required: ["id", "documentId"],
 } as const;
-
-export type DocumentHighlightDocument = RxDocument<DocumentHighlight>;
-
-export type DocumentHighlightCollection = RxCollection<DocumentHighlight>;

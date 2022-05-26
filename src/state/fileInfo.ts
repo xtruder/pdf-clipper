@@ -2,14 +2,17 @@ import { atomFamily } from "recoil";
 
 import { FileInfo } from "~/types";
 
-import { resourceEffect } from "./effects";
-import { persistence } from "./persistence";
+import { rxDocumentEffect } from "./effects";
+import { currentAccountId, db } from "./persistence";
 
 export const fileInfo = atomFamily<FileInfo, string>({
   key: "fileSources",
   default: (id) => ({
     id,
     sources: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    createdBy: currentAccountId,
   }),
-  effects: (fileId) => [resourceEffect(persistence.fileInfo(fileId))],
+  effects: (fileId) => [rxDocumentEffect(db.file_info, fileId)],
 });

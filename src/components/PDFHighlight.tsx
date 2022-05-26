@@ -35,6 +35,8 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
 }) => {
   const isSelected = highlight.id === selectedHighlight?.id;
 
+  if (!highlight.content || !highlight.location) return <></>;
+
   const viewport = pdfViewer?.getPageView(
     highlight.location.pageNumber
   )?.viewport;
@@ -42,6 +44,7 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
 
   const onAreaHighlightChanged = (boundingRect: Rect) => {
     if (!pdfViewer) return;
+    if (!highlight.content || !highlight.location) return;
 
     const image = pdfViewer.screenshotPageArea(
       highlight.location.pageNumber,

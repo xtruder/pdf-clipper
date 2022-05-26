@@ -1,0 +1,42 @@
+table:
+  schema: public
+  name: document_highlights
+configuration:
+  custom_root_fields:
+    insert: insertDocumentHighlights
+    select_aggregate: documentHighlightsAggregate
+    insert_one: insertDocumentHighlight
+    select_by_pk: documentHighlight
+    select: documentHighlights
+    delete: deleteDocumentHighlights
+    update: updateDocumentHighlights
+    delete_by_pk: deleteDocumentHighlight
+    update_by_pk: updateDocumentHighlight
+  custom_name: documentHighlights
+  column_config:
+    thumbnail_image:
+      custom_name: thumbnailImage
+    file_id:
+      custom_name: fileId
+    document_id:
+      custom_name: documentId
+    created_by:
+      custom_name: createdBy
+    updated_at:
+      custom_name: updatedAt
+    created_at:
+      custom_name: createdAt
+  custom_column_names:
+    thumbnail_image: thumbnailImage
+    file_id: fileId
+    document_id: documentId
+    created_by: createdBy
+    updated_at: updatedAt
+    created_at: createdAt
+object_relationships:
+  - name: creator
+    using:
+      foreign_key_constraint_on: created_by
+  - name: document
+    using:
+      foreign_key_constraint_on: document_id
