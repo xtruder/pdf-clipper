@@ -7,12 +7,12 @@ import useDarkMode from "@utilityjs/use-dark-mode";
 
 import { useViewport } from "./lib/react";
 
-import { ErrorFallback } from "~/components/ErrorFallback";
+import { ErrorFallback } from "~/components/ui/ErrorFallback";
 import {
   TopbarProgressIndicator,
   useContextProgress,
   ContextProgressProvider,
-} from "~/components/ProgressIndicator";
+} from "~/components/ui/ProgressIndicator";
 
 import { DocumentViewPage } from "~/pages/DocumentViewPage";
 import { MainPage } from "~/pages/MainPage";

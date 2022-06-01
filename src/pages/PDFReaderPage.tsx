@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 //import { StateCtx } from "~/state/state";
 //import useDarkMode from "@utilityjs/use-dark-mode";
 
-import { useContextProgress } from "~/components/ProgressIndicator";
+import { useContextProgress } from "~/components/ui/ProgressIndicator";
 import { ReaderLayout } from "~/layouts/ReaderLayout";
 import { PDFReader } from "~/containers/PDFReader";
 

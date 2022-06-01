@@ -1,0 +1,44 @@
+type FileInfo {
+  """sha256 hash of file"""
+  hash: String!
+
+  """file mime type"""
+  mimeType: String!
+
+  """primary url of file"""
+  url: String
+
+  """alternative file sources"""
+  sources: [String!]
+
+  """file creation time"""
+  createdAt: DateTime!
+
+  """file last update time"""
+  updatedAt: DateTime!
+
+  """account that created file"""
+  createdBy: AccountInfo!
+}
+
+input UpsertFileInput {
+  """sha256 hash of file"""
+  hash: String
+
+  """file mime type"""
+  mimeType: String
+
+  """sources where file can be retrived"""
+  sources: [String!]
+}
+
+extend type Query {
+  fileInfo(fileHash: String!): FileInfo
+}
+
+extend type Mutation {
+  upsertFileInfo(fileInfo: UpsertFileInput): FileInfo!
+
+  """uploads file and returns file information"""
+  uploadFile(file: Upload!): FileInfo!
+}

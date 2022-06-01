@@ -1,0 +1,73 @@
+type AccountDocument {
+  """document associated with account"""
+  document: Document
+
+  """Role of account for document"""
+  role: DocumentRole!
+
+  """document member creation time"""
+  createdAt: DateTime!
+
+  """Time when account was accepted as member of document"""
+  acceptedAt: DateTime!
+}
+
+type Account {
+  """Account ID"""
+  id: ID!
+
+  """Optional account name"""
+  name: String
+
+  """Account creation time"""
+  createdAt: DateTime!
+
+  """Account last update time"""
+  updatedAt: DateTime!
+
+  """Account deletion time"""
+  deletedAt: DateTime
+
+  """list of documents that account is member of"""
+  documents: [AccountDocument!]!
+}
+
+type AccountInfo {
+  """account ID"""
+  id: ID!
+
+  """optional account name"""
+  name: String
+}
+
+# input for acccount update
+input AccountUpdateInput {
+  """id of the account to update"""
+  id: ID!
+
+  """name of the account"""
+  name: String
+
+  """update timestamp"""
+  timestamp: DateTime!
+}
+
+type Query {
+  """returns information about current account"""
+  currentAccount: Account!
+
+  account(id: ID!): Account
+}
+
+type Subscription {
+  """subscribes to account document updates"""
+  accountDocumentUpdates(accountId: ID!): AccountDocument!
+}
+
+type Mutation {
+  """updates account"""
+  updateAccount(account: AccountUpdateInput!): Account!
+
+  """removes account from document"""
+  removeMeFromDocument(documentId: ID!): Boolean!
+}

@@ -6,7 +6,6 @@ import {
 import { TypedArray } from "pdfjs-dist/types/src/display/api";
 import { debug as _debug } from "debug";
 
-import { DocumentOutline, OutlineNode } from "~/models";
 import {
   asElement,
   getCanvasAreaAsPNG,
@@ -160,6 +159,19 @@ export type _OutlineNode = Omit<__OutlineNode, "items"> & {
   items: _OutlineNode[];
   pageNumber?: number;
   top?: number;
+};
+
+export type OutlineNode = {
+  title: string;
+  location?: any;
+  pageNumber?: number;
+  top?: number;
+
+  items: OutlineNode[];
+};
+
+export type DocumentOutline = {
+  items: OutlineNode[];
 };
 
 export async function getDocumentOutline(

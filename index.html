@@ -3,6 +3,14 @@
   <head>
     <meta name="darkreader" content="pdf-clipper" />
 
+    <!-- polyfil for global, needed by pouchdb libraries-->
+    <script>
+      window.global = window;
+      window.process = {
+        env: { DEBUG: undefined },
+      };
+    </script>
+
     <!-- All other meta tags are defined in App.tsx -->
   </head>
   <body>

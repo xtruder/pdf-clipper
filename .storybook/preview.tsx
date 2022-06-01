@@ -1,5 +1,4 @@
 import React, { Suspense, useEffect } from "react";
-import { RecoilRoot } from "recoil";
 
 import { addDecorator } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
@@ -10,7 +9,7 @@ import {
   ContextProgressProvider,
   useContextProgress,
   TopbarProgressIndicator,
-} from "../src/components/ProgressIndicator";
+} from "../src/components/ui/ProgressIndicator";
 
 import "virtual:windi.css";
 import "../src/App.css";
@@ -44,11 +43,9 @@ addDecorator((story, ctx) => {
   );
 
   const StoryWrapper: React.FC = ({ children }) => (
-    <RecoilRoot>
-      <ContextProgressProvider>
-        <Suspense fallback={<ShowProgress />}>{children}</Suspense>
-      </ContextProgressProvider>
-    </RecoilRoot>
+    <ContextProgressProvider>
+      <Suspense fallback={<ShowProgress />}>{children}</Suspense>
+    </ContextProgressProvider>
   );
 
   return (

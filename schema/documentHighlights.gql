@@ -1,0 +1,91 @@
+enum HighlightColor {
+  RED
+  YELLOW
+  GREEN
+  BLUE
+}
+
+type TextImageHighlightContent {
+  """text associated with highlight"""
+  text: String
+
+  """url of highlight image"""
+  image: String
+
+  """color associated with highlight"""
+  color: HighlightColor
+}
+
+union HighlightContent = TextImageHighlightContent
+
+type DocumentHighlight {
+  """unique highlight id"""
+  id: ID!
+
+  """highlight creation time"""
+  createdAt: DateTime!
+
+  """highlight last udpate time"""
+  updatedAt: DateTime!
+
+  """highlight deletion time"""
+  deletedAt: DateTime
+
+  """highlight author ID"""
+  createdBy: AccountInfo!
+
+  """highlight index, used for sorting"""
+  index: Int!
+
+  """content associated with highlight"""
+  content: HighlightContent!
+
+  """highlight location"""
+  location: String!
+}
+
+type DocumentHighlightChange {
+   """unique highlight id"""
+  id: ID!
+
+  """who has made a change"""
+  createdBy: AccountInfo!
+
+  """whether highlight content has been changed"""
+  content: HighlightContent!
+
+    """whether highlight location has been changed"""
+  location: String!
+
+  """whether highlight has been deleted"""
+  deleted: Boolean
+}
+
+input UpsertDocumentHighlightInput {
+  """unique highlight id"""
+  id: ID
+
+  """content associated with highlight serialized as JSON"""
+  content: String
+
+  """location of a highlight serialized as JSON"""
+  location: String
+
+  """whether highlight has been deleted"""
+  deleted: Boolean
+}
+
+extend type DocumentChange {
+   """changes regarding document highlights"""
+  highlights: [DocumentHighlightChange!]
+}
+
+extend type Document {
+  """list of highlights associated with document"""
+  highlights(limit: Int, offset: Int): [DocumentHighlight!]!
+}
+
+extend type Mutation {
+  """creates or updates document highlight"""
+  upsertDocumentHighlight(documentId: ID!, highlight: UpsertDocumentHighlightInput!): DocumentHighlight!
+}

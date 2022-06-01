@@ -1,100 +1,85 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useRecoilValue, useSetRecoilState } from "recoil";
 
-import { v4 as uuidv4 } from "uuid";
 import { debug as _debug } from "debug";
 
-import { currentAccount, documentInfo, fileInfo } from "~/state";
+import { AccountDocumentsListContainer } from "~/containers/DocumentListContainer";
+import { DocumentDropContainer } from "~/containers/DocumentDropContainer";
+import {
+  DocumentMetaInput,
+  DocumentType,
+  FileInfo,
+  query,
+  UpsertDocumentInput,
+  useMutation,
+} from "~/gqty";
+import { getDocumentOutline, loadPDF, screenshotPageArea } from "~/lib/pdfjs";
 
-import { DocumentListContainer } from "~/containers/DocumentListContainer";
-import { DocumentDropZone } from "~/components/DocumentDropZone";
-import { DocumentType } from "~/models";
-import { sha256 } from "~/lib/crypto";
-import { getPrivateDirectory } from "~/state/state";
-import { paths } from "~/state/const";
-
-const debug = _debug("main");
+const mimeToDocType: Record<string, DocumentType | undefined> = {
+  "application/pdf": DocumentType.PDF,
+};
 
 export interface MainPageProps {}
 
 export const MainPage: React.FC<MainPageProps> = ({}) => {
   const navigate = useNavigate();
 
-  const { documentIds } = useRecoilValue(currentAccount);
-  const setCurrentAccout = useSetRecoilState(currentAccount);
+  const [upsertDocument] = useMutation(
+    (mutation, document: UpsertDocumentInput) =>
+      mutation.upsertDocument({ document }),
+    {
+      suspense: true,
 
-  const [uploadState, setUploadState] = useState<{
-    fileId: string;
-    documentId: string;
-    file?: ArrayBuffer;
-  }>({
-    fileId: "",
-    documentId: "",
-  });
-
-  const setFileInfo = useSetRecoilState(fileInfo(uploadState.fileId));
-  const setDocumentInfo = useSetRecoilState(
-    documentInfo(uploadState.documentId)
+      // refetch account documents
+      refetchQueries: [query.currentAccount.documents],
+    }
   );
 
-  const onUpload = async (file: ArrayBuffer) => {
-    // get sha256 of file and use it as file id
-    const fileId = await sha256(file);
+  const onUpload = async (fileInfo: FileInfo, file: File) => {
+    const docType = mimeToDocType[fileInfo.mimeType || ""];
 
-    debug("file hash: ", fileId);
+    if (!docType) throw new Error(`unsupported mime type ${fileInfo.mimeType}`);
 
-    // get uuid of document
-    const documentId = uuidv4();
-
-    setUploadState({
-      fileId,
-      documentId,
-      file,
+    // create a new document
+    const { id } = await upsertDocument({
+      args: { type: docType, fileHash: fileInfo.hash },
     });
+
+    if (docType === DocumentType.PDF) {
+      // load pdf document from file
+      const pdfDocument = await loadPDF(await file.text());
+
+      // get pdf document metadata
+      const { info }: { info: any } = await pdfDocument.getMetadata();
+
+      // get first page and screenshot page as cover
+      const page1 = await pdfDocument.getPage(1);
+      const cover = await screenshotPageArea(page1, { width: 600 });
+
+      // get pdf document outline
+      const outline = await getDocumentOutline(pdfDocument);
+
+      const meta: DocumentMetaInput = {
+        pageCount: pdfDocument.numPages,
+        title: info["Title"],
+        author: info["Author"],
+        cover,
+        outline,
+      };
+
+      // update document metadata
+      await upsertDocument({ args: { id, meta } });
+    }
   };
-
-  useEffect(
-    (async () => {
-      if (!uploadState.documentId || !uploadState.fileId || !uploadState.file)
-        return;
-
-      // save uploaded file locally
-      await (
-        await getPrivateDirectory()
-      ).saveFile(paths.file(uploadState.fileId, "pdf"), uploadState.file);
-
-      setFileInfo({
-        id: uploadState.fileId,
-
-        // no sources defined until file is uploaded somewhere, will use local
-        // saved file
-        sources: [],
-      });
-
-      setDocumentInfo({
-        id: uploadState.documentId,
-        type: DocumentType.PDF,
-        fileId: uploadState.fileId,
-      });
-
-      setCurrentAccout((val) => ({
-        ...val,
-        documentIds: [uploadState.documentId, ...val.documentIds],
-      }));
-    }) as any,
-    [uploadState]
-  );
 
   return (
     <div className="h-screen flex flex-col p-1">
-      <DocumentDropZone className="flex-none grow-0" onFile={onUpload} />
+      <DocumentDropContainer className="flex-none grow-0" onUpload={onUpload} />
 
       <div className="divider"></div>
 
-      <DocumentListContainer
+      <AccountDocumentsListContainer
         className="flex-1"
-        documentIds={documentIds}
         onOpen={(docId) => navigate(`/document/${docId}`)}
       />
     </div>

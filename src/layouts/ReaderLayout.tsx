@@ -1,12 +1,12 @@
 import React, { Suspense } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
-import { ErrorFallback } from "~/components/ErrorFallback";
+import { ErrorFallback } from "~/components/ui/ErrorFallback";
 import {
   ContextProgressProvider,
   TopbarProgressIndicator,
   useContextProgress,
-} from "~/components/ProgressIndicator";
+} from "~/components/ui/ProgressIndicator";
 
 export const ReaderLayout: React.FC = ({ children }) => {
   const ShowProgress: React.FC = () => (

@@ -52,3 +52,10 @@ export const setRandomInterval = <F extends Function>(
 export const waitError = <T>(promise: Promise<T>): Promise<Error | null> => {
   return promise.then(() => null).catch((err) => err);
 };
+
+export function notEmpty<TValue>(
+  value: TValue | null | undefined
+): value is TValue {
+  if (value === null || value === undefined) return false;
+  return true;
+}
