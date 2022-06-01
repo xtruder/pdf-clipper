@@ -10,6 +10,9 @@ type AccountDocument {
 
   """Time when account was accepted as member of document"""
   acceptedAt: DateTime!
+
+  """account that created document member"""
+  createdBy: AccountInfo!
 }
 
 type Account {
@@ -46,7 +49,7 @@ input AccountUpdateInput {
   id: ID!
 
   """name of the account"""
-  name: String
+  name: String @constraint(pattern: "^[A-Fa-f0-9\\w]{50}$")
 
   """update timestamp"""
   timestamp: DateTime!
@@ -54,7 +57,7 @@ input AccountUpdateInput {
 
 type Query {
   """returns information about current account"""
-  currentAccount: Account!
+  currentAccount: Account
 
   account(id: ID!): Account
 }

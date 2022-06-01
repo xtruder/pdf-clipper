@@ -6,6 +6,9 @@ export type ModalArgs = {
   size: "auto" | "md" | "lg";
   show?: boolean;
   modalBoxClassName?: string;
+
+  /**modal content */
+  children: React.ReactNode;
 };
 
 export const Modal: React.FC<ModalArgs> = ({

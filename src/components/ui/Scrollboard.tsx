@@ -5,6 +5,9 @@ export interface ScrollboardProps {
   center?: boolean;
   contentRef?: ForwardedRef<HTMLDivElement | null>;
 
+  /**scrollboard content */
+  children: React.ReactNode;
+
   onSize?: (width: number, height: number) => void;
   onScroll?: (scroll: { scrollLeft: number; scrollTop: number }) => void;
 }

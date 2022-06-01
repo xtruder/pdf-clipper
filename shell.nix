@@ -18,6 +18,8 @@ in pkgs.mkShell {
 
     cypress
     xorg.xorgserver
+
+    postgresql
   ];
 
   hardeningDisable = [ "all" ];

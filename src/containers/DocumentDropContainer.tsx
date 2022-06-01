@@ -1,28 +1,23 @@
 import React from "react";
 
-import { FileInfo, useMutation } from "~/gqty";
-
 import { DocumentDropZone } from "~/components/ui/DocumentDropZone";
+import { useUploadFile } from "~/graphql";
 
 export const DocumentDropContainer: React.FC<{
-  onUpload: (fileInfo: FileInfo, file: File) => void;
+  onUpload: (file: File, hash: string, mimeType: string) => void;
   className: string;
 }> = ({ onUpload, className }) => {
-  const [uploadFile] = useMutation(
-    (mutation, file: File) =>
-      mutation.uploadFile({
-        file,
-      }),
-    {
-      nonSerializableVariables: true,
-      suspense: false,
-    }
-  );
+  const [uploadFile] = useUploadFile();
 
   const onFile = async (file: File) => {
-    const fileInfo = await uploadFile({ args: file });
+    console.log(file);
+    const fileInfo = await uploadFile({ variables: { file } });
 
-    onUpload(fileInfo, file);
+    if (!fileInfo.data) throw new Error("missing response");
+
+    const { hash, mimeType } = fileInfo.data.uploadFile;
+
+    onUpload(file, hash, mimeType);
   };
 
   return <DocumentDropZone onFile={onFile} className={className} />;

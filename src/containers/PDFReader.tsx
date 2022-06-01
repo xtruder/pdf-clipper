@@ -23,16 +23,15 @@ import { getDocumentOutline, loadPDF } from "~/lib/pdfjs";
 
 import { PDFPageThumbnails } from "~/components/pdf/PDFPageThubnailsView";
 import {
-  DocumentMetaInput,
-  UpsertDocumentHighlightInput,
-  useMutation,
-  useQuery,
-  useSubscription,
-} from "~/gqty";
-import {
   HighlightCard,
   HighlightCardList,
 } from "~/components/highlights/HighlightCard";
+import {
+  useGetDocumentHighlights,
+  useGetDocumentInfo,
+  useUpsertDocument,
+  useUpsertDocumentHighlight,
+} from "~/graphql";
 
 export interface PDFReaderProps {
   documentId: string;
@@ -55,8 +54,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const {
     file,
     meta: { title },
-    highlights: getHighlights,
-  } = useQuery().document({ id: documentId });
+  } = useGetDocumentInfo(documentId);
 
   if (!file || !file.url) throw new Error("missing document file");
 
@@ -64,33 +62,18 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const pdfDocument = suspend(() => loadPDF(file.url!, () => {}), [file.url]);
   const outline = suspend(() => getDocumentOutline(pdfDocument), [pdfDocument]);
 
-  // get highlights from api
-  const initialHighlights: PDFHighlight[] = getHighlights().map((h) => ({
+  const highlights = useGetDocumentHighlights(documentId).map((h) => ({
     id: h.id!,
-    content: {
-      text: h.content?.$on.TextImageHighlightContent?.text!,
-      thumbnail: h.content?.$on.TextImageHighlightContent?.image ?? undefined,
-      color: h.content?.$on.TextImageHighlightContent?.color!,
-    },
+    content: JSON.parse(h.content!),
     location: JSON.parse(h.location!),
   }));
 
-  const [upsertDocument] = useMutation(
-    (mutation, meta: DocumentMetaInput) =>
-      mutation.upsertDocument({ document: { id: documentId, meta } }),
-    { suspense: true }
-  );
+  const [upsertDocument] = useUpsertDocument();
 
-  const [upsertDocumentHighlight] = useMutation(
-    (mutation, highlight: UpsertDocumentHighlightInput) =>
-      mutation.upsertDocumentHighlight({ documentId, highlight }),
-    { suspense: true }
-  );
+  const [upsertDocumentHighlight] = useUpsertDocumentHighlight(documentId);
 
-  const documentChanges = useSubscription().documentChanges({ id: documentId });
+  //  const documentChanges = useSubscription().documentChanges({ id: documentId });
 
-  const [highlights, setHighlights] =
-    useState<PDFHighlight[]>(initialHighlights);
   const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
     useState<PDFHighlight>();
   const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
@@ -125,15 +108,18 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const createHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
     if (!pdfHighlight) return;
 
-    setHighlights((highlights) => [...highlights, pdfHighlight]);
-
-    await upsertDocumentHighlight({
-      args: {
-        id: pdfHighlight.id,
-        content: JSON.stringify(pdfHighlight.content),
-        location: JSON.stringify(pdfHighlight.location),
+    const { errors } = await upsertDocumentHighlight({
+      variables: {
+        documentId,
+        highlight: {
+          id: pdfHighlight.id,
+          content: JSON.stringify(pdfHighlight.content),
+          location: JSON.stringify(pdfHighlight.location),
+        },
       },
     });
+
+    if (errors) return;
 
     if (selectOnCreate) {
       setSelectedHighlight(pdfHighlight);
@@ -154,32 +140,33 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
     // mark highlight as deleted
     await upsertDocumentHighlight({
-      args: { id: pdfHighlight.id, deleted: true },
+      variables: {
+        documentId,
+        highlight: { id: pdfHighlight.id, deleted: true },
+      },
     });
-
-    setHighlights((highlights) =>
-      highlights.filter((h) => h.id === pdfHighlight.id)
-    );
   }, []);
 
   const updateHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
     if (!pdfHighlight) return;
 
-    setHighlights((highlights) =>
-      highlights.map((h) => (h.id === pdfHighlight.id ? pdfHighlight : h))
-    );
-
     // update highlight
     await upsertDocumentHighlight({
-      args: {
-        id: pdfHighlight.id,
-        location: JSON.stringify(pdfHighlight.location),
-        content: JSON.stringify(pdfHighlight.content),
+      variables: {
+        documentId,
+        highlight: {
+          id: pdfHighlight.id,
+          location: JSON.stringify(pdfHighlight.location),
+          content: JSON.stringify(pdfHighlight.content),
+        },
       },
     });
   }, []);
 
-  const changeTitle = (title: string) => upsertDocument({ args: { title } });
+  const changeTitle = (title: string) =>
+    upsertDocument({
+      variables: { document: { id: documentId, meta: { title } } },
+    });
 
   const onKeyDown = (event: KeyboardEvent) => {
     switch (event.code) {
@@ -201,46 +188,40 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (!documentChanges) return;
+  // useEffect(() => {
+  //   if (!documentChanges) return;
 
-    const newHighlights = [...highlights];
+  //   const newHighlights = [...highlights];
 
-    // process highlight changes
-    for (const highlight of documentChanges.highlights || []) {
-      const idx = newHighlights.findIndex((h) => h.id === highlight.id);
-      const content = highlight.content.$on.TextImageHighlightContent;
-      const location = highlight.location && JSON.parse(highlight.location);
+  //   // process highlight changes
+  //   for (const highlight of documentChanges.highlights || []) {
+  //     const idx = newHighlights.findIndex((h) => h.id === highlight.id);
+  //     const content: PDFHighlightContent =
+  //       highlight.content && JSON.parse(highlight.content);
+  //     const location: PDFHighlightLocation =
+  //       highlight.location && JSON.parse(highlight.location);
 
-      if (!content || !location) continue;
+  //     if (!content || !location) continue;
 
-      if (!idx && !highlight.deleted) {
-        newHighlights.push({
-          id: highlight.id!,
-          content: {
-            color: content.color!,
-            text: content.text!,
-            thumbnail: content.image!,
-          },
-          location,
-        });
-      } else if (idx && highlight.deleted) {
-        delete newHighlights[idx];
-      } else if (idx) {
-        newHighlights[idx] = {
-          id: highlight.id!,
-          content: {
-            color: content.color!,
-            text: content.text!,
-            thumbnail: content.image!,
-          },
-          location,
-        };
-      }
-    }
+  //     if (!idx && !highlight.deleted) {
+  //       newHighlights.push({
+  //         id: highlight.id!,
+  //         content,
+  //         location,
+  //       });
+  //     } else if (idx && highlight.deleted) {
+  //       delete newHighlights[idx];
+  //     } else if (idx) {
+  //       newHighlights[idx] = {
+  //         id: highlight.id!,
+  //         content,
+  //         location,
+  //       };
+  //     }
+  //   }
 
-    setHighlights(newHighlights);
-  }, [documentChanges]);
+  //   setHighlights(newHighlights);
+  // }, [documentChanges]);
 
   useEffect(() => {
     if (scrollToPage) {

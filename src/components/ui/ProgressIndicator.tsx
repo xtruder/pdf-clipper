@@ -123,6 +123,7 @@ export interface ProgressStatusContext {
 export interface ContextProgressProps {
   defaultProgress?: number;
   defaultMessage?: string;
+  children: React.ReactNode;
 }
 
 export const [ContextProgressProvider, useContextProgress] = createContextState<

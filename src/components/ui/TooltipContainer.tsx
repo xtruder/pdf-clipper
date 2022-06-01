@@ -20,6 +20,9 @@ export interface TooltipContainerProps {
   show?: boolean;
   observeChanges?: boolean;
   observeScroll?: boolean;
+
+  // tooltiped node
+  children: React.ReactNode;
 }
 
 export const TooltipContainer: React.FC<TooltipContainerProps> = forwardRef(

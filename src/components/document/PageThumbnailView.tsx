@@ -14,6 +14,9 @@ export interface PageThumbnailViewProps {
 
   // gets trigered when thumbnail is clicked
   onClick?: () => void;
+
+  // children component
+  children: React.ReactNode;
 }
 
 export const PageThumbnailView: React.FC<PageThumbnailViewProps> = ({

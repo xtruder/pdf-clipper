@@ -10,6 +10,16 @@ import {
 
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 
+function usePrevious<T>(value: T): T | undefined {
+  const ref = useRef<T>();
+
+  useEffect(() => {
+    ref.current = value;
+  });
+
+  return ref.current;
+}
+
 export interface EditableTextProps {
   // provided text
   text?: string;
@@ -84,8 +94,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
   useEffect(() => {
     if (textRef.current === previousText) return;
 
-    onChange(textRef.current);
     setPreviousText(textRef.current);
+    onChange(textRef.current);
   }, [isEditing]);
 
   return (

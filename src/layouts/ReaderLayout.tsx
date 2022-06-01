@@ -8,7 +8,9 @@ import {
   useContextProgress,
 } from "~/components/ui/ProgressIndicator";
 
-export const ReaderLayout: React.FC = ({ children }) => {
+export const ReaderLayout: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const ShowProgress: React.FC = () => (
     <TopbarProgressIndicator {...useContextProgress()} />
   );

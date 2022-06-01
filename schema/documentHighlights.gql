@@ -5,19 +5,6 @@ enum HighlightColor {
   BLUE
 }
 
-type TextImageHighlightContent {
-  """text associated with highlight"""
-  text: String
-
-  """url of highlight image"""
-  image: String
-
-  """color associated with highlight"""
-  color: HighlightColor
-}
-
-union HighlightContent = TextImageHighlightContent
-
 type DocumentHighlight {
   """unique highlight id"""
   id: ID!
@@ -34,14 +21,11 @@ type DocumentHighlight {
   """highlight author ID"""
   createdBy: AccountInfo!
 
-  """highlight index, used for sorting"""
-  index: Int!
-
   """content associated with highlight"""
-  content: HighlightContent!
+  content: JSON!
 
   """highlight location"""
-  location: String!
+  location: JSON!
 }
 
 type DocumentHighlightChange {
@@ -52,10 +36,10 @@ type DocumentHighlightChange {
   createdBy: AccountInfo!
 
   """whether highlight content has been changed"""
-  content: HighlightContent!
+  content: JSON!
 
     """whether highlight location has been changed"""
-  location: String!
+  location: JSON!
 
   """whether highlight has been deleted"""
   deleted: Boolean
@@ -66,10 +50,10 @@ input UpsertDocumentHighlightInput {
   id: ID
 
   """content associated with highlight serialized as JSON"""
-  content: String
+  content: JSON
 
   """location of a highlight serialized as JSON"""
-  location: String
+  location: JSON
 
   """whether highlight has been deleted"""
   deleted: Boolean

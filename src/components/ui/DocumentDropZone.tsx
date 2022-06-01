@@ -55,7 +55,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
     onDrop,
     multiple: false, // only one file for now
     maxSize: 100 * 1000000, // 100 MB for now, so we don't eat all memory
-    accept: "application/pdf", // accept only pdf for now
+    accept: { "application/pdf": [] }, // accept only pdf for now
   });
 
   const Icon = readerErrorStr ? ExclamationCircleIcon : ExclamationCircleIcon;

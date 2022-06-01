@@ -5,18 +5,12 @@ import { debug as _debug } from "debug";
 
 import { AccountDocumentsListContainer } from "~/containers/DocumentListContainer";
 import { DocumentDropContainer } from "~/containers/DocumentDropContainer";
-import {
-  DocumentMetaInput,
-  DocumentType,
-  FileInfo,
-  query,
-  UpsertDocumentInput,
-  useMutation,
-} from "~/gqty";
 import { getDocumentOutline, loadPDF, screenshotPageArea } from "~/lib/pdfjs";
+import { useUpsertDocument } from "~/graphql";
+import { DocumentMetaInput, DocumentType } from "~/graphql/types";
 
 const mimeToDocType: Record<string, DocumentType | undefined> = {
-  "application/pdf": DocumentType.PDF,
+  "application/pdf": DocumentType.Pdf,
 };
 
 export interface MainPageProps {}
@@ -24,30 +18,27 @@ export interface MainPageProps {}
 export const MainPage: React.FC<MainPageProps> = ({}) => {
   const navigate = useNavigate();
 
-  const [upsertDocument] = useMutation(
-    (mutation, document: UpsertDocumentInput) =>
-      mutation.upsertDocument({ document }),
-    {
-      suspense: true,
+  const [upsertDocument] = useUpsertDocument();
 
-      // refetch account documents
-      refetchQueries: [query.currentAccount.documents],
-    }
-  );
+  const onUpload = async (file: File, hash: string, mimeType: string) => {
+    const docType = mimeToDocType[mimeType || ""];
 
-  const onUpload = async (fileInfo: FileInfo, file: File) => {
-    const docType = mimeToDocType[fileInfo.mimeType || ""];
+    if (!docType) throw new Error(`unsupported mime type ${mimeType}`);
 
-    if (!docType) throw new Error(`unsupported mime type ${fileInfo.mimeType}`);
+    console.log(hash, mimeType);
 
     // create a new document
-    const { id } = await upsertDocument({
-      args: { type: docType, fileHash: fileInfo.hash },
+    const result = await upsertDocument({
+      variables: { document: { type: docType, fileHash: hash } },
     });
 
-    if (docType === DocumentType.PDF) {
+    if (!result.data) throw new Error("missing document info");
+
+    const { id } = result.data.upsertDocument;
+
+    if (docType === DocumentType.Pdf) {
       // load pdf document from file
-      const pdfDocument = await loadPDF(await file.text());
+      const pdfDocument = await loadPDF(await file.arrayBuffer());
 
       // get pdf document metadata
       const { info }: { info: any } = await pdfDocument.getMetadata();
@@ -68,7 +59,7 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
       };
 
       // update document metadata
-      await upsertDocument({ args: { id, meta } });
+      await upsertDocument({ variables: { document: { id, meta } } });
     }
   };
 

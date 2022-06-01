@@ -23,10 +23,10 @@ type FileInfo {
 
 input UpsertFileInput {
   """sha256 hash of file"""
-  hash: String
+  hash: String @constraint(pattern: "^[A-Fa-f0-9]{64}$")
 
   """file mime type"""
-  mimeType: String
+  mimeType: String @constraint(pattern: "^\\w+/[-+.\\w]+$")
 
   """sources where file can be retrived"""
   sources: [String!]

@@ -31,7 +31,7 @@ type DocumentMeta {
 
 type DocumentMember {
   """member account"""
-  account: Account!
+  account: AccountInfo!
 
   """Role of account for document"""
   role: DocumentRole!
@@ -41,13 +41,16 @@ type DocumentMember {
 
   """Time when account was accepted as member of document"""
   acceptedAt: DateTime
+
+  """account that created document member"""
+  createdBy: AccountInfo!
 }
 
 type DocumentMemberChange {
   """account id that membership has been changed for"""
   accountId: ID!
 
-    """who has made a change"""
+  """who has made a change"""
   createdBy: AccountInfo!
 
   """whether ddocument role has been changed"""
@@ -104,7 +107,7 @@ type Document {
 }
 
 input OutlineNodeInput {
-  pageNumber: Int
+  pageNumber: Int @constraint(min: 0)
   location: String
   top: Int
 
@@ -130,10 +133,21 @@ input DocumentMetaInput {
   cover: String
 
   """number of pages in document"""
-  pageCount: Int
+  pageCount: Int @constraint(min: 0)
 
   """document outline"""
   outline: DocumentOutlineInput
+}
+
+input DocumentMemberInput {
+  """id of account to update"""
+  accountId: ID!
+
+  """role of document member"""
+  role: DocumentRole
+
+  """whether document member is accepted"""
+  accepted: Boolean
 }
 
 input UpsertDocumentInput {
@@ -141,18 +155,24 @@ input UpsertDocumentInput {
   id: ID
 
   """hash of file associated with document"""
-  fileHash: String
+  fileHash: String #@constraint(pattern: "^[A-Fa-f0-9]{64}$")
 
   """type of the document"""
   type: DocumentType
 
   """metadata associates with document"""
   meta: DocumentMetaInput
+
+  """list of document members"""
+  members: [DocumentMemberInput!]
+
+  """whether to delete document"""
+  deleted: Boolean
 }
 
 extend type Query {
   """gets document by id"""
-  document(id: ID!): Document!
+  document(id: ID!): Document
 }
 
 extend type Mutation {

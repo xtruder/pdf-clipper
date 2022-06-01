@@ -7,8 +7,7 @@ import {
   TopbarProgressIndicator,
   useRandomProgress,
 } from "~/components/ui/ProgressIndicator";
-
-import { useQuery } from "~/gqty";
+import { useGetCurrentAccountDocuments } from "~/graphql";
 
 import { DocumentInfoCardContainer } from "./DocumentInfoCardContainer";
 
@@ -17,21 +16,16 @@ export const AccountDocumentsListContainer: React.FC<{
   onOpen?: (documentId: string) => void;
 }> = ({ className, onOpen }) => {
   const AccountDocumentsListLoader = useCallback(() => {
-    const {
-      currentAccount: { documents },
-    } = useQuery({
-      prepare({ prepass, query }) {
-        prepass(query.currentAccount, "documents", "document");
-      },
-      suspense: true,
-    });
+    const { data } = useGetCurrentAccountDocuments();
+
+    const documents = data.currentAccount?.documents ?? [];
 
     return (
       <>
         {documents
           .filter((m) => m.document)
           .map((m) => m.document!)
-          .map(({ id = "" }) => (
+          .map(({ id }) => (
             <DocumentInfoCardContainer
               key={id}
               documentId={id}

@@ -1,5 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import { createUploadLink } from "apollo-upload-client";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Helmet, HelmetProvider } from "react-helmet-async";
@@ -21,7 +23,12 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 import "virtual:windi.css";
 import "./App.css";
 
-const PageWrapper: React.FC = ({ children }) => {
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: createUploadLink({ uri: "http://localhost:4000/graphql" }),
+});
+
+const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = () => (
     <TopbarProgressIndicator {...useContextProgress()} />
   );
@@ -90,7 +97,9 @@ export function App(): JSX.Element {
         </Helmet>
       </HelmetProvider>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <AppRouter />
+        <ApolloProvider client={client}>
+          <AppRouter />
+        </ApolloProvider>
       </ErrorBoundary>
     </>
   );

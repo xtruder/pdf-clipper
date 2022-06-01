@@ -32,6 +32,7 @@ node.dest:
 const OutlineItem: React.FC<{
   node: OutlineNode;
   depth: number;
+  children: React.ReactNode;
   onClick?: () => void;
 }> = ({ node, children, onClick = () => null }) => {
   const [isOpened, setIsOpened] = useState(true);

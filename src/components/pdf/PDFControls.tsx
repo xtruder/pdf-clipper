@@ -354,6 +354,7 @@ export const Sidebar: React.FC<{
 export const Drawer: React.FC<{
   className?: string;
   sidebar: JSX.Element;
+  children: React.ReactNode;
 }> = ({ className = "", sidebar, children }) => {
   //  const [showSidebar, setShowSidebar] = useState(false);
   const [isShown, setIsShown] = useState(false);

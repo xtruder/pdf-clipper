@@ -1,0 +1,8 @@
+overwrite: true
+schema: "schema/**.gql"
+documents: ["./src/graphql/queries.ts", "./src/graphql/mutations.ts"]
+generates:
+  src/graphql/types.ts:
+    plugins:
+      - typescript
+      - typescript-operations

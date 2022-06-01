@@ -214,14 +214,14 @@ export async function getDocumentOutline(
 }
 
 export const loadPDF = async (
-  source: string | TypedArray,
+  source: string | TypedArray | ArrayBuffer,
   onProgress: (progress: number) => void = () => null
 ) => {
   debug("loading pdf", source);
 
   const loadingTask = getPDFDocument({
     ...(typeof source === "string" && { url: source }),
-    ...(typeof source !== "string" && { data: source }),
+    ...(typeof source !== "string" && { data: source as any }),
     cMapUrl: new URL("/public/cmaps", window.location.toString()).href,
     cMapPacked: true,
   });
