@@ -7,7 +7,12 @@ import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/react";
 
 import { PDFHighlighter } from "~/components/pdf/PDFHighlighter";
-import { HighlightColor, PDFHighlight } from "~/components/pdf/types";
+import {
+  HighlightColor,
+  PDFHighlight,
+  PDFHighlightContent,
+  PDFHighlightLocation,
+} from "~/components/pdf/types";
 import {
   ActionButton,
   HighlightTooltip,
@@ -67,11 +72,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   // get highlights from api
   const initialHighlights: PDFHighlight[] = getHighlights().map((h) => ({
     id: h.id!,
-    content: {
-      text: h.content?.$on.TextImageHighlightContent?.text!,
-      thumbnail: h.content?.$on.TextImageHighlightContent?.image ?? undefined,
-      color: h.content?.$on.TextImageHighlightContent?.color!,
-    },
+    content: JSON.parse(h.content!),
     location: JSON.parse(h.location!),
   }));
 
@@ -209,19 +210,17 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     // process highlight changes
     for (const highlight of documentChanges.highlights || []) {
       const idx = newHighlights.findIndex((h) => h.id === highlight.id);
-      const content = highlight.content.$on.TextImageHighlightContent;
-      const location = highlight.location && JSON.parse(highlight.location);
+      const content: PDFHighlightContent =
+        highlight.content && JSON.parse(highlight.content);
+      const location: PDFHighlightLocation =
+        highlight.location && JSON.parse(highlight.location);
 
       if (!content || !location) continue;
 
       if (!idx && !highlight.deleted) {
         newHighlights.push({
           id: highlight.id!,
-          content: {
-            color: content.color!,
-            text: content.text!,
-            thumbnail: content.image!,
-          },
+          content,
           location,
         });
       } else if (idx && highlight.deleted) {
@@ -229,11 +228,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
       } else if (idx) {
         newHighlights[idx] = {
           id: highlight.id!,
-          content: {
-            color: content.color!,
-            text: content.text!,
-            thumbnail: content.image!,
-          },
+          content,
           location,
         };
       }

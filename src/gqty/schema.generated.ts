@@ -2,8 +2,6 @@
  * GQTY AUTO-GENERATED CODE: PLEASE DO NOT MODIFY MANUALLY
  */
 
-import { SchemaUnionsKey } from "gqty";
-
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -23,6 +21,7 @@ export interface Scalars {
   Int: number;
   Float: number;
   DateTime: string;
+  JSON: string;
   Upload: any;
 }
 
@@ -81,13 +80,13 @@ export interface OutlineNodeInput {
 
 export interface UpsertDocumentHighlightInput {
   /** content associated with highlight serialized as JSON */
-  content?: InputMaybe<Scalars["String"]>;
+  content?: InputMaybe<Scalars["JSON"]>;
   /** whether highlight has been deleted */
   deleted?: InputMaybe<Scalars["Boolean"]>;
   /** unique highlight id */
   id?: InputMaybe<Scalars["ID"]>;
   /** location of a highlight serialized as JSON */
-  location?: InputMaybe<Scalars["String"]>;
+  location?: InputMaybe<Scalars["JSON"]>;
 }
 
 export interface UpsertDocumentInput {
@@ -118,6 +117,7 @@ export const scalarsEnumsHash: import("gqty").ScalarsEnumsHash = {
   HighlightColor: true,
   ID: true,
   Int: true,
+  JSON: true,
   String: true,
   Upload: true,
 };
@@ -174,27 +174,26 @@ export const generatedSchema = {
   },
   DocumentHighlight: {
     __typename: { __type: "String!" },
-    content: { __type: "HighlightContent!" },
+    content: { __type: "JSON!" },
     createdAt: { __type: "DateTime!" },
     createdBy: { __type: "AccountInfo!" },
     deletedAt: { __type: "DateTime" },
     id: { __type: "ID!" },
-    index: { __type: "Int!" },
-    location: { __type: "String!" },
+    location: { __type: "JSON!" },
     updatedAt: { __type: "DateTime!" },
   },
   DocumentHighlightChange: {
     __typename: { __type: "String!" },
-    content: { __type: "HighlightContent!" },
+    content: { __type: "JSON!" },
     createdBy: { __type: "AccountInfo!" },
     deleted: { __type: "Boolean" },
     id: { __type: "ID!" },
-    location: { __type: "String!" },
+    location: { __type: "JSON!" },
   },
   DocumentMember: {
     __typename: { __type: "String!" },
     acceptedAt: { __type: "DateTime" },
-    account: { __type: "Account!" },
+    account: { __type: "AccountInfo!" },
     createdAt: { __type: "DateTime!" },
     role: { __type: "DocumentRole!" },
   },
@@ -244,10 +243,6 @@ export const generatedSchema = {
     updatedAt: { __type: "DateTime!" },
     url: { __type: "String" },
   },
-  HighlightContent: {
-    __typename: { __type: "String!" },
-    $on: { __type: "$HighlightContent!" },
-  },
   OutlineNodeInput: {
     items: { __type: "[OutlineNodeInput!]" },
     location: { __type: "String" },
@@ -255,17 +250,11 @@ export const generatedSchema = {
     title: { __type: "String!" },
     top: { __type: "Int" },
   },
-  TextImageHighlightContent: {
-    __typename: { __type: "String!" },
-    color: { __type: "HighlightColor" },
-    image: { __type: "String" },
-    text: { __type: "String" },
-  },
   UpsertDocumentHighlightInput: {
-    content: { __type: "String" },
+    content: { __type: "JSON" },
     deleted: { __type: "Boolean" },
     id: { __type: "ID" },
-    location: { __type: "String" },
+    location: { __type: "JSON" },
   },
   UpsertDocumentInput: {
     fileHash: { __type: "String" },
@@ -314,7 +303,6 @@ export const generatedSchema = {
     },
     documentChanges: { __type: "DocumentChange", __args: { id: "ID!" } },
   },
-  [SchemaUnionsKey]: { HighlightContent: ["TextImageHighlightContent"] },
 } as const;
 
 export interface Account {
@@ -453,7 +441,7 @@ export interface DocumentHighlight {
   /**
    * content associated with highlight
    */
-  content: HighlightContent;
+  content: ScalarsEnums["JSON"];
   /**
    * highlight creation time
    */
@@ -471,13 +459,9 @@ export interface DocumentHighlight {
    */
   id: ScalarsEnums["ID"];
   /**
-   * highlight index, used for sorting
-   */
-  index: ScalarsEnums["Int"];
-  /**
    * highlight location
    */
-  location: ScalarsEnums["String"];
+  location: ScalarsEnums["JSON"];
   /**
    * highlight last udpate time
    */
@@ -489,7 +473,7 @@ export interface DocumentHighlightChange {
   /**
    * whether highlight content has been changed
    */
-  content: HighlightContent;
+  content: ScalarsEnums["JSON"];
   /**
    * who has made a change
    */
@@ -505,7 +489,7 @@ export interface DocumentHighlightChange {
   /**
    * whether highlight location has been changed
    */
-  location: ScalarsEnums["String"];
+  location: ScalarsEnums["JSON"];
 }
 
 export interface DocumentMember {
@@ -517,7 +501,7 @@ export interface DocumentMember {
   /**
    * member account
    */
-  account: Account;
+  account: AccountInfo;
   /**
    * document member creation time
    */
@@ -647,27 +631,6 @@ export interface FileInfo {
   url?: Maybe<ScalarsEnums["String"]>;
 }
 
-export interface HighlightContent {
-  __typename?: "TextImageHighlightContent";
-  $on: $HighlightContent;
-}
-
-export interface TextImageHighlightContent {
-  __typename?: "TextImageHighlightContent";
-  /**
-   * color associated with highlight
-   */
-  color?: Maybe<ScalarsEnums["HighlightColor"]>;
-  /**
-   * url of highlight image
-   */
-  image?: Maybe<ScalarsEnums["String"]>;
-  /**
-   * text associated with highlight
-   */
-  text?: Maybe<ScalarsEnums["String"]>;
-}
-
 export interface Mutation {
   __typename?: "Mutation";
   /**
@@ -739,7 +702,6 @@ export interface SchemaObjectTypes {
   Mutation: Mutation;
   Query: Query;
   Subscription: Subscription;
-  TextImageHighlightContent: TextImageHighlightContent;
 }
 export type SchemaObjectTypesNames =
   | "Account"
@@ -756,12 +718,7 @@ export type SchemaObjectTypesNames =
   | "FileInfo"
   | "Mutation"
   | "Query"
-  | "Subscription"
-  | "TextImageHighlightContent";
-
-export interface $HighlightContent {
-  TextImageHighlightContent?: TextImageHighlightContent;
-}
+  | "Subscription";
 
 export interface GeneratedSchema {
   query: Query;

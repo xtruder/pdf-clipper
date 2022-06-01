@@ -3,7 +3,7 @@
  */
 const config = {
   react: true,
-  scalarTypes: { DateTime: "string", ID: "string" },
+  scalarTypes: { DateTime: "string", ID: "string", JSON: "string" },
   introspection: {
     endpoint: "schema/**",
     headers: {},

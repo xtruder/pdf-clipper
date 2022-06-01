@@ -54,7 +54,7 @@ input AccountUpdateInput {
 
 type Query {
   """returns information about current account"""
-  currentAccount: Account!
+  currentAccount: Account
 
   account(id: ID!): Account
 }

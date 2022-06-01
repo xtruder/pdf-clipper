@@ -31,7 +31,7 @@ type DocumentMeta {
 
 type DocumentMember {
   """member account"""
-  account: Account!
+  account: AccountInfo!
 
   """Role of account for document"""
   role: DocumentRole!
