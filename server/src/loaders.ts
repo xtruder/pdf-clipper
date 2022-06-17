@@ -68,6 +68,19 @@ export const createLoaders = () => ({
       .map((docId) => highlights.filter((h) => h.documentId === docId))
       .map((g) => g.map((e) => e?.toDocumentHighlight() || null));
   }),
+  fileInfoLoader: new DataLoader<string, DeepPartial<FileInfo>[]>(
+    async (hashes) => {
+      const files = await FileEntity.find({
+        where: {
+          hash: In(hashes as string[]),
+        },
+      });
+
+      return hashes
+        .map((hash) => files.filter((f) => f.hash === hash))
+        .map((g) => g.map((f) => f.toFileInfo()));
+    }
+  ),
 });
 
 export type Loaders = ReturnType<typeof createLoaders>;
