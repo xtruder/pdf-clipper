@@ -38,7 +38,9 @@ export const useGetDocumentInfo = (documentId: string) => {
   const result = useSuspendedQuery<
     GetDocumentInfoQuery,
     GetDocumentInfoQueryVariables
-  >(GET_DOCUMENT_INFO_QUERY, { variables: { id: documentId } });
+  >(GET_DOCUMENT_INFO_QUERY, {
+    variables: { id: documentId },
+  });
 
   if (!result.data.document) throw new Error("missing result document");
 
@@ -109,25 +111,27 @@ export const useUpsertDocumentHighlight = (documentId: string) =>
       const highlight = data.upsertDocumentHighlight;
 
       // read existing highlights for a document
-      let highlights =
-        cache.readQuery<
-          GetDocumentHighlightsQuery,
-          GetDocumentHighlightsQueryVariables
-        >({
-          query: GET_DOCUMENT_HIGHLIGHTS_QUERY,
-          variables: {
-            documentId,
-          },
-        })?.document?.highlights ?? [];
+      let cached = cache.readQuery<
+        GetDocumentHighlightsQuery,
+        GetDocumentHighlightsQueryVariables
+      >({
+        query: GET_DOCUMENT_HIGHLIGHTS_QUERY,
+        variables: {
+          documentId,
+        },
+      });
+
+      const highlights = cached?.document?.highlights ?? [];
 
       // update existing highlights
-      const idx = highlights.findIndex((h) => h);
+      const newHighlights = [...highlights];
+      const idx = newHighlights.findIndex((h) => h.id === highlight.id);
       if (highlight.deletedAt) {
-        delete highlights[idx];
+        delete newHighlights[idx];
       } else if (idx >= 0) {
-        highlights[idx] = highlight;
+        newHighlights[idx] = highlight;
       } else {
-        highlights.push(highlight);
+        newHighlights.push(highlight);
       }
 
       // write updated highlights with a new inserted highlight
@@ -141,7 +145,9 @@ export const useUpsertDocumentHighlight = (documentId: string) =>
         },
         data: {
           document: {
-            highlights,
+            __typename: "Document",
+            id: documentId,
+            highlights: newHighlights,
           },
         },
       });

@@ -42,6 +42,7 @@ export function useSuspendedQuery<TData = any, TVariables = OperationVariables>(
       if (!isEqual) {
         snapShotCache.current = newValue;
       }
+
       console.log("isEqual", isEqual);
       console.log("hasData", Boolean(newValue.data));
       return newValue;

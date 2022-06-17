@@ -19,7 +19,7 @@ export interface PDFHighlightProps {
   isDarkReader: boolean;
   highlightTooltip?: JSX.Element;
 
-  onHighlightUpdated: (highlight: PDFHighlight) => void;
+  onHighlightUpdated: (highlight: PDFHighlight) => void | Promise<void>;
   onHighlightClicked: (highlight: PDFHighlight) => void;
   onHighlightEditing: (highlight?: PDFHighlight) => void;
 }

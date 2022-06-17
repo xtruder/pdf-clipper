@@ -12,6 +12,7 @@ const DocumentInfoFragment = gql`
       cover
     }
     file {
+      hash
       url
     }
   }
@@ -44,6 +45,7 @@ export const GET_DOCUMENT_INFO_QUERY = gql`
 export const GET_DOCUMENT_HIGHLIGHTS_QUERY = gql`
   query getDocumentHighlights($documentId: ID!) {
     document(id: $documentId) {
+      id
       highlights {
         id
         location

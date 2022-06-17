@@ -59,7 +59,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   if (!file || !file.url) throw new Error("missing document file");
 
   // load pdf document
-  const pdfDocument = suspend(() => loadPDF(file.url!, () => {}), [file.url]);
+  const pdfDocument = suspend(() => loadPDF(file.url!, () => {}), []);
   const outline = suspend(() => getDocumentOutline(pdfDocument), [pdfDocument]);
 
   const highlights = useGetDocumentHighlights(documentId).map((h) => ({

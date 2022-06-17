@@ -24,7 +24,20 @@ import "virtual:windi.css";
 import "./App.css";
 
 const client = new ApolloClient({
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Document: {
+        fields: {
+          meta: {
+            merge: true,
+          },
+        },
+      },
+      FileInfo: {
+        keyFields: ["hash"],
+      },
+    },
+  }),
   link: createUploadLink({ uri: "http://localhost:4000/graphql" }),
 });
 

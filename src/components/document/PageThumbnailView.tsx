@@ -16,7 +16,7 @@ export interface PageThumbnailViewProps {
   onClick?: () => void;
 
   // children component
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export const PageThumbnailView: React.FC<PageThumbnailViewProps> = ({

@@ -55,11 +55,11 @@ export const PDFPageThumbnails: React.FC<PDFPageThumbnailsProps> = ({
   const pages = suspend(
     () =>
       Promise.all(
-        [...Array(pdfDocument.numPages).keys()].map((pageNumber) =>
-          pdfDocument.getPage(pageNumber)
+        [...Array(pdfDocument.numPages).keys()].map((i) =>
+          pdfDocument.getPage(i + 1)
         )
       ),
-    [pdfDocument]
+    pdfDocument.fingerprints
   );
 
   return (

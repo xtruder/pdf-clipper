@@ -424,23 +424,23 @@ export type UploadFileMutationVariables = Exact<{
 
 export type UploadFileMutation = { __typename?: 'Mutation', uploadFile: { __typename?: 'FileInfo', hash: string, mimeType: string } };
 
-export type DocumentInfoFragmentFragment = { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', url?: string | null } | null };
+export type DocumentInfoFragmentFragment = { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', hash: string, url?: string | null } | null };
 
 export type GetCurrentAccountDocumentsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentAccountDocumentsQuery = { __typename?: 'Query', currentAccount?: { __typename?: 'Account', documents: Array<{ __typename?: 'AccountDocument', document?: { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', url?: string | null } | null } | null }> } | null };
+export type GetCurrentAccountDocumentsQuery = { __typename?: 'Query', currentAccount?: { __typename?: 'Account', documents: Array<{ __typename?: 'AccountDocument', document?: { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', hash: string, url?: string | null } | null } | null }> } | null };
 
 export type GetDocumentInfoQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type GetDocumentInfoQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', url?: string | null } | null } | null };
+export type GetDocumentInfoQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, type: DocumentType, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, author?: string | null, cover?: string | null }, file?: { __typename?: 'FileInfo', hash: string, url?: string | null } | null } | null };
 
 export type GetDocumentHighlightsQueryVariables = Exact<{
   documentId: Scalars['ID'];
 }>;
 
 
-export type GetDocumentHighlightsQuery = { __typename?: 'Query', document?: { __typename?: 'Document', highlights: Array<{ __typename?: 'DocumentHighlight', id: string, location: any, content: any, deletedAt?: any | null }> } | null };
+export type GetDocumentHighlightsQuery = { __typename?: 'Query', document?: { __typename?: 'Document', id: string, highlights: Array<{ __typename?: 'DocumentHighlight', id: string, location: any, content: any, deletedAt?: any | null }> } | null };
