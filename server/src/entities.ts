@@ -103,7 +103,6 @@ export class FileEntity extends BaseEntity {
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     createdBy: { id: this.createdById },
-    url: `http://localhost:9000/files/${this.hash}`,
   });
 }
 

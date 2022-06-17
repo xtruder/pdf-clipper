@@ -26,7 +26,8 @@ import { idScalar, dateTimeScalar, JSONScalar } from "./scalars";
 import { DeepPartial } from "./types";
 import { Loaders } from "./loaders";
 import { PassThrough, Readable } from "stream";
-import { hashStream } from "./utils";
+import { hashStream, writeTmpStream } from "./utils";
+import { ReadStream } from "fs";
 
 const handleQuery = async <T>(query: () => Promise<T>): Promise<T> => {
   try {
@@ -42,6 +43,7 @@ const handleQuery = async <T>(query: () => Promise<T>): Promise<T> => {
 
 export interface GqlContext extends Loaders {
   saveFile: (stream: Readable, key: string) => Promise<void>;
+  getFileUrl: (key: string) => Promise<string>;
   accountId: string;
 }
 
@@ -121,6 +123,9 @@ export const resolvers: Resolvers<GqlContext> = {
     highlights: (parent, _, { documentHighlightsLoader }) =>
       documentHighlightsLoader.load(parent.id),
   },
+  FileInfo: {
+    url: (parent, _, { getFileUrl }) => getFileUrl(parent.hash!),
+  },
   // mutation resolvers
   Mutation: {
     uploadFile: async (
@@ -130,14 +135,19 @@ export const resolvers: Resolvers<GqlContext> = {
     ): Promise<DeepPartial<FileInfo>> => {
       const { createReadStream, mimetype: mimeType } = await inputFile;
 
-      const stream = createReadStream();
+      const stream: ReadStream = createReadStream();
 
       console.log("hashing file");
 
       // hash stream content and upload file
-      const hash = await hashStream(stream, "sha256");
+      const hasherStream = new PassThrough();
 
-      console.log("hash", hash);
+      stream.pipe(hasherStream);
+
+      const [hash, tmpStream] = await Promise.all([
+        hashStream(hasherStream, "sha256"),
+        writeTmpStream(stream, "upload"),
+      ]);
 
       const file = await AppDataSource.manager.transaction(async (mgr) => {
         let file = await mgr.findOneBy(FileEntity, { hash: Equal(hash) });
@@ -159,7 +169,7 @@ export const resolvers: Resolvers<GqlContext> = {
         console.log("saving file");
 
         // save file based on hash before commiting transaction
-        await saveFile(stream, hash);
+        await saveFile(tmpStream, hash);
 
         return file;
       });

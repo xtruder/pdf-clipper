@@ -14,7 +14,7 @@ import { IResolvers } from "@graphql-tools/utils";
 //import { logger } from "./logging";
 import { createLoaders } from "./loaders";
 import { GqlContext } from "./resolvers";
-import { saveFile } from "./minio";
+import { getFileUrl, saveFile } from "./minio";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.js";
 
 export type ServerOptions = {
@@ -60,6 +60,7 @@ export async function startServer(
           req.headers["accountid"] || "c633bd68-30ce-4116-b54e-3054dc8caebc"
         ).toString(),
         saveFile,
+        getFileUrl,
       };
     },
     plugins: [

@@ -11,6 +11,12 @@ const client = new Client({
 
 const bucketName = "files";
 
+/**Saves file by uploading to S3 bucket with provided key */
 export async function saveFile(stream: Readable, key: string) {
   await client.putObject(bucketName, key, stream);
+}
+
+/**Get file url using presigned URL, make it avalible for 1hour */
+export async function getFileUrl(key: string): Promise<string> {
+  return await client.presignedGetObject(bucketName, key, 3600);
 }
