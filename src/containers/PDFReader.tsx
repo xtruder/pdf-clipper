@@ -142,7 +142,12 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     await upsertDocumentHighlight({
       variables: {
         documentId,
-        highlight: { id: pdfHighlight.id, deleted: true },
+        highlight: {
+          id: pdfHighlight.id,
+          location: JSON.stringify(pdfHighlight.location),
+          content: JSON.stringify(pdfHighlight.content),
+          deleted: true,
+        },
       },
     });
   }, []);
