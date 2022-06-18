@@ -277,6 +277,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
           <HighlightCardList>
             {highlights.map((h) => (
               <HighlightCard
+                key={h.id}
                 text={h.content.text}
                 image={h.content.thumbnail}
                 color={h.content.color}
