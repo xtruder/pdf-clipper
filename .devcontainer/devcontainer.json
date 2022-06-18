@@ -24,28 +24,25 @@
     "antfu.vite",
     "simonsiefke.svg-preview",
     "editorconfig.editorconfig"
-],
-"portsAttributes": {
-	"3000": {
-		"label": "vite"
-	},
-	"4000": {
-		"label": "hasura-auth"
-	},
-	"6000": {
-		"label": "imgproxy"
-	},
-	"6080": {
-		"label": "imgproxy"
-	},
-	"8080": {
-		"label": "hasura"
-	},
-	"9000": {
-		"label": "minio"
-	},
-	"9001": {
-		"label": "minio-web"
-	}
-}
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "vite"
+    },
+    "4000": {
+      "label": "app"
+    },
+    "6000": {
+      "label": "imgproxy"
+    },
+    "6080": {
+      "label": "imgproxy"
+    },
+    "9000": {
+      "label": "minio"
+    },
+    "9001": {
+      "label": "minio-web"
+    }
+  }
 }
