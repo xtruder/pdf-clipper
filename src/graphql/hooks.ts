@@ -105,6 +105,15 @@ export const useUpsertDocumentHighlight = (documentId: string) =>
       documentId,
       highlight: {},
     },
+    optimisticResponse: (vars) => ({
+      upsertDocumentHighlight: {
+        __typename: "DocumentHighlight",
+        id: vars.highlight.id!,
+        content: vars.highlight.content!,
+        location: vars.highlight.location!,
+        deletedAt: vars.highlight.deleted ? new Date().toISOString() : null,
+      },
+    }),
     update(cache, { data }) {
       if (!data) return;
 
