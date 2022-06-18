@@ -265,7 +265,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     viewerEl.style.transformOrigin = "unset";
 
     pdfViewer.currentScale *= pinchScale || 1;
-    updatePageLayers();
 
     const rect = containerRef.current.getBoundingClientRect();
 
@@ -327,43 +326,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     setScrolledTo(position);
   };
 
-  const updatePageLayers = () => {
-    if (!pdfViewer) return;
-
-    for (const layer of layers) {
-      const { layerName, className, children: pages } = layer.props;
-
-      for (const pageNumber of renderedPages) {
-        const pageView = getPageView(pageNumber);
-        if (!pageView) continue;
-
-        // adds div to page div for highlights
-        const pageLayerDiv = findOrCreateContainerLayer<HTMLDivElement>(
-          pageView.div,
-          layerName
-        );
-        if (!pageLayerDiv) return;
-
-        pageLayerDiv.style.position = "absolute";
-        pageLayerDiv.style.top = "0px";
-        pageLayerDiv.style.left = "0px";
-        pageLayerDiv.style.width =
-          pageView.textLayer?.textLayerDiv.style.width || "0";
-        pageLayerDiv.style.height =
-          pageView.textLayer?.textLayerDiv.style.height || "0";
-
-        pageLayerDiv.className = `${layerName} ${className || ""}`;
-
-        const allPages = Array.isArray(pages) ? pages : pages ? [pages] : [];
-        const pageChild = allPages.find(
-          (page) => page.props.pageNumber === pageNumber
-        );
-
-        ReactDOM.render(pageChild || <></>, pageLayerDiv);
-      }
-    }
-  };
-
   // observe resizes on container
   useEffect(() => {
     if (!containerRef.current) return;
@@ -377,8 +339,22 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     if (!containerRef.current) return;
     if (pdfDocument === currentPdfDocument) return;
 
-    const _pdfViewer = new PDFViewer({
+    /**
+     * Create pdfViewer DIV element where viewer will be rendered
+     *
+     * NOTE: this DIV cannot be created with react, as if PDFDisplay element
+     * gets re-mounted, there is no way to cleanup previous pdfjs render, but
+     * react will not recreate DOM tree, so existing rendered pages will be
+     * present. The easiest way is to resolve this is to create pdfViewer DIV
+     * manually and cleanup on unmount
+     */
+    const pdfViewerDiv = document.createElement("div");
+    pdfViewerDiv.className = "pdfViewer";
+    containerRef.current.appendChild(pdfViewerDiv);
+
+    const pdfViewer = new PDFViewer({
       container: containerRef.current,
+      viewer: pdfViewerDiv,
       eventBus,
       textLayerMode: 1,
       removePageBorders: true,
@@ -390,13 +366,21 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       useOnlyCssZoom: false,
     });
 
-    linkService.setViewer(_pdfViewer);
+    linkService.setViewer(pdfViewer);
     linkService.setDocument(pdfDocument);
 
-    _pdfViewer.setDocument(pdfDocument);
+    pdfViewer.setDocument(pdfDocument);
 
     setCurrentPdfDocument(pdfDocument);
-    setPDFViewer(_pdfViewer);
+    setPDFViewer(pdfViewer);
+
+    return () => {
+      // not sure this is needed
+      pdfViewer.cleanup();
+
+      // remove viewer element from DOM
+      pdfViewerDiv.remove();
+    };
   }, [pdfDocument]);
 
   // init event listeners when pdfViewer changes
@@ -429,9 +413,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
     handleScaledValue();
   }, [pdfScaleValue]);
-
-  // update page layers when pageLayers change or list of rendered pages change
-  useEffect(() => updatePageLayers(), [layers, renderedPages, pdfScaleValue]);
 
   useEffect(() => {
     pdfViewer?.viewer?.classList.toggle("select-none", disableInteractions);
@@ -469,12 +450,68 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
         {...doubleTapProps}
       >
         {/** React must not change this div, as it is being rendered by pdfjs */}
-        <div className="pdfViewer" />
+        {/* <div className="pdfViewer" /> */}
 
         {containerChildren}
       </div>
 
+      {layers
+        .map(({ props: { layerName, className, children: pages } }) =>
+          [...renderedPages].map((pageNumber) => {
+            const pageView = getPageView(pageNumber);
+            if (!pageView) return <></>;
+
+            const allPages = Array.isArray(pages)
+              ? pages
+              : pages
+              ? [pages]
+              : [];
+            const pageChild = allPages.find(
+              (page) => page.props.pageNumber === pageNumber
+            );
+
+            return (
+              <PDFPageLayerContainer
+                key={`${layerName}-${pageNumber}`}
+                pageView={pageView}
+                layerName={layerName}
+                className={className}
+                children={pageChild}
+              />
+            );
+          })
+        )
+        .flat()}
+
       {children}
     </div>
   );
+};
+
+const PDFPageLayerContainer: React.FC<{
+  pageView: PageView;
+  layerName: string;
+  className?: string;
+  children: ReactNode;
+}> = ({ pageView, layerName, className = "", children }) => {
+  const pageLayerDiv = findOrCreateContainerLayer<HTMLDivElement>(
+    pageView.div,
+    layerName
+  );
+
+  if (!pageLayerDiv) return <></>;
+
+  pageLayerDiv.style.position = "absolute";
+  pageLayerDiv.style.top = "0px";
+  pageLayerDiv.style.left = "0px";
+  pageLayerDiv.style.width =
+    pageView.textLayer?.textLayerDiv.style.width || "0";
+  pageLayerDiv.style.height =
+    pageView.textLayer?.textLayerDiv.style.height || "0";
+
+  pageLayerDiv.className = `${layerName} ${className}`;
+
+  if (!pageLayerDiv) return <></>;
+
+  return ReactDOM.createPortal(children, pageLayerDiv);
 };
