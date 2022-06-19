@@ -61,7 +61,7 @@ export const useGetDocumentHighlights = (documentId: string) => {
 
   if (!result.data.document) throw new Error("missing result document");
 
-  return result.data.document.highlights;
+  return result.data.document.highlights.filter((h) => !!h);
 };
 
 export const useUpsertDocument = () =>
