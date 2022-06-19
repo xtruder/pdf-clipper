@@ -1,13 +1,14 @@
 import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
-import { createUploadLink } from "apollo-upload-client";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import useDarkMode from "@utilityjs/use-dark-mode";
 
 import { useViewport } from "./lib/react";
+
+import { ApolloProvider } from "@apollo/client";
+import { client, queueLink } from "./apollo";
 
 import { ErrorFallback } from "~/components/ui/ErrorFallback";
 import {
@@ -23,23 +24,9 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 import "virtual:windi.css";
 import "./App.css";
 
-const client = new ApolloClient({
-  cache: new InMemoryCache({
-    typePolicies: {
-      Document: {
-        fields: {
-          meta: {
-            merge: true,
-          },
-        },
-      },
-      FileInfo: {
-        keyFields: ["hash"],
-      },
-    },
-  }),
-  link: createUploadLink({ uri: "http://localhost:4000/graphql" }),
-});
+// Note: remove these listeners when your app is shut down to avoid leaking listeners.
+window.addEventListener("offline", () => queueLink.close());
+window.addEventListener("online", () => queueLink.open());
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = () => (

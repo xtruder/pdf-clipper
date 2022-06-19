@@ -40,6 +40,7 @@ export const useGetDocumentInfo = (documentId: string) => {
     GetDocumentInfoQueryVariables
   >(GET_DOCUMENT_INFO_QUERY, {
     variables: { id: documentId },
+    fetchPolicy: "cache-and-network",
   });
 
   if (!result.data.document) throw new Error("missing result document");
@@ -55,6 +56,7 @@ export const useGetDocumentHighlights = (documentId: string) => {
     variables: {
       documentId,
     },
+    fetchPolicy: "cache-and-network",
   });
 
   if (!result.data.document) throw new Error("missing result document");
@@ -135,7 +137,7 @@ export const useUpsertDocumentHighlight = (documentId: string) =>
       // update existing highlights
       const newHighlights = [...highlights];
       const idx = newHighlights.findIndex((h) => h.id === highlight.id);
-      if (highlight.deletedAt) {
+      if (highlight.deletedAt && idx >= 0) {
         delete newHighlights[idx];
       } else if (idx >= 0) {
         newHighlights[idx] = highlight;
