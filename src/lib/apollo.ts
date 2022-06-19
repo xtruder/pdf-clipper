@@ -4,9 +4,9 @@ import {
   QueryHookOptions,
   ApolloQueryResult,
   useApolloClient,
+  DocumentNode,
 } from "@apollo/client";
-import { DocumentNode } from "graphql";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useMemo, useSyncExternalStore, useCallback } from "react";
 
 import { deepEqual } from "./utils";
 
@@ -17,35 +17,35 @@ export function useSuspendedQuery<TData = any, TVariables = OperationVariables>(
   const client = useApolloClient();
   const snapShotCache = useRef<ApolloQueryResult<TData>>();
 
-  const [observedQuery] = useState(() => {
-    const obsQuery = client.watchQuery<TData, TVariables>({ query, ...props });
-    return obsQuery;
-  });
-
-  const data = useSyncExternalStore(
-    (store) => {
-      const unSub = observedQuery.subscribe(() => {
-        store();
-      });
-      return () => {
-        unSub.unsubscribe();
-      };
-    },
-    () => {
-      const result = observedQuery.getCurrentResult();
-      const isEqual = deepEqual(snapShotCache.current, result);
-
-      const newValue = (
-        isEqual ? snapShotCache.current : result
-      ) as ApolloQueryResult<TData>;
-
-      if (!isEqual) {
-        snapShotCache.current = newValue;
-      }
-
-      return newValue;
-    }
+  const observedQuery = useMemo(
+    () => client.watchQuery<TData, TVariables>({ query, ...props }),
+    [query, JSON.stringify(props)]
   );
+
+  const subscribe = useCallback(
+    (store: () => void) => {
+      const sub = observedQuery.subscribe(() => store());
+      return () => sub.unsubscribe();
+    },
+    [observedQuery]
+  );
+
+  const getSnapshot = useCallback(() => {
+    const result = observedQuery.getCurrentResult();
+    const isEqual = deepEqual(snapShotCache.current, result);
+
+    const newValue = (
+      isEqual ? snapShotCache.current : result
+    ) as ApolloQueryResult<TData>;
+
+    if (!isEqual) {
+      snapShotCache.current = newValue;
+    }
+
+    return newValue;
+  }, [observedQuery]);
+
+  const data = useSyncExternalStore(subscribe, getSnapshot);
 
   const cache = client.readQuery<TData, TVariables>({ query, ...props });
 
