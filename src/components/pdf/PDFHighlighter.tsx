@@ -302,8 +302,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
             <MouseSelection
               eventsElRef={containerRef}
               blendMode={isDarkReader ? "difference" : "multiply"}
-              className={`border-dashed border-2 rounded-md ${colorToClassName[highlightColor]}`}
-              tooltipContainerClassName="z-10"
+              className={`border-dashed border-2 rounded-md z-10 ${colorToClassName[highlightColor]}`}
+              tooltipContainerClassName="z-12"
               active={enableAreaSelection}
               tooltip={selectionTooltip}
               onDragEnd={() => setDisableInteractions(false)}
