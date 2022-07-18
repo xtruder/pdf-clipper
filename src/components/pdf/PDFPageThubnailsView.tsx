@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { suspend } from "suspend-react";
 
 import { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 
@@ -6,8 +7,8 @@ import {
   PageThumbnailsList,
   PageThumbnailView,
 } from "../document/PageThumbnailView";
-import { getPageHeight, screenshotPageArea } from "~/lib/pdfjs";
-import { suspend } from "suspend-react";
+import { getPageHeight, getPageCanvasArea } from "~/lib/pdfjs";
+import { canvasToPNGDataURI } from "~/lib/dom";
 
 export interface PDFPageThumbnailProps {
   page: PDFPageProxy;
@@ -25,7 +26,7 @@ export const PDFPageThumbnail: React.FC<PDFPageThumbnailProps> = ({
   const [image, setImage] = useState<string>();
 
   const onInView = async () =>
-    setImage(await screenshotPageArea(page, { width }));
+    setImage(canvasToPNGDataURI(await getPageCanvasArea(page, { width })));
 
   return (
     <PageThumbnailView
@@ -66,6 +67,7 @@ export const PDFPageThumbnails: React.FC<PDFPageThumbnailsProps> = ({
     <PageThumbnailsList>
       {pages.map((page) => (
         <PDFPageThumbnail
+          key={page.pageNumber}
           page={page}
           width={thumbWidth}
           onClick={() => onPageClick(page.pageNumber)}

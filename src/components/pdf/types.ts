@@ -22,6 +22,9 @@ export interface PDFHighlight {
   id: string;
   location: PDFHighlightLocation;
   content: PDFHighlightContent;
+  image?: {
+    source: string;
+  };
 }
 
 export * from "../highlights/types";

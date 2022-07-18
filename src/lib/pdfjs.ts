@@ -8,13 +8,11 @@ import { debug as _debug } from "debug";
 
 import {
   asElement,
-  getCanvasAreaAsPNG,
   isHTMLElement,
   getDocument,
   Rect,
+  getCanvasArea,
 } from "./dom";
-
-const debug = _debug("pdfjs");
 
 export interface PageView {
   viewport: Viewport;
@@ -121,7 +119,7 @@ export function getPageHeight(page: PDFPageProxy, width: number): number {
 
 // creates screenshot of a page with selected width by rendering page in canvas
 // and converting canvas to png image
-export async function screenshotPageArea(
+export async function getPageCanvasArea(
   page: PDFPageProxy,
   {
     width,
@@ -132,7 +130,7 @@ export async function screenshotPageArea(
     scale?: number;
     area?: Rect;
   }
-): Promise<string> {
+): Promise<HTMLCanvasElement> {
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
 
@@ -149,7 +147,7 @@ export async function screenshotPageArea(
     viewport: page.getViewport({ scale: scale * ratio }),
   }).promise;
 
-  return getCanvasAreaAsPNG(canvas, area);
+  return getCanvasArea(canvas, area);
 }
 
 type __OutlineNode = Awaited<
@@ -213,11 +211,16 @@ export async function getDocumentOutline(
   return { items: await mapOutlineNodes(outline) };
 }
 
-export const loadPDF = async (
-  source: string | TypedArray | ArrayBuffer,
-  onProgress: (progress: number) => void = () => null
-) => {
-  debug("loading pdf", source);
+export interface PDFLoadProgress {
+  loaded: number;
+  total: number;
+}
+
+export async function loadPDF(
+  source: string | TypedArray | ArrayBuffer | Blob,
+  onProgress?: (progress: PDFLoadProgress) => void
+): Promise<PDFDocumentProxy> {
+  if (source instanceof Blob) source = await source.arrayBuffer();
 
   const loadingTask = getPDFDocument({
     ...(typeof source === "string" && { url: source }),
@@ -226,13 +229,7 @@ export const loadPDF = async (
     cMapPacked: true,
   });
 
-  loadingTask.onProgress = (args: { loaded: number; total: number }) => {
-    onProgress(args.loaded / args.total);
-  };
+  if (onProgress) loadingTask.onProgress = onProgress;
 
-  const pdf = await loadingTask.promise;
-
-  debug("pdf loaded", pdf._pdfInfo);
-
-  return pdf;
-};
+  return await loadingTask.promise;
+}

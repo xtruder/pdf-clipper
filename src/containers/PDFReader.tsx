@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect } from "react";
 import useState from "react-usestateref";
-import { suspend } from "suspend-react";
 import { FullScreen } from "@chiragrupani/fullscreen-react";
 
+import { useAtom, useAtomValue } from "jotai";
+
 import { clearRangeSelection } from "~/lib/dom";
-import { resetValue } from "~/lib/react";
+import { resetValue } from "~/lib/utils";
 
 import { PDFHighlighter } from "~/components/pdf/PDFHighlighter";
 import { HighlightColor, PDFHighlight } from "~/components/pdf/types";
@@ -19,19 +20,10 @@ import {
 import { PDFDisplayProxy, ScrollPosition } from "~/components/pdf/PDFDisplay";
 import { DocumentOutlineView } from "~/components/document/DocumentOutlineView";
 
-import { getDocumentOutline, loadPDF } from "~/lib/pdfjs";
-
 import { PDFPageThumbnails } from "~/components/pdf/PDFPageThubnailsView";
-import {
-  HighlightCard,
-  HighlightCardList,
-} from "~/components/highlights/HighlightCard";
-import {
-  useGetDocumentHighlights,
-  useGetDocumentInfo,
-  useUpsertDocument,
-  useUpsertDocumentHighlight,
-} from "~/graphql";
+import { HighlightCardList } from "~/components/highlights/HighlightCard";
+import { documentAtom, documentHighlightsAtom, pdfLoaderAtom } from "~/state";
+import { HighlightCardContainer } from "./HighlightCardContainer";
 
 export interface PDFReaderProps {
   documentId: string;
@@ -50,29 +42,23 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   isDarkMode = false,
   selectOnCreate = true,
 }) => {
-  // get document info from api
-  const {
-    file,
-    meta: { title },
-  } = useGetDocumentInfo(documentId);
-
-  if (!file || !file.url) throw new Error("missing document file");
+  const [{ meta }, setDocument] = useAtom(documentAtom(documentId));
 
   // load pdf document
-  const pdfDocument = suspend(() => loadPDF(file.url!, () => {}), []);
-  const outline = suspend(() => getDocumentOutline(pdfDocument), [pdfDocument]);
+  const pdfDocument = useAtomValue(pdfLoaderAtom(documentId));
+  useEffect(() => () => pdfLoaderAtom.remove(documentId), [documentId]);
 
-  const highlights = useGetDocumentHighlights(documentId).map((h) => ({
-    id: h.id!,
-    content: JSON.parse(h.content!),
-    location: JSON.parse(h.location!),
+  let { title, description, outline } = meta;
+
+  const [highlights, dispatchHighligt] = useAtom(
+    documentHighlightsAtom(documentId)
+  );
+
+  let pdfHighlights = highlights.map<PDFHighlight>((h) => ({
+    id: h.id,
+    content: h.content!,
+    location: h.location!,
   }));
-
-  const [upsertDocument] = useUpsertDocument();
-
-  const [upsertDocumentHighlight] = useUpsertDocumentHighlight(documentId);
-
-  //  const documentChanges = useSubscription().documentChanges({ id: documentId });
 
   const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
     useState<PDFHighlight>();
@@ -93,6 +79,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const [isDarkReader, setIsDarkReader] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  // if highlight is selected use that one, instead of current one
+  pdfHighlights = pdfHighlights.map((h) =>
+    h.id === selectedHighlight?.id ? selectedHighlight : h
+  );
+
   const clearAreaSelection = () => {
     if (!enableAreaSelection) return;
     resetValue(setEnableAreaSelection, true);
@@ -108,18 +99,16 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const createHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
     if (!pdfHighlight) return;
 
-    const { errors } = await upsertDocumentHighlight({
-      variables: {
+    dispatchHighligt({
+      action: "create",
+      value: {
+        id: pdfHighlight.id,
+        documentType: "PDF",
         documentId,
-        highlight: {
-          id: pdfHighlight.id,
-          content: JSON.stringify(pdfHighlight.content),
-          location: JSON.stringify(pdfHighlight.location),
-        },
+        content: pdfHighlight.content,
+        location: pdfHighlight.location,
       },
     });
-
-    if (errors) return;
 
     if (selectOnCreate) {
       setSelectedHighlight(pdfHighlight);
@@ -138,40 +127,30 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     // unselect highlight
     setSelectedHighlight(undefined);
 
-    // mark highlight as deleted
-    await upsertDocumentHighlight({
-      variables: {
-        documentId,
-        highlight: {
-          id: pdfHighlight.id,
-          location: JSON.stringify(pdfHighlight.location),
-          content: JSON.stringify(pdfHighlight.content),
-          deleted: true,
-        },
-      },
-    });
+    dispatchHighligt({ action: "remove", value: pdfHighlight.id });
   }, []);
 
   const updateHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
     if (!pdfHighlight) return;
 
-    // update highlight
-    await upsertDocumentHighlight({
-      variables: {
+    // update selected highlight, so results immidiately reflect ui
+    setSelectedHighlight(pdfHighlight);
+
+    dispatchHighligt({
+      action: "update",
+      value: {
+        id: pdfHighlight.id,
+        documentType: "PDF",
         documentId,
-        highlight: {
-          id: pdfHighlight.id,
-          location: JSON.stringify(pdfHighlight.location),
-          content: JSON.stringify(pdfHighlight.content),
-        },
+        content: pdfHighlight.content,
+        location: pdfHighlight.location,
+        image: null,
       },
     });
   }, []);
 
   const changeTitle = (title: string) =>
-    upsertDocument({
-      variables: { document: { id: documentId, meta: { title } } },
-    });
+    setDocument({ id: documentId, meta: { ...meta, title, description } });
 
   const onKeyDown = (event: KeyboardEvent) => {
     switch (event.code) {
@@ -192,41 +171,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         break;
     }
   };
-
-  // useEffect(() => {
-  //   if (!documentChanges) return;
-
-  //   const newHighlights = [...highlights];
-
-  //   // process highlight changes
-  //   for (const highlight of documentChanges.highlights || []) {
-  //     const idx = newHighlights.findIndex((h) => h.id === highlight.id);
-  //     const content: PDFHighlightContent =
-  //       highlight.content && JSON.parse(highlight.content);
-  //     const location: PDFHighlightLocation =
-  //       highlight.location && JSON.parse(highlight.location);
-
-  //     if (!content || !location) continue;
-
-  //     if (!idx && !highlight.deleted) {
-  //       newHighlights.push({
-  //         id: highlight.id!,
-  //         content,
-  //         location,
-  //       });
-  //     } else if (idx && highlight.deleted) {
-  //       delete newHighlights[idx];
-  //     } else if (idx) {
-  //       newHighlights[idx] = {
-  //         id: highlight.id!,
-  //         content,
-  //         location,
-  //       };
-  //     }
-  //   }
-
-  //   setHighlights(newHighlights);
-  // }, [documentChanges]);
 
   useEffect(() => {
     if (scrollToPage) {
@@ -249,8 +193,6 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   }, [selectedHighlight]);
 
   useEffect(() => setIsDarkReader(isDarkMode), [isDarkMode]);
-
-  const currentHighlights = highlights;
 
   const sidebar = (
     <Sidebar
@@ -275,13 +217,11 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
         ),
         highlights: (
           <HighlightCardList>
-            {highlights.map((h) => (
-              <HighlightCard
+            {pdfHighlights.map((h) => (
+              <HighlightCardContainer
                 key={h.id}
-                text={h.content.text}
-                image={h.content.thumbnail}
-                color={h.content.color}
-                pageNumber={h.location.pageNumber}
+                documentId={documentId}
+                highlightId={h.id}
                 selected={h.id === selectedHighlight?.id}
                 scrollIntoView={h.id === scrollToListViewHighlight?.id}
                 onClicked={() => setScrollToHighlight(h)}
@@ -295,7 +235,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
             ))}
           </HighlightCardList>
         ),
-        outline: (
+        outline: outline ? (
           <DocumentOutlineView
             outline={outline}
             onOutlineNodeClicked={(position) =>
@@ -305,7 +245,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
               })
             }
           />
-        ),
+        ) : null,
       }}
     />
   );
@@ -335,7 +275,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
         <PDFHighlighter
           pdfDocument={pdfDocument}
-          highlights={currentHighlights}
+          highlights={pdfHighlights}
           selectedHighlight={selectedHighlight}
           scrollTo={scrollToPosition}
           scrollToHighlight={scrollToHighlight}

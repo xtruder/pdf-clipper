@@ -22,7 +22,13 @@ import {
   PDFViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import { Rect, getWindow, getCanvasAreaAsPNG, asElement } from "~/lib/dom";
+import {
+  Rect,
+  getWindow,
+  getCanvasArea,
+  canvasToPNGDataURI,
+  asElement,
+} from "~/lib/dom";
 import { PageView, findOrCreateContainerLayer } from "~/lib/pdfjs";
 
 // import worker src to set for pdfjs global worker options
@@ -175,7 +181,9 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     const page = getPageView(pageNumber);
     if (!page || !page.canvas) return null;
 
-    return getCanvasAreaAsPNG(page.canvas, area, window.devicePixelRatio);
+    return canvasToPNGDataURI(
+      getCanvasArea(page.canvas, area, window.devicePixelRatio)
+    );
   };
 
   // when selected text on pdf has changed

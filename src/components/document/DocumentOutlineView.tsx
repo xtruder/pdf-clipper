@@ -2,20 +2,12 @@ import React, { useState } from "react";
 
 import { ReactComponent as ChevronUpIcon } from "~/assets/icons/chevron-up-outline.svg";
 import { ReactComponent as ChevronDownIcon } from "~/assets/icons/chevron-down-outline.svg";
+import { DocumentOutline, OutlineNode } from "~/types";
 
 export interface OutlinePosition {
   pageNumber?: number;
   location?: any;
   top?: number;
-}
-
-export interface OutlineNode extends OutlinePosition {
-  title: string;
-  items: OutlineNode[];
-}
-
-export interface DocumentOutline {
-  items: OutlineNode[];
 }
 
 /*
@@ -89,7 +81,7 @@ export const DocumentOutlineView: React.FC<DocumentOutlineViewProps> = ({
     depth: number = 0
   ): JSX.Element[] =>
     nodes.map((node, i) => {
-      const childNodes = renderOutlineNodes(node.items, depth + 1);
+      const childNodes = renderOutlineNodes(node.items ?? [], depth + 1);
 
       return (
         <OutlineItem
@@ -99,7 +91,7 @@ export const DocumentOutlineView: React.FC<DocumentOutlineViewProps> = ({
           onClick={() =>
             onOutlineNodeClicked({
               pageNumber: node.pageNumber!,
-              location: node.location,
+              location: node.position,
             })
           }
         >

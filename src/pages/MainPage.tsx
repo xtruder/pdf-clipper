@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { debug as _debug } from "debug";
+import { v4 as uuid } from "uuid";
+import { useAtomValue, useSetAtom } from "jotai";
 
 import { AccountDocumentsListContainer } from "~/containers/DocumentListContainer";
-import { DocumentDropContainer } from "~/containers/DocumentDropContainer";
-import { getDocumentOutline, loadPDF, screenshotPageArea } from "~/lib/pdfjs";
-import { useUpsertDocument } from "~/graphql";
-import { DocumentMetaInput, DocumentType } from "~/graphql/types";
+import {
+  currentAccountAtom,
+  documentAtom,
+  documentFileAtom,
+  documentMembersAtom,
+} from "~/state";
+import { DocumentDropZone } from "~/components/ui/DocumentDropZone";
 
-const mimeToDocType: Record<string, DocumentType | undefined> = {
-  "application/pdf": DocumentType.Pdf,
+const mimeToDocType: Record<string, string> = {
+  "application/pdf": "PDF",
 };
 
 export interface MainPageProps {}
@@ -18,54 +21,46 @@ export interface MainPageProps {}
 export const MainPage: React.FC<MainPageProps> = ({}) => {
   const navigate = useNavigate();
 
-  const [upsertDocument] = useUpsertDocument();
+  const { id: accountId } = useAtomValue(currentAccountAtom);
+  const [newDocumentId, setNewDocumentId] = useState(uuid());
+  const updateDocument = useSetAtom(documentAtom(newDocumentId));
+  const setDocumentMembers = useSetAtom(documentMembersAtom(newDocumentId));
+  const setDocumentFile = useSetAtom(documentFileAtom(newDocumentId));
 
-  const onUpload = async (file: File, hash: string, mimeType: string) => {
-    const docType = mimeToDocType[mimeType || ""];
+  const onUpload = useCallback(
+    async (file: File) => {
+      const docType = mimeToDocType[file.type || ""];
 
-    if (!docType) throw new Error(`unsupported mime type ${mimeType}`);
+      if (!docType) throw new Error(`unsupported mime type ${file.type}`);
 
-    console.log(hash, mimeType);
+      if (docType === "PDF") {
+        // update document metadata
+        updateDocument({
+          type: "PDF",
+          meta: {},
+          createdBy: accountId,
+        });
 
-    // create a new document
-    const result = await upsertDocument({
-      variables: { document: { type: docType, fileHash: hash } },
-    });
+        setDocumentFile(file);
 
-    if (!result.data) throw new Error("missing document info");
+        setDocumentMembers({
+          action: "create",
+          value: {
+            accountId,
+            documentId: newDocumentId,
+            role: "admin",
+          },
+        });
+      }
 
-    const { id } = result.data.upsertDocument;
-
-    if (docType === DocumentType.Pdf) {
-      // load pdf document from file
-      const pdfDocument = await loadPDF(await file.arrayBuffer());
-
-      // get pdf document metadata
-      const { info }: { info: any } = await pdfDocument.getMetadata();
-
-      // get first page and screenshot page as cover
-      const page1 = await pdfDocument.getPage(1);
-      const cover = await screenshotPageArea(page1, { width: 600 });
-
-      // get pdf document outline
-      const outline = await getDocumentOutline(pdfDocument);
-
-      const meta: DocumentMetaInput = {
-        pageCount: pdfDocument.numPages,
-        title: info["Title"],
-        author: info["Author"],
-        cover,
-        outline,
-      };
-
-      // update document metadata
-      await upsertDocument({ variables: { document: { id, meta } } });
-    }
-  };
+      setNewDocumentId(uuid());
+    },
+    [newDocumentId]
+  );
 
   return (
     <div className="h-screen flex flex-col p-1">
-      <DocumentDropContainer className="flex-none grow-0" onUpload={onUpload} />
+      <DocumentDropZone className="flex-none grow-0" onFile={onUpload} />
 
       <div className="divider"></div>
 

@@ -8,7 +8,7 @@ import { suspend } from "suspend-react";
 // utils
 import { loadPDF } from "~/lib/pdfjs";
 import { clearRangeSelection } from "~/lib/dom";
-import { resetValue } from "~/lib/react";
+import { resetValue } from "~/lib/utils";
 
 // components
 import { useContextProgress } from "../ui/ProgressIndicator";
@@ -24,7 +24,10 @@ export default {
 
 export const ThePDFHighlighter: Story = (args) => {
   const { setProgress } = useContextProgress();
-  const pdfDocument = suspend(() => loadPDF(args.url, setProgress), [args.url]);
+  const pdfDocument = suspend(
+    () => loadPDF(args.url, ({ loaded, total }) => setProgress(total / loaded)),
+    [args.url]
+  );
 
   const [highlights, setHighlights, highlightsRef] = useState<PDFHighlight[]>(
     []

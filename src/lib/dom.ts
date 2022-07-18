@@ -34,14 +34,14 @@ export const isHTMLCanvasElement = (elm: any) =>
 export const asElement = (x: any): HTMLElement => x;
 
 // gets canvas area as png data url
-export const getCanvasAreaAsPNG = (
+export const getCanvasArea = (
   canvas: HTMLCanvasElement,
   rect?: Rect,
   devicePixelRatio: number = 1
-): string => {
+): HTMLCanvasElement => {
   // if no rect provided, capture whole canvas area as image/png
   if (!rect) {
-    return canvas.toDataURL("image/png");
+    return canvas;
   }
 
   const { left, top, width, height } = rect;
@@ -53,7 +53,7 @@ export const getCanvasAreaAsPNG = (
   imgCanvas.height = height;
 
   const imgCanvasContext = imgCanvas.getContext("2d");
-  if (!imgCanvasContext) return "";
+  if (!imgCanvasContext) throw new Error("can't create 2d canvas context");
 
   // draws image to convas on area from existing canvas image source
   imgCanvasContext.drawImage(
@@ -68,9 +68,46 @@ export const getCanvasAreaAsPNG = (
     height
   );
 
-  // return image as png data url
-  return imgCanvas.toDataURL("image/png");
+  return imgCanvas;
 };
+
+export const canvasToPNGBlob = (canvas: HTMLCanvasElement): Promise<Blob> =>
+  new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => {
+      if (!blob) return reject(new Error("can't create canvas image"));
+      resolve(blob);
+    }, "image/png")
+  );
+
+export const canvasToPNGDataURI = (canvas: HTMLCanvasElement) =>
+  canvas.toDataURL("image/png");
+
+export const blobToDataURL = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    let reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
+
+export function dataURItoBlob(dataURI: string) {
+  // convert base64/URLEncoded data component to raw binary data held in a string
+  var byteString;
+  if (dataURI.split(",")[0].indexOf("base64") >= 0)
+    byteString = atob(dataURI.split(",")[1]);
+  else byteString = unescape(dataURI.split(",")[1]);
+
+  // separate out the mime component
+  var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+
+  // write the bytes of the string to a typed array
+  var ia = new Uint8Array(byteString.length);
+  for (var i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+
+  return new Blob([ia], { type: mimeString });
+}
 
 export const clearRangeSelection = () => {
   if (window.getSelection()?.empty) {

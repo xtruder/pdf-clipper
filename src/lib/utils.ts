@@ -105,3 +105,81 @@ export function deepEqual(objA: any, objB: any, map = new WeakMap()): boolean {
 
   return true;
 }
+
+export async function* streamAsyncIterator<T>(stream: ReadableStream<T>) {
+  // Get a lock on the stream
+  const reader = stream.getReader();
+
+  try {
+    while (true) {
+      // Read from the stream
+      const { done, value } = await reader.read();
+      // Exit if we're done
+      if (done) return;
+      // Else yield the chunk
+      yield value;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+type UndefinedOrBoolean<T> = T extends boolean ? boolean : T;
+
+export const resetValue = <V>(
+  func: (value: UndefinedOrBoolean<V>) => void,
+  newValue: UndefinedOrBoolean<V>
+) => {
+  func(typeof newValue === "boolean" ? !newValue : (undefined as any));
+  setTimeout(() => func(newValue), 0);
+};
+
+export interface Cache<T> {
+  get(key: string): T | undefined;
+  set(key: string, value: T): void;
+}
+
+/**Simple TTL cache optimized for reads */
+export function ttlCache<T>(ttl: number): Cache<T> {
+  const cache: Record<string, T> = {};
+  const timers: Record<string, any> = {};
+
+  const setKeyExpiery = (key: string) => {
+    // if timer already exists, clear it first
+    if (timers[key]) clearTimeout(timers[key]);
+
+    // create a new timer
+    timers[key] = setTimeout(() => {
+      delete timers[key];
+      delete cache[key];
+    }, ttl);
+  };
+
+  const get = (key: string) => {
+    setKeyExpiery(key);
+    return cache[key];
+  };
+
+  const set = (key: string, value: T) => {
+    cache[key] = value;
+
+    setKeyExpiery(key);
+  };
+
+  return { get, set };
+}
+
+export function lazyCache<T, Ctx>(
+  cache: Cache<T>,
+  resolve: (key: string, ctx: Ctx) => Promise<T>
+) {
+  return async (key: string, ctx: Ctx): Promise<T> => {
+    let value = cache.get(key);
+    if (value) return value;
+
+    value = await resolve(key, ctx);
+    cache.set(key, value);
+
+    return value;
+  };
+}

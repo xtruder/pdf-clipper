@@ -7,6 +7,7 @@ import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outli
 import { ReactComponent as TrashIcon } from "~/assets/icons/trash-outline.svg";
 import { ReactComponent as ChevronDoubleDownIcon } from "~/assets/icons/chevron-double-down-outline.svg";
 import { ReactComponent as ChevronDoubleUpIcon } from "~/assets/icons/chevron-double-up-outline.svg";
+import { Image } from "../ui/Image";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "bg-red-200",
@@ -18,6 +19,7 @@ const colorToClass: Record<HighlightColor, string> = {
 export interface HighlightCardProps {
   text?: string;
   image?: string;
+  fallbackImage?: string;
   color?: HighlightColor;
   pageNumber: number;
   maxLength?: number;
@@ -32,6 +34,7 @@ export interface HighlightCardProps {
 export const HighlightCard: React.FC<HighlightCardProps> = ({
   text,
   image,
+  fallbackImage,
   pageNumber,
   color,
   maxLength = 100,
@@ -78,11 +81,13 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
         )}
       </h2>
     );
-  } else if (image) {
+  } else if (image || fallbackImage) {
     highlight = (
-      <img
+      <Image
         src={image}
+        fallbackSrc={fallbackImage}
         className="h-initial w-full block hover:cursor-pointer"
+        loading="lazy"
         onClick={() => onClicked()}
       />
     );

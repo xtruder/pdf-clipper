@@ -1,26 +1,22 @@
+import { useAtom, useAtomValue } from "jotai";
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { DocumentInfoCard } from "~/components/document/DocumentInfoCard";
 import { ErrorFallback } from "~/components/ui/ErrorFallback";
 
-import {
-  useGetDocumentInfo,
-  useRemoveMeFromDocument,
-  useUpsertDocument,
-} from "~/graphql";
+import { currentAccountAtom, documentAtom, documentMembersAtom } from "~/state";
 
 export const DocumentInfoCardContainer: React.FC<{
   documentId: string;
   onOpen?: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardLoader = useCallback(() => {
-    const { meta } = useGetDocumentInfo(documentId);
-
-    const [upsertDocument] = useUpsertDocument();
-
-    // mutation for removing document from account documents
-    const [removeMeFromDocument] = useRemoveMeFromDocument(documentId);
+    const { id: accountId } = useAtomValue(currentAccountAtom);
+    const [{ meta = {} }, setDocument] = useAtom(documentAtom(documentId));
+    const [documentMembers, dispatchDocumentMembers] = useAtom(
+      documentMembersAtom(documentId)
+    );
 
     let { title, description, cover, pageCount } = meta;
 
@@ -31,16 +27,19 @@ export const DocumentInfoCardContainer: React.FC<{
         cover={cover ?? undefined}
         pages={pageCount ?? 0}
         onDescriptionChanged={(description) =>
-          upsertDocument({
-            variables: { document: { id: documentId, meta: { description } } },
-          })
+          setDocument({ id: documentId, meta: { ...meta, description } })
         }
         onTitleChanged={(title) =>
-          upsertDocument({
-            variables: { document: { id: documentId, meta: { title } } },
+          setDocument({ id: documentId, meta: { ...meta, title } })
+        }
+        onDeleteClicked={() =>
+          dispatchDocumentMembers({
+            action: "remove",
+            value: documentMembers.find(
+              (member) => member.accountId === accountId
+            )?.id,
           })
         }
-        onDeleteClicked={() => removeMeFromDocument()}
         onOpen={onOpen}
       />
     );

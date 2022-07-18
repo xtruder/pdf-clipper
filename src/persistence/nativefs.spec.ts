@@ -1,7 +1,7 @@
 import { FileSystemDirectoryHandle } from "native-file-system-adapter";
 
 import { getPrivateDirectory, NativeFS } from "./nativefs";
-import { waitError } from "./utils";
+import { waitError } from "../lib/utils";
 
 const dirEntires = async (dir?: FileSystemDirectoryHandle) => {
   const entries: (FileSystemDirectoryHandle | FileSystemHandle)[] = [];

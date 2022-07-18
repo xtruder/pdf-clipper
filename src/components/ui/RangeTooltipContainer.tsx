@@ -1,7 +1,7 @@
 import React, { useMemo, useRef } from "react";
 import { VirtualElement } from "@popperjs/core";
 
-import { useIsChanging } from "~/lib/react";
+import { useIsChanging } from "~/lib/react-hooks";
 
 import { TooltipContainer } from "./TooltipContainer";
 

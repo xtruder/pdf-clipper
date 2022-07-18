@@ -6,17 +6,6 @@ import {
 
 import parseDataUrl from "data-urls";
 
-export type TypedArray =
-  | Int8Array
-  | Uint8Array
-  | Uint8ClampedArray
-  | Int16Array
-  | Uint16Array
-  | Int32Array
-  | Uint32Array
-  | Float32Array
-  | Float64Array;
-
 export async function getPrivateDirectory() {
   let dir: FileSystemDirectoryHandle | undefined;
 
@@ -40,7 +29,7 @@ export class NativeFS {
   }
 
   /**Saves file to native filesystem, content can be string, dataurl or File */
-  async saveFile(path: string, contents: string | File | BufferSource) {
+  async saveFile(path: string, contents: string | File | BufferSource | Blob) {
     let rootDir: FileSystemDirectoryHandle;
 
     // create directory recusively and get new directory handle and file name
@@ -86,6 +75,44 @@ export class NativeFS {
     return file;
   }
 
+  async fileExists(path: string): Promise<boolean> {
+    let rootDir: FileSystemDirectoryHandle;
+
+    [rootDir, path] = await this.getOrCreateRecursiePath(path);
+
+    try {
+      await rootDir.getFileHandle(path);
+    } catch (err) {
+      if (
+        err instanceof DOMException &&
+        err.code === DOMException.NOT_FOUND_ERR
+      ) {
+        return false;
+      }
+
+      throw err;
+    }
+
+    return true;
+  }
+
+  async getFiles(path: string) {
+    let rootDir: FileSystemDirectoryHandle;
+
+    [rootDir, path] = await this.getOrCreateRecursiePath(path + "/f");
+
+    const entries: {
+      kind: "file" | "directory";
+      name: string;
+    }[] = [];
+
+    for await (const [, entry] of rootDir.entries()) {
+      entries.push(entry);
+    }
+
+    return entries;
+  }
+
   /**Removes file by path */
   async removeFile(path: string): Promise<void> {
     let rootDir: FileSystemDirectoryHandle;
@@ -97,16 +124,19 @@ export class NativeFS {
     await fileHandle.remove();
   }
 
-  // creates ar gets directory recursively
+  /**creates ar gets directory recursively */
   private async getOrCreateRecursiePath(
     path: string,
     dir: FileSystemDirectoryHandle = this.rootDir
   ): Promise<[FileSystemDirectoryHandle, string]> {
-    const parts = path.split("/", 2);
+    const parts = path.split("/");
 
     if (parts.length <= 1) return [dir, parts[0]];
 
     const dirHandle = await dir.getDirectoryHandle(parts[0], { create: true });
-    return await this.getOrCreateRecursiePath(parts[1], dirHandle);
+    return await this.getOrCreateRecursiePath(
+      parts.slice(1).join("/"),
+      dirHandle
+    );
   }
 }

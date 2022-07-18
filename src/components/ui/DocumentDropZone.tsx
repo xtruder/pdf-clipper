@@ -13,7 +13,7 @@ export interface DocumentDropZoneProps {
 
 export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
   onFile,
-  showProgress = false,
+  //showProgress = false,
   className,
 }) => {
   const [readerErrorStr, setReaderErrorStr] = useState<JSX.Element | null>(
@@ -48,7 +48,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
       onFile?.(acceptedFile);
       setReaderErrorStr(null);
     },
-    []
+    [onFile]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -75,7 +75,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
     >
       <input {...getInputProps()} />
 
-      <div className="flex justify-center items-center text-center h-full w-full bg-base-100 border-1 border-dashed rounded-md px-2">
+      <div className="flex justify-center items-center text-center h-full w-full bg-base-100 border-1 border-dashed p-1">
         <div
           className={`alert ${
             readerErrorStr ? "alert-error" : ""

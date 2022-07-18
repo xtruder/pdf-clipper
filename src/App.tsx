@@ -5,10 +5,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import useDarkMode from "@utilityjs/use-dark-mode";
 
-import { useViewport } from "./lib/react";
-
-import { ApolloProvider } from "@apollo/client";
-import { client, queueLink } from "./apollo";
+import { useViewport } from "./lib/react-hooks";
 
 import { ErrorFallback } from "~/components/ui/ErrorFallback";
 import {
@@ -23,10 +20,8 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 
 import "virtual:windi.css";
 import "./App.css";
-
-// Note: remove these listeners when your app is shut down to avoid leaking listeners.
-window.addEventListener("offline", () => queueLink.close());
-window.addEventListener("online", () => queueLink.open());
+import { suspend } from "suspend-react";
+import { initPersistence, initServices } from "./state";
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = () => (
@@ -72,6 +67,11 @@ export function App(): JSX.Element {
   const { isDarkMode } = useDarkMode({});
   const { height, width } = useViewport();
 
+  suspend(async () => {
+    await initPersistence();
+    initServices();
+  }, []);
+
   // define global --vh and --vw css variables that have viewport width and height set
   useEffect(() => {
     document.documentElement.style.setProperty("--vh", `${height}px`);
@@ -97,9 +97,7 @@ export function App(): JSX.Element {
         </Helmet>
       </HelmetProvider>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <ApolloProvider client={client}>
-          <AppRouter />
-        </ApolloProvider>
+        <AppRouter />
       </ErrorBoundary>
     </>
   );

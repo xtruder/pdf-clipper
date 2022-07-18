@@ -1,16 +1,7 @@
+import { useState, useEffect } from "react";
 import useEvent from "@react-hook/event";
-import { useEffect, useState } from "react";
 
-type UndefinedOrBoolean<T> = T extends boolean ? boolean : T;
-
-export const resetValue = <V>(
-  func: (value: UndefinedOrBoolean<V>) => void,
-  newValue: UndefinedOrBoolean<V>
-) => {
-  func(typeof newValue === "boolean" ? !newValue : (undefined as any));
-  setTimeout(() => func(newValue), 0);
-};
-
+/**hook that reports whether value has changed in last interval */
 export const useIsChanging = (interval: number, value: any): boolean => {
   const [lastTimer, setLastTimer] = useState<NodeJS.Timeout>();
   const [changing, setChanging] = useState(true);

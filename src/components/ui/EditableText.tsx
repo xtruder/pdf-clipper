@@ -10,16 +10,6 @@ import {
 
 import { ReactComponent as PencilAltIcon } from "~/assets/icons/pencil-alt-outline.svg";
 
-function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
-
-  useEffect(() => {
-    ref.current = value;
-  });
-
-  return ref.current;
-}
-
 export interface EditableTextProps {
   // provided text
   text?: string;
@@ -56,8 +46,8 @@ export const EditableText: React.FC<EditableTextProps> = ({
   placeholder = "Write text here...",
   clampLines,
   clampClassName = clampLines ? `line-clamp-${clampLines.toString()}` : "",
-  focusOnEdit = true,
-  editOnClick = false,
+  focusOnEdit = false,
+  editOnClick = true,
   showEditIcon = !editOnClick,
   editing = !text,
 

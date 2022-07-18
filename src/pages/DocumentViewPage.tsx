@@ -1,8 +1,8 @@
 import React from "react";
 import { useParams, Navigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
 
-import { useGetDocumentInfo } from "~/graphql";
-import { DocumentType } from "~/graphql/types";
+import { documentAtom } from "~/state";
 
 export interface DocumentViewPageProps {}
 
@@ -10,12 +10,12 @@ export const DocumentViewPage: React.FC<DocumentViewPageProps> = ({}) => {
   const { documentId } = useParams();
   if (!documentId) return <a>Missing document ID</a>;
 
-  const document = useGetDocumentInfo(documentId);
+  const doc = useAtomValue(documentAtom(documentId));
 
-  const type = document.type;
+  const type = doc.type;
 
   switch (type) {
-    case DocumentType.Pdf:
+    case "PDF":
       return <Navigate to={`/viewpdf/${documentId}`} replace={true} />;
     default:
       throw new Error(`Invalid document type ${type}`);
