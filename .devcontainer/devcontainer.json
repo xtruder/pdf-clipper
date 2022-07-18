@@ -30,7 +30,7 @@
       "label": "vite"
     },
     "4000": {
-      "label": "app"
+      "label": "server"
     },
     "6000": {
       "label": "imgproxy"

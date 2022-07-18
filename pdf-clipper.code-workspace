@@ -1,0 +1,45 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "name": "app",
+      "path": "packages/app"
+    },
+    {
+      "name": "components",
+      "path": "packages/components"
+    },
+    {
+      "name": "server",
+      "path": "packages/server"
+    }
+  ],
+  "settings": {
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.rulers": [80, 120]
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.rulers": [80, 120]
+    },
+    "files.exclude": {
+      "node_modules": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/package-lock.json": true
+    },
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+  }
+}

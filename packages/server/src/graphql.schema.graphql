@@ -1,0 +1,387 @@
+directive @constraint(contains: String, endsWith: String, exclusiveMax: Float, exclusiveMin: Float, format: String, max: Float, maxLength: Int, min: Float, minLength: Int, multipleOf: Float, notContains: String, pattern: String, startsWith: String, uniqueTypeName: String) on ARGUMENT_DEFINITION | FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Account {
+  """Account creation time"""
+  createdAt: DateTime!
+
+  """Account deletion time"""
+  deletedAt: DateTime
+
+  """list of documents that account is member of"""
+  documents: [AccountDocument!]!
+
+  """Account ID"""
+  id: ID!
+
+  """Optional account name"""
+  name: String
+
+  """Account last update time"""
+  updatedAt: DateTime!
+}
+
+type AccountDocument {
+  """Time when account was accepted as member of document"""
+  acceptedAt: DateTime!
+
+  """document member creation time"""
+  createdAt: DateTime!
+
+  """account that created document member"""
+  createdBy: AccountInfo!
+
+  """document associated with account"""
+  document: Document
+
+  """Role of account for document"""
+  role: DocumentRole!
+}
+
+type AccountInfo {
+  """account ID"""
+  id: ID!
+
+  """optional account name"""
+  name: String
+}
+
+input AccountUpdateInput {
+  """id of the account to update"""
+  id: ID!
+
+  """name of the account"""
+  name: String
+
+  """update timestamp"""
+  timestamp: DateTime!
+}
+
+scalar DateTime
+
+type Document {
+  """document creation time"""
+  createdAt: DateTime!
+
+  """account that created document"""
+  createdBy: AccountInfo!
+
+  """document deletion time"""
+  deletedAt: DateTime
+
+  """file associated with document"""
+  file: FileInfo
+
+  """list of highlights associated with document"""
+  highlights(limit: Int, offset: Int): [DocumentHighlight!]!
+
+  """unique document ID"""
+  id: ID!
+
+  """list of document members"""
+  members: [DocumentMember!]!
+
+  """metadata associated with document"""
+  meta: DocumentMeta!
+
+  """type of the document"""
+  type: DocumentType!
+
+  """document last update time"""
+  updatedAt: DateTime!
+}
+
+type DocumentChange {
+  """whether document has been deleted"""
+  deleted: Boolean
+
+  """changes regarding document highlights"""
+  highlights: [DocumentHighlightChange!]
+
+  """changes regarding document members"""
+  members: [DocumentMemberChange!]
+
+  """whether document meta has been updated"""
+  meta: DocumentMeta
+
+  """timestamp of change"""
+  timestamp: DateTime!
+}
+
+type DocumentHighlight {
+  """content associated with highlight"""
+  content: JSON!
+
+  """highlight creation time"""
+  createdAt: DateTime!
+
+  """highlight author ID"""
+  createdBy: AccountInfo!
+
+  """highlight deletion time"""
+  deletedAt: DateTime
+
+  """unique highlight id"""
+  id: ID!
+
+  """URL of image associated with highlight"""
+  image: String
+
+  """highlight location"""
+  location: JSON!
+
+  """highlight last udpate time"""
+  updatedAt: DateTime!
+}
+
+type DocumentHighlightChange {
+  """whether highlight content has been changed"""
+  content: JSON!
+
+  """who has made a change"""
+  createdBy: AccountInfo!
+
+  """whether highlight has been deleted"""
+  deleted: Boolean
+
+  """unique highlight id"""
+  id: ID!
+
+  """whether highlight location has been changed"""
+  location: JSON!
+}
+
+type DocumentMember {
+  """Time when account was accepted as member of document"""
+  acceptedAt: DateTime
+
+  """member account"""
+  account: AccountInfo!
+
+  """document member creation time"""
+  createdAt: DateTime!
+
+  """account that created document member"""
+  createdBy: AccountInfo!
+
+  """Role of account for document"""
+  role: DocumentRole!
+}
+
+type DocumentMemberChange {
+  """whether member has been accepted"""
+  accepted: Boolean
+
+  """account id that membership has been changed for"""
+  accountId: ID!
+
+  """who has made a change"""
+  createdBy: AccountInfo!
+
+  """whether member has been deleted"""
+  deleted: Boolean
+
+  """whether ddocument role has been changed"""
+  role: DocumentRole
+}
+
+input DocumentMemberInput {
+  """whether document member is accepted"""
+  accepted: Boolean
+
+  """id of account to update"""
+  accountId: ID!
+
+  """role of document member"""
+  role: DocumentRole
+}
+
+"""user provided document metadata"""
+type DocumentMeta {
+  """document author"""
+  author: String
+
+  """url of document cover image"""
+  cover: String
+
+  """document description"""
+  description: String
+
+  """keywords associated with document"""
+  keywords: [String!]
+
+  """number of document pages"""
+  pageCount: Int
+
+  """title of the document"""
+  title: String
+}
+
+input DocumentMetaInput {
+  """document author"""
+  author: String
+
+  """url of document cover image"""
+  cover: String
+
+  """document description"""
+  description: String
+
+  """document outline"""
+  outline: JSON
+
+  """number of pages in document"""
+  pageCount: Int
+
+  """title of the document"""
+  title: String
+}
+
+type DocumentReadingInfo {
+  """account that reading info is associated with"""
+  account: AccountInfo!
+
+  """document creation time"""
+  createdAt: DateTime!
+
+  """document deletion time"""
+  deletedAt: DateTime
+
+  """last read page"""
+  lastPage: Int
+
+  """last reading location"""
+  location: String
+
+  """url of screenshot image"""
+  screenshot: String
+
+  """document last update time"""
+  updatedAt: DateTime!
+}
+
+enum DocumentRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum DocumentType {
+  PDF
+}
+
+type FileInfo {
+  """file creation time"""
+  createdAt: DateTime!
+
+  """account that created file"""
+  createdBy: AccountInfo!
+
+  """sha256 hash of file"""
+  hash: String!
+
+  """file mime type"""
+  mimeType: String!
+
+  """alternative file sources"""
+  sources: [String!]
+
+  """file last update time"""
+  updatedAt: DateTime!
+
+  """primary url of file"""
+  url: String
+}
+
+enum HighlightColor {
+  BLUE
+  GREEN
+  RED
+  YELLOW
+}
+
+scalar JSON
+
+type Mutation {
+  """removes account from document"""
+  removeMeFromDocument(documentId: ID!): Boolean!
+
+  """updates account"""
+  updateAccount(account: AccountUpdateInput!): Account!
+
+  """uploads file and returns file information"""
+  uploadFile(file: Upload!): FileInfo!
+
+  """creates or updates a document"""
+  upsertDocument(document: UpsertDocumentInput!): Document!
+
+  """creates or updates document highlight"""
+  upsertDocumentHighlight(documentId: ID!, highlight: UpsertDocumentHighlightInput!): DocumentHighlight!
+  upsertFileInfo(fileInfo: UpsertFileInput): FileInfo!
+}
+
+type Query {
+  account(id: ID!): Account
+
+  """returns information about current account"""
+  currentAccount: Account
+
+  """gets document by id"""
+  document(id: ID!): Document
+  fileInfo(fileHash: String!): FileInfo
+}
+
+type Subscription {
+  """subscribes to account document updates"""
+  accountDocumentUpdates(accountId: ID!): AccountDocument!
+  documentChanges(id: ID!): DocumentChange
+}
+
+scalar Upload
+
+input UpsertDocumentHighlightInput {
+  """content associated with highlight serialized as JSON"""
+  content: JSON
+
+  """whether highlight has been deleted"""
+  deleted: Boolean
+
+  """unique highlight id"""
+  id: ID
+
+  """image assocaited with highlight"""
+  image: Upload
+
+  """location of a highlight serialized as JSON"""
+  location: JSON
+}
+
+input UpsertDocumentInput {
+  """whether to delete document"""
+  deleted: Boolean
+
+  """hash of file associated with document"""
+  fileHash: String
+
+  """unique document ID"""
+  id: ID
+
+  """list of document members"""
+  members: [DocumentMemberInput!]
+
+  """metadata associates with document"""
+  meta: DocumentMetaInput
+
+  """type of the document"""
+  type: DocumentType
+}
+
+input UpsertFileInput {
+  """sha256 hash of file"""
+  hash: String
+
+  """file mime type"""
+  mimeType: String
+
+  """sources where file can be retrived"""
+  sources: [String!]
+}
