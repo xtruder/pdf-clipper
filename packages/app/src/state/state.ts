@@ -119,10 +119,14 @@ export const accountDocumentsAtom = atomFamily((accountId: string) =>
 /**atom to create or update a single document highlight */
 export const documentHighlightAtom = atomFamily((highlightId: string) =>
   atomWithObservable(() =>
-    db.documenthighlights.findOne({ selector: { id: highlightId } }).$.pipe(
-      filter((doc) => !!doc),
-      map((v) => v!)
-    )
+    db.documenthighlights
+      .findOne({
+        selector: { id: highlightId },
+      })
+      .$.pipe(
+        filter((doc) => !!doc),
+        map((v) => v!)
+      )
   )
 );
 
@@ -149,7 +153,10 @@ export const documentHighlightImageAtom = atomFamily((highlightId: string) =>
 /**atom that subscribes to document highlights */
 export const documentHighlightsAtom = atomFamily((documentId: string) =>
   syncableRxDocumentsAtom<DocumentHighlight>(() =>
-    db.documenthighlights.find({ selector: { documentId } })
+    db.documenthighlights.find({
+      selector: { documentId },
+      sort: [{ sequence: "asc" }],
+    })
   )
 );
 

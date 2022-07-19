@@ -71,6 +71,9 @@ export const schema: RxJsonSchema<DocumentHighlight> = {
     location: {
       type: "object",
     },
+    sequence: {
+      type: "string",
+    },
     image: {
       type: ["object", "null"],
       properties: {

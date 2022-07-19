@@ -22,6 +22,7 @@ export interface PDFHighlight {
   id: string;
   location: PDFHighlightLocation;
   content: PDFHighlightContent;
+  sequence: string;
   image?: {
     source: string;
   };

@@ -1,4 +1,5 @@
-import { groupBy, unique } from "../lib/utils";
+import { Offset } from "~/lib/dom";
+import { groupBy, toFixed, unique } from "../lib/utils";
 import { PDFHighlight } from "./types";
 
 // get highlights per page, that are on that page or have rects on page
@@ -47,3 +48,8 @@ export const groupHighlightsByPage = (
   // group by display page number
   return groupBy(pageSpecificHighlights, (h) => h.location.displayPage);
 };
+
+export const getHighlightSequence = (
+  pageNumber: number,
+  offset: Offset
+): string => `${toFixed(pageNumber, 5)}/${toFixed(Math.round(offset.top), 5)}`;

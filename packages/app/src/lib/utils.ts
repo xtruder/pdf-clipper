@@ -25,30 +25,6 @@ export function filterObject<T extends object>(
   ) as Partial<T>;
 }
 
-export const s4 = () => {
-  return Math.floor((1 + Math.random()) * 0x10000)
-    .toString(16)
-    .substring(1);
-};
-
-export const setRandomInterval = <F extends Function>(
-  callback: F,
-  min: number,
-  max: number
-) => {
-  let timer: NodeJS.Timeout;
-
-  const randomInterval = () => Math.random() * (max - min + 1) + min;
-  const callCallback = () => {
-    callback();
-    timer = setTimeout(callCallback, randomInterval());
-  };
-
-  timer = setTimeout(callCallback, randomInterval());
-
-  return () => clearTimeout(timer);
-};
-
 export const waitError = <T>(promise: Promise<T>): Promise<Error | null> => {
   return promise.then(() => null).catch((err) => err);
 };
@@ -133,53 +109,3 @@ export const resetValue = <V>(
   func(typeof newValue === "boolean" ? !newValue : (undefined as any));
   setTimeout(() => func(newValue), 0);
 };
-
-export interface Cache<T> {
-  get(key: string): T | undefined;
-  set(key: string, value: T): void;
-}
-
-/**Simple TTL cache optimized for reads */
-export function ttlCache<T>(ttl: number): Cache<T> {
-  const cache: Record<string, T> = {};
-  const timers: Record<string, any> = {};
-
-  const setKeyExpiery = (key: string) => {
-    // if timer already exists, clear it first
-    if (timers[key]) clearTimeout(timers[key]);
-
-    // create a new timer
-    timers[key] = setTimeout(() => {
-      delete timers[key];
-      delete cache[key];
-    }, ttl);
-  };
-
-  const get = (key: string) => {
-    setKeyExpiery(key);
-    return cache[key];
-  };
-
-  const set = (key: string, value: T) => {
-    cache[key] = value;
-
-    setKeyExpiery(key);
-  };
-
-  return { get, set };
-}
-
-export function lazyCache<T, Ctx>(
-  cache: Cache<T>,
-  resolve: (key: string, ctx: Ctx) => Promise<T>
-) {
-  return async (key: string, ctx: Ctx): Promise<T> => {
-    let value = cache.get(key);
-    if (value) return value;
-
-    value = await resolve(key, ctx);
-    cache.set(key, value);
-
-    return value;
-  };
-}
