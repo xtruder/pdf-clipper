@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { FC, Suspense, useCallback, useEffect } from "react";
 import useState from "react-usestateref";
 import { FullScreen } from "@chiragrupani/fullscreen-react";
 
@@ -22,9 +22,15 @@ import {
   PDFPageThumbnails,
   HighlightCardList,
   HighlightColor,
+  TopbarProgressIndicator,
 } from "@pdf-clipper/components";
 
-import { documentAtom, documentHighlightsAtom, pdfLoaderAtom } from "~/state";
+import {
+  documentAtom,
+  documentHighlightsAtom,
+  pdfLoaderAtom,
+  pdfLoadProgressAtom,
+} from "~/state";
 import { HighlightCardContainer } from "./HighlightCardContainer";
 
 export interface PDFReaderProps {
@@ -37,7 +43,7 @@ export interface PDFReaderProps {
   onClose?: () => void;
 }
 
-export const PDFReader: React.FC<PDFReaderProps> = ({
+export const PDFReader: FC<PDFReaderProps> = ({
   documentId,
   className = "",
   onClose,
