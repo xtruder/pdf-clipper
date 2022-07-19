@@ -163,3 +163,9 @@ export const documentHighlightsAtom = atomFamily((documentId: string) =>
 export const pdfLoaderAtom = atomFamily((documentId: string) =>
   atomWithObservable(() => pdfLoader.getLoadedPDF(documentId))
 );
+
+export const pdfLoadProgressAtom = atomFamily((documentId: string) =>
+  atomWithObservable(() =>
+    pdfLoader.getPDF(documentId).pipe(map((loader) => loader.progress))
+  )
+);
