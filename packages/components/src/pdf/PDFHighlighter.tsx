@@ -32,7 +32,7 @@ import { MouseSelection, Target } from "../ui/MouseSelection";
 import { RangeTooltipContainer } from "../ui/RangeTooltipContainer";
 
 import "./PDFHighlighter.css";
-import { groupHighlightsByPage } from "./utils";
+import { getHighlightSequence, groupHighlightsByPage } from "./utils";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.RED]: "textLayer__selection_red",
@@ -140,17 +140,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const page = pdfViewer.getPageView(pageNumber)!;
     const text = range.toString();
 
+    const scaledBoundingRect = viewportRectToScaledPageRect(
+      boundingRect,
+      page.viewport
+    );
+
     // create a new highlight
     const highlight: PDFHighlight = {
       id: uuid(),
       location: {
-        boundingRect: viewportRectToScaledPageRect(boundingRect, page.viewport),
+        boundingRect: scaledBoundingRect,
         rects: rects.map((rect) =>
           viewportRectToScaledPageRect(rect, page.viewport)
         ),
         pageNumber,
       },
       content: { text, color: highlightColor },
+      sequence: getHighlightSequence(pageNumber, scaledBoundingRect),
     };
 
     onHighlighting(highlight);
@@ -177,15 +183,21 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const image = pdfViewer.screenshotPageArea(page.number, pageBoundingRect);
     if (!image) return;
 
+    const scaledBoundingRect = viewportRectToScaledPageRect(
+      pageBoundingRect,
+      viewport
+    );
+
     // create a new higlightwith image content
     const highlight: PDFHighlight = {
       id: uuid(),
       location: {
-        boundingRect: viewportRectToScaledPageRect(pageBoundingRect, viewport),
+        boundingRect: scaledBoundingRect,
         rects: [],
         pageNumber: page.number,
       },
       content: { thumbnail: image, color: highlightColor },
+      sequence: getHighlightSequence(page.number, scaledBoundingRect),
     };
 
     onHighlighting(highlight);

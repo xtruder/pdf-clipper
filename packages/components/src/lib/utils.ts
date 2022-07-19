@@ -51,3 +51,6 @@ export const setRandomInterval = <F extends Function>(
 
   return () => clearTimeout(timer);
 };
+
+export const toFixed = (number: Number, len: number) =>
+  ("0".repeat(len) + number).slice(-len);

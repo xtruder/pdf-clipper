@@ -43,6 +43,9 @@ export interface DocumentHighlight {
   /**content associated with highlight (depends of document type) */
   content?: any;
 
+  /**lexographically sortable highlight sequence (ex.: 00010/0345) */
+  sequence: string;
+
   /**image of the highlight */
   image?: HighlightImageInfo | null;
 

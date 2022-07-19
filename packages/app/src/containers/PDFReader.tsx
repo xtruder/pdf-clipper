@@ -52,7 +52,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
 
   let { title, description, outline } = meta;
 
-  const [highlights, dispatchHighligt] = useAtom(
+  const [highlights, dispatchHighlight] = useAtom(
     documentHighlightsAtom(documentId)
   );
 
@@ -60,6 +60,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     id: h.id,
     content: h.content!,
     location: h.location!,
+    sequence: h.sequence,
   }));
 
   const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
@@ -101,14 +102,17 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
   const createHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
     if (!pdfHighlight) return;
 
-    dispatchHighligt({
+    const { id, content, location, sequence } = pdfHighlight;
+
+    dispatchHighlight({
       action: "create",
       value: {
-        id: pdfHighlight.id,
+        id,
         documentType: "PDF",
         documentId,
-        content: pdfHighlight.content,
-        location: pdfHighlight.location,
+        content,
+        location,
+        sequence,
       },
     });
 
@@ -129,7 +133,7 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     // unselect highlight
     setSelectedHighlight(undefined);
 
-    dispatchHighligt({ action: "remove", value: pdfHighlight.id });
+    dispatchHighlight({ action: "remove", value: pdfHighlight.id });
   }, []);
 
   const updateHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
@@ -138,15 +142,18 @@ export const PDFReader: React.FC<PDFReaderProps> = ({
     // update selected highlight, so results immidiately reflect ui
     setSelectedHighlight(pdfHighlight);
 
-    dispatchHighligt({
+    const { id, content, location, sequence } = pdfHighlight;
+
+    dispatchHighlight({
       action: "update",
       value: {
-        id: pdfHighlight.id,
+        id,
         documentType: "PDF",
         documentId,
-        content: pdfHighlight.content,
-        location: pdfHighlight.location,
+        content,
+        location,
         image: null,
+        sequence,
       },
     });
   }, []);

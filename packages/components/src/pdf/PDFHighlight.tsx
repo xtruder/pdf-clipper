@@ -11,6 +11,7 @@ import { AreaHighlight } from "../highlights/AreaHighlight";
 import { TextHighlight } from "../highlights/TextHighlight";
 
 import { PDFHighlight } from "./types";
+import { getHighlightSequence } from "./utils";
 
 export interface PDFHighlightProps {
   pdfViewer: PDFDisplayProxy | null;
@@ -55,19 +56,25 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
     );
     if (!image) return;
 
+    const scaledBoundingRect = viewportRectToScaledPageRect(
+      {
+        ...boundingRect,
+        pageNumber: highlight.location.boundingRect.pageNumber,
+      },
+      viewport
+    );
+
     const newHighlight: PDFHighlight = {
       ...highlight,
       content: { thumbnail: image, color: highlight.content.color },
       location: {
         ...highlight.location,
-        boundingRect: viewportRectToScaledPageRect(
-          {
-            ...boundingRect,
-            pageNumber: highlight.location.boundingRect.pageNumber,
-          },
-          viewport
-        ),
+        boundingRect: scaledBoundingRect,
       },
+      sequence: getHighlightSequence(
+        highlight.location.pageNumber,
+        scaledBoundingRect
+      ),
     };
 
     onHighlightUpdated(newHighlight);
