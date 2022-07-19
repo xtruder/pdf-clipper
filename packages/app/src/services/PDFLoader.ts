@@ -8,13 +8,15 @@ import {
   mergeMap,
   tap,
   BehaviorSubject,
+  iif,
 } from "rxjs";
 import debug from "debug";
 
 import { loadPDF, PDFLoadProgress } from "~/lib/pdfjs";
 
-import { Database } from "../persistence/rxdb";
-import { DocumentDocument } from "../persistence/collections/document";
+import { Database } from "~/persistence/rxdb";
+import { DocumentDocument } from "~/persistence/collections/document";
+import { BlobDownloader } from "~/persistence/types";
 
 const log = debug("services:PDFloader");
 
@@ -38,7 +40,10 @@ export interface PDFLoader {
   getLoadedPDF: (id: string) => Observable<PDFDocumentProxy>;
 }
 
-export function createPDFLoader(db: Database): PDFLoader {
+export function createPDFLoader(
+  db: Database,
+  downloader: BlobDownloader
+): PDFLoader {
   // find PDF documents
   const pdfDocs$ = db.documents
     .find({
@@ -53,6 +58,38 @@ export function createPDFLoader(db: Database): PDFLoader {
       },
     })
     .$.pipe(mergeMap((doc) => doc));
+
+  const createLoadablePDFDocument = (pdfDoc: DocumentDocument) =>
+    of(pdfDoc).pipe(
+      // get source of the document
+      mergeMap(getDocumentSource),
+      map((source) =>
+        iif(
+          () => typeof source === "string",
+          downloader
+            .download(
+              source as string,
+              pdfDoc.file!.size,
+              pdfDoc.file!.mimeType
+            )
+            .pipe(
+              mergeMap(({ blob, progress }) => {
+                if (blob) {
+                  pdfDoc.putFile(blob);
+                  return loadPDFFromBlob(blob);
+                } else return of({ pdf: null, progress });
+              })
+            ),
+          loadPDFFromBlob(source as Blob)
+        ).pipe(
+          logProgress(pdfDoc.id),
+          shareReplay({ bufferSize: 1, refCount: false })
+        )
+      ),
+
+      // add documentId to loader
+      mergeMap((loader) => of({ documentId: pdfDoc.id, loader }))
+    );
 
   const loader$ = pdfDocs$.pipe(
     mergeMap(createLoadablePDFDocument),
@@ -85,9 +122,7 @@ const getDocumentSource = async (pdfDoc: DocumentDocument) => {
 };
 
 /**function that loads PDF and reports loading progress */
-const loadPDFWithProgress = (
-  source: File | string
-): Observable<PDFLoadStatus> => {
+const loadPDFFromBlob = (blob: Blob): Observable<PDFLoadStatus> => {
   const subject$ = new BehaviorSubject<PDFLoadStatus>({
     pdf: null,
     progress: {
@@ -96,7 +131,7 @@ const loadPDFWithProgress = (
     },
   });
 
-  loadPDF(source, (progress) => subject$.next({ pdf: null, progress }))
+  loadPDF(blob, (progress) => subject$.next({ pdf: null, progress }))
     .then((pdf) =>
       subject$.next({
         pdf,
@@ -120,21 +155,4 @@ const logProgress = (docId: string) =>
           docId,
           total || loaded ? (total / loaded) * 100 : 0
         )
-  );
-
-/**operator that creates observable for loading pdfs  */
-const createLoadablePDFDocument = (pdfDoc: DocumentDocument) =>
-  of(pdfDoc).pipe(
-    // get source of the document
-    mergeMap(getDocumentSource),
-    map((source) =>
-      of(source).pipe(
-        mergeMap(loadPDFWithProgress),
-        logProgress(pdfDoc.id),
-        shareReplay({ bufferSize: 1, refCount: false })
-      )
-    ),
-
-    // add documentId to loader
-    mergeMap((loader) => of({ documentId: pdfDoc.id, loader }))
   );
