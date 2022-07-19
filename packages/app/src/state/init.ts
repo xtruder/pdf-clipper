@@ -1,14 +1,13 @@
 import { debug } from "debug";
-import {
-  IPFSHTTPClient,
-  create as createIPFSHttpClient,
-} from "ipfs-http-client";
+import { create as createIPFSHttpClient } from "ipfs-http-client";
+import { IPFSClient } from "~/persistence/ipfs";
 
 import { NativeFS } from "~/persistence/nativefs";
 import { Database, initDB } from "~/persistence/rxdb";
 
 import {
   createIPFSFileUploader,
+  createIPFSHighlightImageUploader,
   createPDFHighlightScreenshotter,
   createPDFLoader,
   createPDFMetaExtractor,
@@ -19,7 +18,7 @@ const log = debug("services");
 
 export let db: Database;
 export let fs: NativeFS;
-export let ipfs: IPFSHTTPClient;
+export let ipfs: IPFSClient;
 export let pdfLoader: PDFLoader;
 
 export async function initPersistence() {
@@ -28,9 +27,11 @@ export async function initPersistence() {
   fs = await NativeFS.usePrivateDirectory();
   db = await initDB(fs);
   pdfLoader = createPDFLoader(db);
-  ipfs = createIPFSHttpClient({
-    url: "https://ipfs.infura.io:5001/api/v0",
-  });
+  ipfs = new IPFSClient(
+    createIPFSHttpClient({
+      url: "https://ipfs.infura.io:5001/api/v0",
+    })
+  );
 }
 
 export function initServices() {
@@ -38,6 +39,7 @@ export function initServices() {
     log("leader elected");
 
     createIPFSFileUploader(db, ipfs).startUploading();
+    createIPFSHighlightImageUploader(db, ipfs).start();
     createPDFHighlightScreenshotter(db, pdfLoader).start();
     createPDFMetaExtractor(db, pdfLoader).start();
 
