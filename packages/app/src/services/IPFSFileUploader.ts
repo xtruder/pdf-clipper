@@ -1,6 +1,5 @@
-import { debug as _debug } from "debug";
+import debug from "debug";
 import {
-  Subject,
   Observable,
   Subscription,
   mergeMap,
@@ -15,17 +14,12 @@ import {
   pipe,
   forkJoin,
 } from "rxjs";
-import { IPFSHTTPClient } from "ipfs-http-client";
 
-import { Database } from "../persistence/rxdb";
-import { DocumentDocument } from "../persistence/collections/document";
+import { Database } from "~/persistence/rxdb";
+import { DocumentDocument } from "~/persistence/collections/document";
+import { IPFSClient } from "~/persistence/ipfs";
 
-const debug = _debug("services:IPFSFileUploader");
-
-interface DocumentUploadProgress {
-  document: DocumentDocument;
-  progress: number;
-}
+const log = debug("services:IPFSFileUploader");
 
 // export function runIPFSDocumentFileDownload(
 //   db: Database,
@@ -104,6 +98,11 @@ interface DocumentUploadProgress {
 //   );
 // }
 
+export interface DocumentUploadProgress {
+  document: DocumentDocument;
+  progress: number;
+}
+
 export interface IPFSFileUploader {
   getUpload: (docId: string) => Observable<DocumentUploadProgress>;
   getFinishedUpload: (docId: string) => Observable<DocumentDocument>;
@@ -112,7 +111,7 @@ export interface IPFSFileUploader {
 
 export function createIPFSFileUploader(
   db: Database,
-  ipfsClient: IPFSHTTPClient
+  client: IPFSClient
 ): IPFSFileUploader {
   const docsToUpload$ = db.documents
     .find({
@@ -128,69 +127,7 @@ export function createIPFSFileUploader(
     })
     .$.pipe(mergeMap((doc) => doc));
 
-  const uploadToIPFS = uploadDocs(uploadDocFileToIPFS(ipfsClient));
-
-  const uploads$ = docsToUpload$.pipe(uploadToIPFS, share());
-  const finishedUploads$ = uploads$.pipe(filterFinishedUploads);
-
-  const getUpload = (docId: string) =>
-    uploads$.pipe(first(({ document: { id } }) => id === docId));
-
-  const getFinishedUpload = (docId: string) =>
-    finishedUploads$.pipe(first(({ id }) => id === docId));
-
-  const startUploading = () => {
-    const finishedUploadsSub = finishedUploads$.subscribe();
-    const uploadsSub = uploads$.subscribe();
-
-    uploadsSub.add(() => finishedUploadsSub.unsubscribe());
-
-    return uploadsSub;
-  };
-
-  return { getUpload, getFinishedUpload, startUploading };
-}
-
-const uploadDocFileToIPFS =
-  (ipfs: IPFSHTTPClient): UploadDocFileFn =>
-  (document, file) => {
-    const subject = new Subject<DocumentUploadProgress>();
-
-    ipfs
-      .add(file, {
-        progress: (bytes) => {
-          const progress = bytes / file.size;
-
-          if (progress < 1)
-            subject.next({ document, progress: bytes / file.size });
-        },
-      })
-      .then(async ({ cid }) => {
-        // add source to document
-        document = await document.atomicPatch({
-          file: {
-            ...document.file!,
-            source: `ipfs://${cid.toV1()}`,
-          },
-        });
-
-        subject.next({ document, progress: 1 });
-        subject.complete();
-
-        debug("upload complete", document.id, cid.toV1().toString());
-      })
-      .catch((err) => subject.error(err));
-
-    return subject.asObservable();
-  };
-
-type UploadDocFileFn = (
-  doc: DocumentDocument,
-  file: File
-) => Observable<DocumentUploadProgress>;
-
-const uploadDocs = (uploadDocFileFn: UploadDocFileFn) =>
-  pipe(
+  const uploadDocs = pipe(
     // upload each document only once
     distinct((document: DocumentDocument) => document.id),
 
@@ -202,18 +139,58 @@ const uploadDocs = (uploadDocFileFn: UploadDocFileFn) =>
       })
     ),
 
-    tap(({ document }) => debug("uploading file", document.id)),
+    tap(({ document }) => log("uploading file", document.id)),
 
     // do the actual upload
-    mergeMap(({ document, file }) => uploadDocFileFn(document, file!)),
+    mergeMap(({ document, file }) => uploadDocFileToIPFS(document, file!)),
 
     tap(({ document, progress }) =>
-      debug("document upload progress", document.id, progress)
+      log("document upload progress", document.id, progress)
     )
   );
 
-const filterFinishedUploads = pipe(
-  filter(({ progress }: DocumentUploadProgress) => progress === 1),
-  map(({ document }) => document!),
-  shareReplay(1)
-);
+  const uploadDocFileToIPFS = (document: DocumentDocument, file: Blob) =>
+    client.upload(file).pipe(
+      mergeMap(async ({ cid, progress }) => {
+        log("document file uploaded", cid);
+
+        // add source to document
+        document = await document.atomicPatch({
+          file: {
+            ...document.file!,
+            source: `ipfs://${cid}`,
+          },
+        });
+
+        return { document, progress };
+      })
+    );
+
+  const filterFinishedUploads = pipe(
+    filter(({ progress }: DocumentUploadProgress) => progress === 1),
+    map(({ document }) => document!),
+    shareReplay(1)
+  );
+
+  const uploads$ = docsToUpload$.pipe(uploadDocs, share());
+  const finishedUploads$ = uploads$.pipe(filterFinishedUploads);
+
+  const getUpload = (docId: string) =>
+    uploads$.pipe(first(({ document: { id } }) => id === docId));
+
+  const getFinishedUpload = (docId: string) =>
+    finishedUploads$.pipe(first(({ id }) => id === docId));
+
+  const startUploading = () => {
+    log("starting ipfs file uploader");
+
+    const finishedUploadsSub = finishedUploads$.subscribe();
+    const uploadsSub = uploads$.subscribe();
+
+    uploadsSub.add(() => finishedUploadsSub.unsubscribe());
+
+    return uploadsSub;
+  };
+
+  return { getUpload, getFinishedUpload, startUploading };
+}
