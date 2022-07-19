@@ -26,12 +26,12 @@ export async function initPersistence() {
 
   fs = await NativeFS.usePrivateDirectory();
   db = await initDB(fs);
-  pdfLoader = createPDFLoader(db);
   ipfs = new IPFSClient(
     createIPFSHttpClient({
       url: "https://ipfs.infura.io:5001/api/v0",
     })
   );
+  pdfLoader = createPDFLoader(db, ipfs);
 }
 
 export function initServices() {

@@ -7,7 +7,7 @@ import { NativeFS } from "../nativefs";
 import { Database } from "../rxdb";
 
 export type DocumentMethods = {
-  putFile<T>(this: RxDocument<Document, T>, file: File): Promise<DocumentFile>;
+  putFile<T>(this: RxDocument<Document, T>, file: Blob): Promise<DocumentFile>;
   getCachedFile(this: RxDocument<Document, any>): Promise<File | null>;
 };
 

@@ -51,16 +51,19 @@ export function createIPFSHighlightImageUploader(
     image: Blob
   ) =>
     client.upload(image).pipe(
-      mergeMap(async ({ cid, progress }) => {
-        log("highlight image uploaded", cid);
+      mergeMap(async ({ source, progress }) => {
+        log("highlight image uploaded", source);
 
-        // add source to document
-        highlight = await highlight.atomicPatch({
-          image: {
-            ...highlight.image!,
-            source: `ipfs://${cid}`,
-          },
-        });
+        // when file is uploaded source is avalible, then update document
+        if (source) {
+          // add source to document
+          highlight = await highlight.atomicPatch({
+            image: {
+              ...highlight.image!,
+              source,
+            },
+          });
+        }
 
         return { highlight, progress };
       })

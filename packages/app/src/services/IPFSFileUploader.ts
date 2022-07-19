@@ -18,6 +18,7 @@ import {
 import { Database } from "~/persistence/rxdb";
 import { DocumentDocument } from "~/persistence/collections/document";
 import { IPFSClient } from "~/persistence/ipfs";
+import { LoadProgress } from "~/persistence/types";
 
 const log = debug("services:IPFSFileUploader");
 
@@ -100,7 +101,7 @@ const log = debug("services:IPFSFileUploader");
 
 export interface DocumentUploadProgress {
   document: DocumentDocument;
-  progress: number;
+  progress: LoadProgress;
 }
 
 export interface IPFSFileUploader {
@@ -151,23 +152,26 @@ export function createIPFSFileUploader(
 
   const uploadDocFileToIPFS = (document: DocumentDocument, file: Blob) =>
     client.upload(file).pipe(
-      mergeMap(async ({ cid, progress }) => {
-        log("document file uploaded", cid);
+      mergeMap(async ({ source, progress }) => {
+        log("document file uploaded", source);
 
-        // add source to document
-        document = await document.atomicPatch({
-          file: {
-            ...document.file!,
-            source: `ipfs://${cid}`,
-          },
-        });
+        // when file is uploaded source is avalible, then update document
+        if (source) {
+          // add source to document
+          document = await document.atomicPatch({
+            file: {
+              ...document.file!,
+              source,
+            },
+          });
+        }
 
         return { document, progress };
       })
     );
 
   const filterFinishedUploads = pipe(
-    filter(({ progress }: DocumentUploadProgress) => progress === 1),
+    filter(({ document }: DocumentUploadProgress) => !!document.file?.source),
     map(({ document }) => document!),
     shareReplay(1)
   );
