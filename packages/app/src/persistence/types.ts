@@ -35,3 +35,8 @@ export interface BlobDownloader {
     mimeType: string
   ): Observable<DownloadStatus>;
 }
+
+export interface BlobURLProvider {
+  /**gets URL that blob can be loaded from */
+  url(source: string): Promise<string>;
+}

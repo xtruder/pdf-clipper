@@ -10,8 +10,6 @@ import { RxDBLeaderElectionPlugin } from "rxdb/plugins/leader-election";
 import { RxDBLocalDocumentsPlugin } from "rxdb/plugins/local-documents";
 import { RxDBDevModePlugin } from "rxdb/plugins/dev-mode";
 
-import { NativeFS } from "./nativefs";
-
 import { CollectionCreator } from "./collections/types";
 import accountCollectionCreator, {
   AccountCollection,
@@ -31,6 +29,9 @@ import documentHighlightCollectionCreator, {
 import sessionCollectionCreator, {
   SessionCollection,
 } from "./collections/session";
+import blobInfoCollectionCreator, {
+  BlobInfoCollection,
+} from "./collections/blobInfo";
 
 export type DatabaseCollections = {
   accounts: AccountCollection;
@@ -39,6 +40,7 @@ export type DatabaseCollections = {
   documentmembers: DocumentMemberCollection;
   documenthighlights: DocumentHighlightCollection;
   sessions: SessionCollection;
+  blobinfos: BlobInfoCollection;
 };
 
 export type Database = RxDatabase<DatabaseCollections>;
@@ -58,7 +60,7 @@ addRxPlugin(RxDBLocalDocumentsPlugin);
 // enable dev mode
 addRxPlugin(RxDBDevModePlugin);
 
-export async function initDB(fs: NativeFS): Promise<Database> {
+export async function initDB(): Promise<Database> {
   const database = await createRxDatabase<DatabaseCollections>({
     name: "db",
     storage: getRxStorageDexie(),
@@ -68,10 +70,11 @@ export async function initDB(fs: NativeFS): Promise<Database> {
   const collectionCreators: CollectionCreator<any, any>[] = [
     accountCollectionCreator(),
     accountInfoCollectionCreator(),
-    documentCollectionCreator(fs),
+    documentCollectionCreator(),
     documentMemberCollectionCreator(),
-    documentHighlightCollectionCreator(fs),
+    documentHighlightCollectionCreator(),
     sessionCollectionCreator(),
+    blobInfoCollectionCreator(),
   ];
 
   await database.addCollections(

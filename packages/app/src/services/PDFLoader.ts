@@ -8,7 +8,6 @@ import {
   mergeMap,
   tap,
   BehaviorSubject,
-  iif,
 } from "rxjs";
 import debug from "debug";
 
@@ -16,13 +15,13 @@ import { loadPDF, PDFLoadProgress } from "~/lib/pdfjs";
 
 import { Database } from "~/persistence/rxdb";
 import { DocumentDocument } from "~/persistence/collections/document";
-import { BlobDownloader } from "~/persistence/types";
+import { BlobStore } from "~/persistence/blobstore";
 
 const log = debug("services:PDFloader");
 
 export interface PDFLoadStatus {
   pdf: PDFDocumentProxy | null;
-  progress: PDFLoadProgress;
+  progress?: PDFLoadProgress;
 }
 
 export interface PDFDocumentLoadable {
@@ -35,15 +34,13 @@ export interface PDFLoader {
   loader$: Observable<PDFDocumentLoadable>;
 
   /**gets pdf observable with loading status */
-  getPDF: (id: string) => Observable<PDFLoadStatus>;
+  getPDF: (documentId: string) => Observable<PDFLoadStatus>;
 
-  getLoadedPDF: (id: string) => Observable<PDFDocumentProxy>;
+  /**gets pdf observable which resolves when pdf has been already loaded */
+  getLoadedPDF: (documentId: string) => Observable<PDFDocumentProxy>;
 }
 
-export function createPDFLoader(
-  db: Database,
-  downloader: BlobDownloader
-): PDFLoader {
+export function createPDFLoader(db: Database, store: BlobStore): PDFLoader {
   // find PDF documents
   const pdfDocs$ = db.documents
     .find({
@@ -53,7 +50,7 @@ export function createPDFLoader(
           { type: { $eq: "PDF" } },
 
           // and have file attached
-          { file: { $exists: true } },
+          { fileHash: { $exists: true } },
         ],
       },
     })
@@ -61,32 +58,16 @@ export function createPDFLoader(
 
   const createLoadablePDFDocument = (pdfDoc: DocumentDocument) =>
     of(pdfDoc).pipe(
-      // get source of the document
-      mergeMap(getDocumentSource),
-      map((source) =>
-        iif(
-          () => typeof source === "string",
-          downloader
-            .download(
-              source as string,
-              pdfDoc.file!.size,
-              pdfDoc.file!.mimeType
-            )
-            .pipe(
-              mergeMap(({ blob, progress }) => {
-                if (blob) {
-                  pdfDoc.putFile(blob);
-                  return loadPDFFromBlob(blob);
-                } else return of({ pdf: null, progress });
-              })
-            ),
-          loadPDFFromBlob(source as Blob)
-        ).pipe(
+      // load file from hash
+      map((pdfDoc) =>
+        store.load$(pdfDoc.fileHash!).pipe(
+          mergeMap(({ blob, progress }) =>
+            blob ? loadPDFFromBlob(blob) : of({ pdf: null, progress })
+          ),
           logProgress(pdfDoc.id),
           shareReplay({ bufferSize: 1, refCount: false })
         )
       ),
-
       // add documentId to loader
       mergeMap((loader) => of({ documentId: pdfDoc.id, loader }))
     );
@@ -113,21 +94,13 @@ export function createPDFLoader(
   return { loader$, getPDF, getLoadedPDF };
 }
 
-const getDocumentSource = async (pdfDoc: DocumentDocument) => {
-  const file = await pdfDoc.getCachedFile();
-
-  const source = file ? file : pdfDoc.file!.source!;
-
-  return source;
-};
-
 /**function that loads PDF and reports loading progress */
 const loadPDFFromBlob = (blob: Blob): Observable<PDFLoadStatus> => {
   const subject$ = new BehaviorSubject<PDFLoadStatus>({
     pdf: null,
     progress: {
       loaded: 0,
-      total: 0,
+      total: blob.size,
     },
   });
 
@@ -136,8 +109,8 @@ const loadPDFFromBlob = (blob: Blob): Observable<PDFLoadStatus> => {
       subject$.next({
         pdf,
         progress: {
-          total: subject$.value.progress.total,
-          loaded: subject$.value.progress.total,
+          total: blob.size,
+          loaded: blob.size,
         },
       })
     )
@@ -147,12 +120,16 @@ const loadPDFFromBlob = (blob: Blob): Observable<PDFLoadStatus> => {
 };
 
 const logProgress = (docId: string) =>
-  tap(({ progress: { loaded, total }, pdf }: PDFLoadStatus) =>
-    !!pdf
-      ? log("PDF document loaded %s", docId)
-      : log(
-          "loading PDF document %s: %s",
-          docId,
-          total || loaded ? (total / loaded) * 100 : 0
-        )
+  tap(
+    ({
+      progress: { loaded, total } = { loaded: 0, total: 0 },
+      pdf,
+    }: PDFLoadStatus) =>
+      !!pdf
+        ? log("PDF document loaded %s", docId)
+        : log(
+            "loading PDF document %s: %s",
+            docId,
+            total || loaded ? (total / loaded) * 100 : 0
+          )
   );

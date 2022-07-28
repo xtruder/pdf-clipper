@@ -4,11 +4,16 @@ import { BehaviorSubject, defer, Observable } from "rxjs";
 import {
   BlobDownloader,
   BlobUploader,
+  BlobURLProvider,
   DownloadStatus,
   UploadStatus,
 } from "./types";
 
-export class IPFSClient implements BlobUploader, BlobDownloader {
+export class IPFSClient
+  implements BlobUploader, BlobDownloader, BlobURLProvider
+{
+  private gatewayURL = "https://cloudflare-ipfs.com/ipfs/$1";
+
   constructor(private client: IPFSHTTPClient) {}
 
   /**uploads blob to IPFS and reports upload progress */
@@ -56,7 +61,7 @@ export class IPFSClient implements BlobUploader, BlobDownloader {
 
       let chunks: Uint8Array[] = [];
       let loaded: number = 0;
-      for await (const chunk of ipfs.get(cid)) {
+      for await (const chunk of ipfs.cat(cid, {})) {
         chunks.push(chunk);
         loaded += chunk.byteLength;
 
@@ -69,5 +74,11 @@ export class IPFSClient implements BlobUploader, BlobDownloader {
 
       yield { source, progress: { loaded: size, total: size }, blob };
     });
+  }
+
+  async url(source: string): Promise<string> {
+    const cidStr = new URL(source).host;
+
+    return this.gatewayURL.replace("$1", cidStr);
   }
 }

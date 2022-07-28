@@ -1,24 +1,18 @@
 import { RxJsonSchema, RxDocument, RxCollection } from "rxdb";
 
-import { sha256 } from "~/lib/crypto";
-import { DocumentHighlight, HighlightImageInfo } from "~/types";
+import { DocumentHighlight } from "~/types";
 
-import { NativeFS } from "../nativefs";
 import { Database } from "../rxdb";
 import { DocumentDocument } from "./document";
 
 import { CollectionCreator } from "./types";
 
 export type DocumentHighlightMethods = {
-  putImage<T>(
-    this: RxDocument<DocumentHighlight, T>,
-    image: Blob
-  ): Promise<HighlightImageInfo>;
-  getCachedImage(this: RxDocument<Document, any>): Promise<Blob | null>;
   populateDocument<T>(
     this: RxDocument<DocumentHighlight, T>
   ): Promise<DocumentDocument>;
 };
+
 export type DocumentHighlightDocument = RxDocument<
   DocumentHighlight,
   DocumentHighlightMethods
@@ -74,23 +68,9 @@ export const schema: RxJsonSchema<DocumentHighlight> = {
     sequence: {
       type: "string",
     },
-    image: {
-      type: ["object", "null"],
-      properties: {
-        hash: {
-          type: "string",
-          minLength: 64,
-          maxLength: 64,
-        },
-        mimeType: {
-          type: "string",
-        },
-        source: {
-          type: "string",
-          format: "uri",
-        },
-      },
-      required: ["hash", "mimeType"],
+    imageHash: {
+      type: ["string", "null"],
+      ref: "blobinfos",
     },
     local: {
       type: "boolean",
@@ -100,43 +80,13 @@ export const schema: RxJsonSchema<DocumentHighlight> = {
   required: ["id", "documentId"],
 };
 
-export default (
-  fs: NativeFS
-): CollectionCreator<DocumentHighlight, DocumentHighlightMethods> => ({
+export default (): CollectionCreator<
+  DocumentHighlight,
+  DocumentHighlightMethods
+> => ({
   name: "documenthighlights",
   schema,
   methods: {
-    /**saves a image to local file system and adds image information to document */
-    async putImage<T>(
-      this: RxDocument<DocumentHighlight, T>,
-      image: Blob
-    ): Promise<HighlightImageInfo> {
-      const hash = await sha256(await image.arrayBuffer());
-
-      if (this.image?.hash === hash) return this.image;
-
-      await fs.saveFile(hash, image);
-
-      const imageInfo: HighlightImageInfo = {
-        hash,
-        mimeType: image.type,
-      };
-
-      await this.atomicPatch({ image: imageInfo });
-
-      return imageInfo;
-    },
-
-    /**gets cached highlight image as file */
-    async getCachedImage<T>(
-      this: RxDocument<DocumentHighlight, T>
-    ): Promise<Blob | null> {
-      if (!this.image?.hash) return null;
-      if (!(await fs.fileExists(this.image.hash))) return null;
-
-      return fs.getFile(this.image.hash);
-    },
-
     async populateDocument<T>(
       this: RxDocument<DocumentHighlight, T>
     ): Promise<DocumentDocument> {

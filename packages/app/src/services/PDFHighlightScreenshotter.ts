@@ -11,12 +11,14 @@ import { getPageCanvasArea } from "~/lib/pdfjs";
 import { canvasToPNGBlob } from "~/lib/dom";
 
 import { DocumentHighlightDocument } from "~/persistence/collections/documentHighlight";
+import { BlobStore } from "~/persistence/blobstore";
 
 const log = debug("services:PDFHighlightScreenshotter");
 
 export function createPDFHighlightScreenshotter(
   db: Database,
-  pdfLoader: PDFLoader
+  pdfLoader: PDFLoader,
+  blobStore: BlobStore
 ) {
   const docHighlights$ = db.documenthighlights
     .find({
@@ -28,10 +30,10 @@ export function createPDFHighlightScreenshotter(
           {
             $or: [
               // that don't have image associated
-              { image: { $exists: false } },
+              { imageHash: { $exists: false } },
 
               // or image is null, which means it was reset
-              { image: { $eq: null } },
+              { imageHash: { $eq: null } },
             ],
           },
         ],
@@ -74,7 +76,11 @@ export function createPDFHighlightScreenshotter(
     );
 
     // save screehoted image
-    await highlight.putImage(screenshot);
+    const { hash } = await blobStore.store("highlightimg", screenshot);
+
+    log("highlight screenshot saved %s with hash %s", highlight.id, hash);
+
+    await highlight.atomicPatch({ imageHash: hash });
 
     return { highlight: pdfHighlight, screenshot };
   };

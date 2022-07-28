@@ -1,15 +1,9 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
-import { sha256 } from "~/lib/crypto";
 
 import { CollectionCreator } from "./types";
-import { Document, DocumentFile } from "~/types";
-import { NativeFS } from "../nativefs";
-import { Database } from "../rxdb";
+import { Document } from "~/types";
 
-export type DocumentMethods = {
-  putFile<T>(this: RxDocument<Document, T>, file: Blob): Promise<DocumentFile>;
-  getCachedFile(this: RxDocument<Document, any>): Promise<File | null>;
-};
+export type DocumentMethods = {};
 
 export type DocumentDocument = RxDocument<Document, DocumentMethods>;
 export type DocumentCollection = RxCollection<Document, DocumentMethods>;
@@ -46,6 +40,10 @@ export const schema: RxJsonSchema<Document> = {
       type: "string",
       enum: ["PDF"],
     },
+    fileHash: {
+      type: "string",
+      ref: "blobinfos",
+    },
     meta: {
       type: "object",
     },
@@ -57,34 +55,6 @@ export const schema: RxJsonSchema<Document> = {
         format: "uuid",
       },
     },
-    file: {
-      type: "object",
-      properties: {
-        kind: {
-          type: "string",
-          enum: ["main"],
-        },
-        hash: {
-          type: "string",
-          maxLength: 64,
-        },
-        size: {
-          type: "number",
-        },
-        mimeType: {
-          type: "string",
-        },
-        source: {
-          type: "string",
-          format: "uri",
-        },
-      },
-      required: ["hash", "mimeType", "size"],
-    },
-    fileHash: {
-      type: "string",
-      ref: "fileInfo",
-    },
     local: {
       type: "boolean",
       default: false,
@@ -93,45 +63,10 @@ export const schema: RxJsonSchema<Document> = {
   required: ["id"],
 };
 
-export default (
-  fs: NativeFS
-): CollectionCreator<Document, DocumentMethods> => ({
+export default (): CollectionCreator<Document, DocumentMethods> => ({
   name: "documents",
   schema,
-  methods: {
-    /**saves a file to local file system and adds file information to document */
-    async putFile<T>(
-      this: RxDocument<Document, T>,
-      file: File
-    ): Promise<DocumentFile> {
-      const hash = await sha256(await file.arrayBuffer());
-
-      if (this.file?.hash === hash) return this.file;
-
-      await fs.saveFile(hash, file);
-
-      const fileInfo: DocumentFile = {
-        hash,
-        mimeType: file.type,
-        size: file.size,
-      };
-
-      await this.atomicPatch({ file: fileInfo });
-
-      this.collection._docCache;
-
-      return fileInfo;
-    },
-
-    /**gets cached file */
-    async getCachedFile(this: RxDocument<Document, any>): Promise<File | null> {
-      if (!this.file?.hash) return null;
-      if (!(await fs.fileExists(this.file.hash))) return null;
-
-      return fs.getFile(this.file.hash);
-    },
-  },
-  registerHooks(collection: DocumentCollection, _db: Database) {
+  registerHooks(collection: DocumentCollection) {
     collection.preInsert(
       (data) => (data.createdAt = new Date().toISOString()),
       true

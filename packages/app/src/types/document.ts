@@ -40,21 +40,6 @@ export interface DocumentMeta {
   outline?: DocumentOutline;
 }
 
-/**file associated with document */
-export interface DocumentFile {
-  /**sha256 hash of file */
-  hash: string;
-
-  /**mime type associated with file */
-  mimeType: string;
-
-  /**size of the file */
-  size: number;
-
-  /**file source */
-  source?: string;
-}
-
 export interface Document {
   /**unique id of document */
   id: string;
@@ -71,14 +56,11 @@ export interface Document {
   /**document deletion time */
   deletedAt?: string;
 
-  /**file associated with document */
-  file?: DocumentFile;
-
-  /**hash of file assocaited with document */
-  fileHash?: string;
-
   /**metadata associated with document */
   meta: DocumentMeta;
+
+  /**hash of the file associated with document */
+  fileHash?: string;
 
   /**list of document member ids */
   members?: string[];
