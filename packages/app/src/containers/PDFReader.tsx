@@ -152,7 +152,7 @@ export const PDFReader: FC<PDFReaderProps> = ({
         documentId,
         content,
         location,
-        image: null,
+        imageHash: null,
         sequence,
       },
     });

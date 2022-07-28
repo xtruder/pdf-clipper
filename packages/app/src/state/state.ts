@@ -1,8 +1,18 @@
 import { v4 as uuid } from "uuid";
+import {
+  filter,
+  first,
+  firstValueFrom,
+  map,
+  mergeMap,
+  shareReplay,
+  from,
+} from "rxjs";
+
 import { atom } from "jotai";
 import { atomFamily, atomWithObservable } from "jotai/utils";
 
-import { db, pdfLoader } from "./init";
+import { blobStore, db, pdfLoader } from "./init";
 import { syncableRxDocumentAtom, syncableRxDocumentsAtom } from "./utils";
 
 import {
@@ -12,20 +22,6 @@ import {
   DocumentHighlight,
   DocumentMember,
 } from "~/types";
-import {
-  filter,
-  find,
-  first,
-  firstValueFrom,
-  map,
-  mergeMap,
-  iif,
-  defer,
-  of,
-  shareReplay,
-} from "rxjs";
-import { blobToDataURL } from "~/lib/dom";
-
 /**atom that subscribes to current account */
 export const currentAccountAtom = syncableRxDocumentAtom<Account>(
   () =>
@@ -54,22 +50,29 @@ export const documentAtom = atomFamily((documentId: string) =>
 );
 
 const documentFileAtomData = atomFamily((documentId: string) =>
-  atom(async () => {
-    const document = await db.documents
-      .findOne({
-        selector: {
-          id: documentId,
-        },
-      })
-      .$.pipe(first((v) => !!v))
-      .toPromise();
+  atom<Promise<Blob | null>>(async () => {
+    const document = await firstValueFrom(
+      db.documents
+        .findOne({
+          selector: {
+            id: documentId,
+            source: { $exists: true },
+          },
+        })
+        .$.pipe(
+          filter((v) => !!v),
+          map((v) => v!)
+        )
+    );
 
-    return document!.getCachedFile();
+    if (!document.fileHash) return null;
+
+    return blobStore.load(document.fileHash);
   })
 );
 
 export const documentFileAtom = atomFamily((documentId: string) =>
-  atom<File | null, File>(
+  atom<Blob | null, Blob>(
     (get) => get(documentFileAtomData(documentId)),
     async (_get, _set, file) => {
       const document = await firstValueFrom(
@@ -82,22 +85,23 @@ export const documentFileAtom = atomFamily((documentId: string) =>
           .$.pipe(first((v) => !!v))
       );
 
-      await document!.putFile(file);
+      const { hash } = await blobStore.store("docfile", file);
+      await document?.atomicPatch({ fileHash: hash });
     }
   )
 );
 
-const documentHighlightImageAtomData = atomFamily(
-  ([documentId, highlightId]: [string, string]) =>
-    atomWithObservable(() =>
-      db.documenthighlights
-        .findOne({ selector: { documentId, highlightId } })
-        .$.pipe(
-          find((h) => !!h),
-          map((h) => h!.getCachedImage())
-        )
-    )
-);
+// const documentHighlightImageAtomData = atomFamily(
+//   ([documentId, highlightId]: [string, string]) =>
+//     atomWithObservable(() =>
+//       db.documenthighlights
+//         .findOne({ selector: { documentId, highlightId } })
+//         .$.pipe(
+//           find((h) => !!h),
+//           map((h) => h!.getCachedImage())
+//         )
+//     )
+// );
 
 export const documentsAtom = syncableRxDocumentsAtom<Document>(() =>
   db.documents.find()
@@ -131,22 +135,28 @@ export const documentHighlightAtom = atomFamily((highlightId: string) =>
 );
 
 export const documentHighlightImageAtom = atomFamily((highlightId: string) =>
-  atomWithObservable(() =>
-    db.documenthighlights.findOne({ selector: { id: highlightId } }).$.pipe(
-      mergeMap((doc) =>
-        iif(
-          () => !!doc?.image,
-          defer(async () => {
-            const imageBlob = await doc!.getCachedImage();
-            if (!imageBlob) return null;
+  atomWithObservable(
+    () => {
+      const docHighlight$ = db.documenthighlights
+        .findOne({
+          selector: {
+            $and: [
+              { id: highlightId },
+              { imageHash: { $exists: true, $ne: null } },
+            ],
+          },
+        })
+        .$.pipe(
+          filter((doc) => !!doc),
+          map((doc) => doc!)
+        );
 
-            return await blobToDataURL(imageBlob);
-          }),
-          of(null)
-        )
-      ),
-      shareReplay({ refCount: true, bufferSize: 1 })
-    )
+      return docHighlight$.pipe(
+        mergeMap((doc) => from(blobStore.loadAsDataURL(doc.imageHash!))),
+        shareReplay({ refCount: true, bufferSize: 1 })
+      );
+    },
+    { initialValue: null }
   )
 );
 

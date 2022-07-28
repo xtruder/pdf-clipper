@@ -7,17 +7,6 @@ export enum HighlightColor {
   BLUE = "blue",
 }
 
-export interface HighlightImageInfo {
-  /**sha256 hash of the image */
-  hash: string;
-
-  /**image source URL */
-  source?: string;
-
-  /**image mime type */
-  mimeType: string;
-}
-
 export interface DocumentHighlight {
   /**unique document highlight id */
   id: string;
@@ -46,11 +35,11 @@ export interface DocumentHighlight {
   /**lexographically sortable highlight sequence (ex.: 00010/0345) */
   sequence: string;
 
-  /**image of the highlight */
-  image?: HighlightImageInfo | null;
-
   /**user who created the highlight */
   createdBy?: string;
+
+  /**hash of the image of the highlight */
+  imageHash?: string | null;
 
   /**whether highlight is local and wont be synced */
   local?: boolean;

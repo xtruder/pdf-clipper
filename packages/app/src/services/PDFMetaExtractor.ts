@@ -21,7 +21,7 @@ export function createPDFMetaExtractor(db: Database, pdfLoader: PDFLoader) {
           { type: { $eq: "PDF" } },
 
           // that have file associated
-          { file: { $exists: true } },
+          { fileHash: { $exists: true } },
 
           // and that don't have meta extracted yet
           { "meta.pageCount": { $exists: false } },
