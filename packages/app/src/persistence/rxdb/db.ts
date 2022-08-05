@@ -9,10 +9,15 @@ import { RxDBLeaderElectionPlugin } from "rxdb/plugins/leader-election";
 import { RxDBLocalDocumentsPlugin } from "rxdb/plugins/local-documents";
 import { RxDBDevModePlugin } from "rxdb/plugins/dev-mode";
 
+import ReconnectingWebSocket from "reconnecting-websocket";
+import { GraphQLWebSocketClient } from "graphql-request";
+import { GRAPHQL_TRANSPORT_WS_PROTOCOL } from "graphql-ws";
+
 import collectionCreators, {
   Database,
   DatabaseCollections,
 } from "./collections";
+import { replicateRxCollection } from "./graphql-replication";
 
 // validate data
 addRxPlugin(RxDBValidatePlugin);
@@ -30,6 +35,15 @@ addRxPlugin(RxDBLocalDocumentsPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
 export async function initDB(): Promise<Database> {
+  const socket = new ReconnectingWebSocket(
+    "ws://localhost:1111/graphql",
+    GRAPHQL_TRANSPORT_WS_PROTOCOL
+  );
+  const client: GraphQLWebSocketClient = new GraphQLWebSocketClient(
+    socket as WebSocket,
+    {}
+  );
+
   const storage = getRxStorageDexie();
 
   const database = await createRxDatabase<DatabaseCollections>({
@@ -52,6 +66,14 @@ export async function initDB(): Promise<Database> {
       c.initCollection(collection, database);
     }
   }
+
+  replicateRxCollection(collections.accounts, client, storage);
+  replicateRxCollection(collections.accountinfos, client, storage);
+  replicateRxCollection(collections.documents, client, storage);
+  replicateRxCollection(collections.documenthighlights, client, storage);
+  replicateRxCollection(collections.documentmembers, client, storage);
+  replicateRxCollection(collections.blobinfos, client, storage);
+  replicateRxCollection(collections.sessions, client, storage);
 
   // setup debug logging on collections
   for (const [, c] of Object.entries(collections)) {
