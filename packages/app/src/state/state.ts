@@ -22,6 +22,7 @@ import {
   DocumentHighlight,
   DocumentMember,
 } from "~/types";
+
 /**atom that subscribes to current account */
 export const currentAccountAtom = syncableRxDocumentAtom<Account>(
   () =>

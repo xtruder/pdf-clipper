@@ -23,11 +23,7 @@ const PDFReaderPage: FC = () => {
     <Suspense
       fallback={
         <TopbarProgressIndicator
-          progress={
-            progress.total && progress.loaded
-              ? progress.loaded / progress.total
-              : 0
-          }
+          progress={progress ? progress.loaded / progress.total : 0}
         />
       }
     >

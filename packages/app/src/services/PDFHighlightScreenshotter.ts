@@ -10,7 +10,7 @@ import { scaledRectToViewportRect } from "~/lib/pdf";
 import { getPageCanvasArea } from "~/lib/pdfjs";
 import { canvasToPNGBlob } from "~/lib/dom";
 
-import { DocumentHighlightDocument } from "~/persistence/collections/documentHighlight";
+import { DocumentHighlightDocument } from "~/persistence/rxdb";
 import { BlobStore } from "~/persistence/blobstore";
 
 const log = debug("services:PDFHighlightScreenshotter");

@@ -1,18 +1,16 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
+
 import { BlobInfo } from "~/types";
-import { CollectionCreator } from "./types";
 
-export type BlobInfoMethods = {};
-
-export type BlobInfoDocument = RxDocument<BlobInfo, BlobInfoMethods>;
-export type BlobInfoCollection = RxCollection<BlobInfo, BlobInfoMethods>;
+export type BlobInfoDocument = RxDocument<BlobInfo>;
+export type BlobInfoCollection = RxCollection<BlobInfo>;
 
 export const schema: RxJsonSchema<BlobInfo> = {
-  title: "blobinfo schema",
+  title: "BlobInfo",
   description: "schema for blobinfos collection",
+  type: "object",
   version: 0,
   primaryKey: "hash",
-  type: "object",
   properties: {
     hash: {
       type: "string",
@@ -52,18 +50,14 @@ export const schema: RxJsonSchema<BlobInfo> = {
   required: ["hash", "type", "mimeType", "size"],
 };
 
-export default (): CollectionCreator<BlobInfo> => ({
-  name: "blobinfos",
-  schema,
-  registerHooks(collection: BlobInfoCollection) {
-    collection.preInsert(
-      (data) => (data.createdAt = new Date().toISOString()),
-      true
-    );
+export function initCollection(collection: BlobInfoCollection) {
+  collection.preInsert(
+    (data) => (data.createdAt = new Date().toISOString()),
+    true
+  );
 
-    collection.preSave(
-      (data) => (data.updatedAt = new Date().toISOString()),
-      true
-    );
-  },
-});
+  collection.preSave(
+    (data) => (data.updatedAt = new Date().toISOString()),
+    true
+  );
+}

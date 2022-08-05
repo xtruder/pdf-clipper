@@ -1,17 +1,16 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
 
 import { Account } from "~/types";
-import { CollectionCreator } from "./types";
 
 export type AccountDocument = RxDocument<Account>;
 export type AccountCollection = RxCollection<Account>;
 
 export const schema: RxJsonSchema<Account> = {
-  title: "account schema",
+  title: "Account",
   description: "schema for account",
+  type: "object",
   version: 0,
   primaryKey: "id",
-  type: "object",
   properties: {
     id: {
       type: "string",
@@ -36,18 +35,14 @@ export const schema: RxJsonSchema<Account> = {
   required: ["id"],
 };
 
-export default (): CollectionCreator<Account> => ({
-  name: "accounts",
-  schema,
-  registerHooks(collection: AccountCollection) {
-    collection.preInsert(
-      (data) => (data.createdAt = new Date().toISOString()),
-      true
-    );
+export function initCollection(collection: AccountCollection) {
+  collection.preInsert(
+    (data) => (data.createdAt = new Date().toISOString()),
+    true
+  );
 
-    collection.preSave(
-      (data) => (data.updatedAt = new Date().toISOString()),
-      true
-    );
-  },
-});
+  collection.preSave(
+    (data) => (data.updatedAt = new Date().toISOString()),
+    true
+  );
+}

@@ -1,19 +1,16 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
 
-import { CollectionCreator } from "./types";
 import { Document } from "~/types";
 
-export type DocumentMethods = {};
-
-export type DocumentDocument = RxDocument<Document, DocumentMethods>;
-export type DocumentCollection = RxCollection<Document, DocumentMethods>;
+export type DocumentDocument = RxDocument<Document>;
+export type DocumentCollection = RxCollection<Document>;
 
 export const schema: RxJsonSchema<Document> = {
-  title: "document schema",
+  title: "Document",
   description: "schema holding documents",
+  type: "object",
   version: 0,
   primaryKey: "id",
-  type: "object",
   properties: {
     id: {
       type: "string",
@@ -46,6 +43,7 @@ export const schema: RxJsonSchema<Document> = {
     },
     meta: {
       type: "object",
+      default: {},
     },
     members: {
       type: "array",
@@ -63,28 +61,19 @@ export const schema: RxJsonSchema<Document> = {
   required: ["id"],
 };
 
-export default (): CollectionCreator<Document, DocumentMethods> => ({
-  name: "documents",
-  schema,
-  registerHooks(collection: DocumentCollection) {
-    collection.preInsert(
-      (data) => (data.createdAt = new Date().toISOString()),
-      true
-    );
+export function initCollection(collection: DocumentCollection) {
+  collection.preInsert(
+    (data) => (data.createdAt = new Date().toISOString()),
+    true
+  );
 
-    collection.preSave(
-      (data) => (data.updatedAt = new Date().toISOString()),
-      true
-    );
+  collection.preSave(
+    (data) => (data.updatedAt = new Date().toISOString()),
+    true
+  );
 
-    collection.preRemove(
-      (data) => (data.deletedAt = new Date().toISOString()),
-      true
-    );
-  },
-});
-
-// export type DocumentLocalDocument = RxLocalDocument<
-//   RxCollection<Document>,
-//   DocumentLocalData
-// >;
+  collection.preRemove(
+    (data) => (data.deletedAt = new Date().toISOString()),
+    true
+  );
+}

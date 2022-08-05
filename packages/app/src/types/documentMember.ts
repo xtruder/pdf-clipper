@@ -15,6 +15,9 @@ export interface DocumentMember {
   /**time when membership request was created */
   createdAt?: string;
 
+  /**last update time of document membership */
+  updatedAt?: string;
+
   /**time when membership has been deleted */
   deletedAt?: string;
 

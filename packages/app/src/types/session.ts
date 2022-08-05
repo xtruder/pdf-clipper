@@ -8,6 +8,9 @@ export interface Session {
   /**session creation time */
   createdAt?: string;
 
+  /**session last update time */
+  updatedAt?: string;
+
   /**list of document ids to sync */
   syncDocuments: string[];
 }

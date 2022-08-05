@@ -4,9 +4,8 @@ import debug from "debug";
 import { getPageCanvasArea, getDocumentOutline } from "~/lib/pdfjs";
 
 import { PDFLoader } from "./PDFLoader";
-import { Database } from "../persistence/rxdb";
 
-import { DocumentDocument } from "../persistence/collections/document";
+import { Database, DocumentDocument } from "~/persistence/rxdb";
 import { canvasToPNGDataURI } from "~/lib/dom";
 import { PDFDocumentProxy } from "pdfjs-dist";
 

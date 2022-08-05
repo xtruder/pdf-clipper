@@ -13,8 +13,7 @@ import debug from "debug";
 
 import { loadPDF, PDFLoadProgress } from "~/lib/pdfjs";
 
-import { Database } from "~/persistence/rxdb";
-import { DocumentDocument } from "~/persistence/collections/document";
+import { Database, DocumentDocument } from "~/persistence/rxdb";
 import { BlobStore } from "~/persistence/blobstore";
 
 const log = debug("services:PDFloader");

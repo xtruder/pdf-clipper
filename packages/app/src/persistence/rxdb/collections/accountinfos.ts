@@ -1,17 +1,16 @@
-import { RxJsonSchema, RxDocument, RxCollection } from "rxdb";
+import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
 
 import { AccountInfo } from "~/types";
-import { CollectionCreator } from "./types";
 
 export type AccountInfoDocument = RxDocument<AccountInfo>;
 export type AccountInfoCollection = RxCollection<AccountInfo>;
 
 export const schema: RxJsonSchema<AccountInfo> = {
-  title: "account infoschema",
+  title: "AccountInfo",
   description: "schema for account",
+  type: "object",
   version: 0,
   primaryKey: "id",
-  type: "object",
   properties: {
     id: {
       type: "string",
@@ -24,8 +23,3 @@ export const schema: RxJsonSchema<AccountInfo> = {
   },
   required: ["id"],
 };
-
-export default (): CollectionCreator<AccountInfo> => ({
-  name: "accountinfos",
-  schema,
-});

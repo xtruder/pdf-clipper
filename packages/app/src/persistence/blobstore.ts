@@ -1,3 +1,4 @@
+import debug from "debug";
 import {
   from,
   Observable,
@@ -9,7 +10,6 @@ import {
   distinct,
   forkJoin,
   first,
-  Subscription,
   firstValueFrom,
 } from "rxjs";
 
@@ -17,8 +17,7 @@ import { sha256 } from "~/lib/crypto";
 import { blobToDataURL } from "~/lib/dom";
 
 import { BlobInfo, BlobType } from "~/types";
-import { BlobInfoDocument } from "./collections/blobInfo";
-import { Database } from "./rxdb";
+import { Database, BlobInfoDocument } from "./rxdb";
 
 /**BlobCache defines interface for blob caching */
 export interface BlobCache {
@@ -94,6 +93,8 @@ export interface StoreOptions {
 }
 
 export class BlobStore {
+  private log = debug("blobstore");
+
   private loaders: Record<string, BlobLoader> = {};
 
   private uploads: Observable<{
@@ -103,7 +104,7 @@ export class BlobStore {
 
   private finishedUploads: Observable<BlobInfoDocument>;
 
-  private subscription: Subscription | undefined;
+  //  private subscription: Subscription | undefined;
 
   constructor(private db: Database, private blobCache: BlobCache) {
     this.uploads = this.createUploader();
@@ -141,6 +142,11 @@ export class BlobStore {
         from(this.blobCache.load(hash, blobInfo.mimeType)).pipe(
           map((blob) =>
             blob ? blob.slice(0, blob.size, blobInfo.mimeType) : null
+          ),
+          tap(
+            (blob) =>
+              blob &&
+              this.log("blob loaded from cache: %s/%s", blobInfo.type, hash)
           ),
           mergeMap((blob) =>
             blob ? of({ blob, info: blobInfo }) : this.downloadBlob(blobInfo)
@@ -183,7 +189,7 @@ export class BlobStore {
   }
 
   startUploader() {
-    this.subscription = this.uploads.subscribe();
+    this.uploads.subscribe();
   }
 
   private downloadBlob(blobInfo: BlobInfo): Observable<BlobLoadStatus> {
@@ -193,6 +199,8 @@ export class BlobStore {
         info: blobInfo,
       });
     }
+
+    this.log("downloading blob %s of type %s", blobInfo.hash, blobInfo.type);
 
     const loader = this.loaders[blobInfo.type];
     if (!loader) throw new Error("invalid loader type: " + blobInfo.type);
@@ -205,6 +213,12 @@ export class BlobStore {
           info: blobInfo,
           progress,
         })),
+
+        tap(({ blob, progress: { loaded, total } }) =>
+          blob
+            ? this.log("blob downloaded %s", blobInfo.hash)
+            : this.log("downloading blog %s: %d", blobInfo.hash, loaded / total)
+        ),
 
         // save blob to cache, when it has finished loading
         tap(({ blob }) => blob && this.blobCache.save(blobInfo.hash, blob))
@@ -255,6 +269,12 @@ export class BlobStore {
       // do the actual upload
       mergeMap(({ blob, blobInfo }) =>
         this.loaders[blobInfo.type].upload(blob!).pipe(
+          tap(({ source, progress: { loaded, total } }) =>
+            source
+              ? this.log("blob %s uploaded to %s", blobInfo.hash, source)
+              : this.log("uploading blob %s: %d", blobInfo.hash, loaded / total)
+          ),
+
           mergeMap(async ({ source, progress }) => {
             if (source) {
               blobInfo = await blobInfo.atomicPatch({ source });
