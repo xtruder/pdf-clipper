@@ -1,4 +1,5 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
+import { first, firstValueFrom, map } from "rxjs";
 
 import { DocumentMember } from "~/types";
 import { Database } from "./types";
@@ -83,10 +84,12 @@ export function initCollection(
   );
 
   const populateFromDoc = async (member: DocumentMember) => {
-    const document = await db.documents
-      .findOne({ selector: { id: member.documentId } })
-      .exec();
-    if (!document) throw new Error("invalid document id");
+    const document = await firstValueFrom(
+      db.documents.findOne({ selector: { id: member.documentId } }).$.pipe(
+        first((d) => !!d),
+        map((d) => d!)
+      )
+    );
 
     member.local = document.local;
   };

@@ -1,40 +1,33 @@
-import { Observable, Subject, map, catchError, of, merge } from "rxjs";
+import { Subject } from "rxjs";
 import deepEqual from "fast-deep-equal";
+import createDebugLogger from "debug";
 
-import type {
-  EventBulk,
-  JsonSchema,
-  RxDocumentData,
-  RxJsonSchema,
-  RxStorage,
-  WithDeleted,
-  RxStorageInstanceReplicationState,
-  RxCollection,
-} from "rxdb";
-import type {
-  RxReplicationHandler,
-  RxReplicationWriteToMasterRow,
-} from "rxdb/dist/types/types";
+import type { JsonSchema, WithDeleted, RxCollection } from "rxdb";
 import {
-  randomCouchString,
-  replicateRxStorageInstance,
-  defaultConflictHandler,
-  RX_REPLICATION_META_INSTANCE_SCHEMA,
-} from "rxdb";
+  replicateRxCollection,
+  RxReplicationState,
+} from "rxdb/plugins/replication";
+import type {
+  RxReplicationWriteToMasterRow,
+  ReplicationPullHandlerResult,
+  RxReplicationPullStreamItem,
+} from "rxdb/dist/types/types";
 
 import * as gql from "gql-query-builder";
 import type Fields from "gql-query-builder/build/Fields";
-import type { GraphQLWebSocketClient } from "graphql-request";
 
 import {
   getMutaionOperationNameForSchema,
   getQueryOperationNameForSchema,
   getSubscribeOperationNameForSchema,
 } from "./graphql-schema";
+import { Client, ExecutionResult, RequestParams } from "graphql-sse";
 
 const getRecursiveSchemaFields = (schema: JsonSchema): Fields =>
   Object.entries(schema.properties || {})
-    .filter(([name]) => !["_attachments", "_meta", "_rev"].includes(name))
+    .filter(
+      ([name]) => !["_attachments", "_meta", "_rev", "_deleted"].includes(name)
+    )
     .map(([name, prop]) =>
       prop.type === "object" && prop.properties
         ? { [name]: getRecursiveSchemaFields(prop) }
@@ -43,206 +36,207 @@ const getRecursiveSchemaFields = (schema: JsonSchema): Fields =>
         : name
     );
 
-type CheckpointType = number;
+type CheckpointType = string;
 
 type UpdateResult<T> = {
   updated: T[];
   rejected: T[];
 };
 
-export interface RxGraphQLReplicationOptions<RxDocType> {
+export interface GraphqlReplicationOptions<RxDocType> {
+  replicationIdentifier: string;
+  collection: RxCollection<RxDocType, any>;
   updatedField: keyof RxDocType;
   deletedField?: keyof RxDocType;
   localField?: keyof RxDocType;
+  client: Client;
+  pullBatchSize?: number;
+  pushBatchSize?: number;
+  subscribe?: boolean;
+  enablePush?: boolean;
 }
 
-export class RxGraphQLReplicationHandler<RxDocType>
-  implements RxReplicationHandler<RxDocType, CheckpointType>
-{
-  private updateSubject = new Subject<RxDocType[]>();
+export function replicateGraphql<RxDocType>({
+  replicationIdentifier,
+  collection,
+  client,
+  updatedField,
+  deletedField,
+  localField,
+  pullBatchSize,
+  pushBatchSize,
+  subscribe = true,
+  enablePush = true,
+}: GraphqlReplicationOptions<RxDocType>): RxReplicationState<
+  RxDocType,
+  CheckpointType
+> {
+  const schema = collection.schema.jsonSchema;
+  const fields = getRecursiveSchemaFields(schema as JsonSchema);
+  const log = createDebugLogger(`graphql-replication:${collection.name}`);
 
-  public masterChangeStream$: Observable<
-    "RESYNC" | EventBulk<WithDeleted<RxDocType>, CheckpointType>
-  > = this.updateSubject.pipe(
-    map(
-      (updated): EventBulk<WithDeleted<RxDocType>, CheckpointType> => ({
-        id: randomCouchString(10),
-        events: this.mapEvents(updated),
-        checkpoint: this.getCheckpoint(updated),
-        context: "",
-      })
-    ),
-    catchError((_err, caught) => {
-      // upon error re-subscribe and force a resync
-      // this.unsubscribe?.();
-      // this.unsubscribe = this.subscribeChanges();
+  const executeQuery = async <T>(payload: RequestParams) =>
+    new Promise<ExecutionResult<T, unknown>>((resolve, reject) => {
+      let result: ExecutionResult<T, unknown>;
+      client.subscribe<T>(payload, {
+        next: (data) => (result = data),
+        error: reject,
+        complete: () => resolve(result),
+      });
+    });
 
-      // retry source observable again
-      return merge(of("RESYNC" as const), caught);
-    })
-  );
-
-  private unsubscribe: ReturnType<GraphQLWebSocketClient["subscribe"]>;
-  private schemaFields: Fields;
-
-  constructor(
-    private client: GraphQLWebSocketClient,
-    private collectionName: string,
-    private schema: RxJsonSchema<RxDocumentData<RxDocType>>,
-    private options: RxGraphQLReplicationOptions<RxDocType>
-  ) {
-    this.schemaFields = getRecursiveSchemaFields(this.schema as JsonSchema);
-
-    this.unsubscribe = this.subscribeChanges();
-  }
-
-  private getCheckpoint(events: RxDocType[]) {
-    return Math.max(
-      ...events.map((event) =>
-        event[this.options.updatedField]
-          ? new Date(event[this.options.updatedField] as any).getTime()
-          : 0
+  const getCheckpoint = (events: RxDocType[]) =>
+    new Date(
+      Math.max(
+        ...events.map((event) =>
+          event[updatedField]
+            ? new Date(event[updatedField] as any).getTime()
+            : 0
+        )
       )
-    );
-  }
+    ).toISOString();
 
-  private mapEvents(events: RxDocType[]) {
-    return events.map(
+  const mapEvents = (events: RxDocType[]) =>
+    events.map(
       (event): WithDeleted<RxDocType> => ({
         ...event,
-        _deleted: this.options.deletedField
-          ? !!event[this.options.deletedField]
-          : false,
+        _deleted: deletedField ? !!event[deletedField] : false,
       })
     );
-  }
 
-  private getSubscriptionOp = () =>
-    gql.subscription({
-      operation: getSubscribeOperationNameForSchema(this.schema),
-      fields: this.schemaFields,
+  const stream$ = new Subject<
+    RxReplicationPullStreamItem<RxDocType, CheckpointType>
+  >();
+
+  if (subscribe) {
+    const payload = gql.subscription({
+      operation: getSubscribeOperationNameForSchema(schema),
+      fields,
       variables: {},
     });
 
-  private getQueryOp = (since: number, limit: number) =>
-    gql.query({
-      operation: getQueryOperationNameForSchema(this.schema),
-      variables: { since, limit },
-      fields: this.schemaFields,
-    });
+    log("subscribing to changes: %s", payload.query);
 
-  private getMutationOp = (docs: RxDocType[]) =>
-    gql.mutation({
-      operation: getMutaionOperationNameForSchema(this.schema),
-      variables: {
-        input: {
-          type: this.schema.title! + "Input",
-          required: true,
-          list: true,
-          value: docs,
-        },
+    client.subscribe<RxDocType[]>(payload, {
+      next: ({ data }) =>
+        data &&
+        stream$.next({
+          documents: mapEvents(data),
+          checkpoint: getCheckpoint(data),
+        }),
+      error: () => {
+        log("subscription error, resyncing");
+        stream$.next("RESYNC");
       },
-      fields: [
-        {
-          updated: this.schemaFields,
-        },
-        {
-          rejected: this.schemaFields,
-        },
-      ],
+      complete: () => stream$.complete(),
     });
-
-  private subscribeChanges() {
-    const { query } = this.getSubscriptionOp();
-
-    return this.client.subscribe(query, this.updateSubject);
   }
 
-  async masterChangesSince(
-    checkpoint: number,
-    bulkSize: number
-  ): Promise<{
-    checkpoint: number;
-    documentsData: WithDeleted<RxDocType>[];
-  }> {
-    const { query, variables } = this.getQueryOp(checkpoint, bulkSize);
+  return replicateRxCollection({
+    replicationIdentifier,
+    collection,
+    waitForLeadership: true,
+    autoStart: true,
+    live: subscribe,
+    retryTime: 10000,
+    pull: {
+      async handler(
+        lastPulledCheckpoint: CheckpointType,
+        batchSize: number
+      ): Promise<ReplicationPullHandlerResult<RxDocType>> {
+        const payload = gql.query({
+          operation: getQueryOperationNameForSchema(schema),
+          variables: { since: lastPulledCheckpoint, limit: batchSize },
+          fields,
+        });
 
-    const updated = await this.client.request<RxDocType[]>(query, variables);
+        log(
+          "pulling changes (since: %d): %s",
+          lastPulledCheckpoint,
+          payload.query
+        );
 
-    return {
-      checkpoint: this.getCheckpoint(updated),
-      documentsData: this.mapEvents(updated),
-    };
-  }
+        const { data: updated } = await executeQuery<RxDocType[]>(payload);
 
-  async masterWrite(
-    rows: RxReplicationWriteToMasterRow<RxDocType>[]
-  ): Promise<WithDeleted<RxDocType>[]> {
-    console.log("writing rows to master", this.collectionName, rows);
+        if (!updated) throw new Error("error getting last updates");
 
-    const docs = rows.map((row) => row.newDocumentState);
+        const checkpoint = getCheckpoint(updated);
+        const documents = mapEvents(updated);
 
-    // only write docs that don't have local set to true
-    let docsToWrite = docs;
-    if (this.options.localField) {
-      const localField = this.options.localField;
-      docsToWrite = docs.filter((doc) => !!!doc[localField]);
-    }
+        if (documents.length) {
+          log("new updated docs with checkpoint %s:", checkpoint, documents);
+        }
 
-    const { query, variables } = this.getMutationOp(docsToWrite);
+        return {
+          checkpoint,
+          documents,
+        };
+      },
+      batchSize: pullBatchSize,
+      stream$,
+    },
+    push: enablePush
+      ? {
+          async handler(
+            rows: RxReplicationWriteToMasterRow<RxDocType>[]
+          ): Promise<WithDeleted<RxDocType>[]> {
+            const docs = rows.map((row) => row.newDocumentState);
 
-    console.log(query, variables);
+            // only write docs that don't have local set to true
+            let docsToWrite = docs
 
-    const { updated, rejected } = await this.client.request<
-      UpdateResult<RxDocType>
-    >(query, variables);
+              // if localField is defined filter docs that have local set to true
+              .filter((doc) => (localField ? !!!doc[localField] : true))
 
-    console.log("writing rows success", this.collectionName);
+              // remove _deleted from doc
+              .map(({ _deleted, ...doc }) => doc);
 
-    const changed = rows
-      .map((row) => row.newDocumentState)
-      .filter(
-        ({ _deleted, ...doc }) => !updated.find((u) => deepEqual(doc, u))
-      );
+            const payload = gql.mutation({
+              operation: getMutaionOperationNameForSchema(schema),
+              variables: {
+                input: {
+                  type: schema.title! + "Input",
+                  required: true,
+                  list: true,
+                  value: docsToWrite,
+                },
+              },
+              fields: [
+                {
+                  updated: fields,
+                },
+                {
+                  rejected: fields,
+                },
+              ],
+            });
 
-    return this.mapEvents(rejected.concat(changed));
-  }
-}
+            log(
+              "push docs to server: %s",
+              payload.query,
+              payload.variables.input
+            );
 
-export async function replicateRxCollection<
-  RxDocType,
-  OrmMethods,
-  StaticMethods,
-  RxStorageInternals,
-  RxStorageSettings
->(
-  collection: RxCollection<RxDocType, OrmMethods, StaticMethods>,
-  client: GraphQLWebSocketClient,
-  metaStorage: RxStorage<RxStorageInternals, RxStorageSettings>,
-  options: RxGraphQLReplicationOptions<RxDocType>
-): Promise<RxStorageInstanceReplicationState<RxDocType>> {
-  const forkInstance = collection.storageInstance;
+            const { data } = await executeQuery<UpdateResult<RxDocType>>(
+              payload
+            );
+            if (!data) throw new Error("missing result data");
 
-  const metaInstance = await metaStorage.createStorageInstance({
-    databaseInstanceToken: randomCouchString(10),
-    databaseName: forkInstance.databaseName + "-meta",
-    collectionName: forkInstance.collectionName,
-    schema: RX_REPLICATION_META_INSTANCE_SCHEMA,
-    options: {} as any,
-    multiInstance: true,
-  });
+            const { updated, rejected } = data;
 
-  return replicateRxStorageInstance<RxDocType>({
-    identifier: randomCouchString(10),
-    bulkSize: 100,
-    forkInstance,
-    metaInstance,
-    replicationHandler: new RxGraphQLReplicationHandler<RxDocType>(
-      client,
-      forkInstance.collectionName,
-      forkInstance.schema,
-      options
-    ),
-    conflictHandler: defaultConflictHandler,
+            log("writing rows success", data);
+
+            const changed = rows
+              .map((row) => row.newDocumentState)
+              .filter(
+                ({ _deleted, ...doc }) =>
+                  !updated.find((u) => deepEqual(doc, u))
+              );
+
+            return mapEvents(rejected.concat(changed));
+          },
+          batchSize: pushBatchSize,
+        }
+      : undefined,
   });
 }

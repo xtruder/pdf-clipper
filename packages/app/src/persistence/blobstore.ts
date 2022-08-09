@@ -89,7 +89,7 @@ export interface BlobUploadTask {
 
 export interface StoreOptions {
   /**whether to sync Blob */
-  sync?: boolean;
+  local?: boolean;
 }
 
 export class BlobStore {
@@ -118,7 +118,7 @@ export class BlobStore {
   async store(
     type: BlobType,
     blob: Blob,
-    { sync = true }: StoreOptions = {}
+    { local = false }: StoreOptions = {}
   ): Promise<BlobInfo> {
     const hash = await sha256(await blob.arrayBuffer());
 
@@ -129,7 +129,7 @@ export class BlobStore {
       type,
       mimeType: blob.type,
       size: blob.size,
-      sync,
+      local,
     });
   }
 
