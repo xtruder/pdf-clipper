@@ -23,13 +23,16 @@ import {
   DocumentMember,
 } from "~/types";
 
-export const currentAccountIdAtom = atomWithStorage("darkMode", uuid());
+export const currentAccountIdAtom = atomWithStorage(
+  "current-account-id",
+  uuid()
+);
 
 /**atom that subscribes to current account */
 export const accountAtom = atomFamily((accountId: string) =>
   syncableRxDocumentAtom<Account>(
     () => db.accounts.findOne(accountId),
-    () => ({ id: uuid() })
+    () => ({ id: accountId })
   )
 );
 

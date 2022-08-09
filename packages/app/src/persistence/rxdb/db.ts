@@ -3,24 +3,18 @@ import debug from "debug";
 
 // rxdb plugins
 import { getRxStorageDexie } from "rxdb/plugins/dexie";
-import { RxDBValidatePlugin } from "rxdb/plugins/validate";
+import { wrappedValidateAjvStorage } from "rxdb/plugins/validate-ajv";
 import { RxDBUpdatePlugin } from "rxdb/plugins/update";
 import { RxDBLeaderElectionPlugin } from "rxdb/plugins/leader-election";
 import { RxDBLocalDocumentsPlugin } from "rxdb/plugins/local-documents";
 import { RxDBDevModePlugin } from "rxdb/plugins/dev-mode";
 
-import ReconnectingWebSocket from "reconnecting-websocket";
-import { GraphQLWebSocketClient } from "graphql-request";
-import { GRAPHQL_TRANSPORT_WS_PROTOCOL } from "graphql-ws";
-
 import collectionCreators, {
   Database,
   DatabaseCollections,
 } from "./collections";
-import { replicateRxCollection } from "./graphql-replication";
-
-// validate data
-addRxPlugin(RxDBValidatePlugin);
+import { replicateGraphql } from "./graphql-replication";
+import { createClient } from "graphql-sse";
 
 // enable updates using mongo-query-syntax
 addRxPlugin(RxDBUpdatePlugin);
@@ -35,16 +29,16 @@ addRxPlugin(RxDBLocalDocumentsPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
 export async function initDB(): Promise<Database> {
-  const socket = new ReconnectingWebSocket(
-    "ws://localhost:1111/graphql",
-    GRAPHQL_TRANSPORT_WS_PROTOCOL
-  );
-  const client: GraphQLWebSocketClient = new GraphQLWebSocketClient(
-    socket as WebSocket,
-    {}
-  );
+  const gqlClient = createClient({
+    url: "https://localhost:1111/graphql",
 
-  const storage = getRxStorageDexie();
+    // retries will be done by graphqlReplication plugin
+    retryAttempts: 0,
+  });
+
+  const storage = wrappedValidateAjvStorage({
+    storage: getRxStorageDexie(),
+  });
 
   const database = await createRxDatabase<DatabaseCollections>({
     name: "db",
@@ -67,13 +61,58 @@ export async function initDB(): Promise<Database> {
     }
   }
 
-  replicateRxCollection(collections.accounts, client, storage);
-  replicateRxCollection(collections.accountinfos, client, storage);
-  replicateRxCollection(collections.documents, client, storage);
-  replicateRxCollection(collections.documenthighlights, client, storage);
-  replicateRxCollection(collections.documentmembers, client, storage);
-  replicateRxCollection(collections.blobinfos, client, storage);
-  replicateRxCollection(collections.sessions, client, storage);
+  replicateGraphql({
+    replicationIdentifier: "accounts",
+    collection: collections.accounts,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    deletedField: "deletedAt",
+  });
+  replicateGraphql({
+    replicationIdentifier: "accountinfos",
+    collection: collections.accountinfos,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    enablePush: false,
+  });
+  replicateGraphql({
+    replicationIdentifier: "documents",
+    collection: collections.documents,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    deletedField: "deletedAt",
+    localField: "local",
+  });
+  replicateGraphql({
+    replicationIdentifier: "documenthighlights",
+    collection: collections.documenthighlights,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    deletedField: "deletedAt",
+    localField: "local",
+  });
+  replicateGraphql({
+    replicationIdentifier: "documentmembers",
+    collection: collections.documentmembers,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    deletedField: "deletedAt",
+    localField: "local",
+  });
+  replicateGraphql({
+    replicationIdentifier: "blobinfos",
+    collection: collections.blobinfos,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    localField: "local",
+  });
+  replicateGraphql({
+    replicationIdentifier: "sessions",
+    collection: collections.sessions,
+    client: gqlClient,
+    updatedField: "updatedAt",
+    deletedField: "deletedAt",
+  });
 
   // setup debug logging on collections
   for (const [, c] of Object.entries(collections)) {
