@@ -10,7 +10,7 @@ import {
 } from "rxjs";
 
 import { atom } from "jotai";
-import { atomFamily, atomWithObservable } from "jotai/utils";
+import { atomFamily, atomWithObservable, atomWithStorage } from "jotai/utils";
 
 import { blobStore, db, pdfLoader } from "./init";
 import { syncableRxDocumentAtom, syncableRxDocumentsAtom } from "./utils";
@@ -23,15 +23,19 @@ import {
   DocumentMember,
 } from "~/types";
 
+export const currentAccountIdAtom = atomWithStorage("darkMode", uuid());
+
 /**atom that subscribes to current account */
-export const currentAccountAtom = syncableRxDocumentAtom<Account>(
-  () =>
-    db.accounts.findOne({
-      selector: {
-        default: true,
-      },
-    }),
-  () => ({ id: uuid(), default: true })
+export const accountAtom = atomFamily((accountId: string) =>
+  syncableRxDocumentAtom<Account>(
+    () => db.accounts.findOne(accountId),
+    () => ({ id: uuid() })
+  )
+);
+
+export const currentAccountAtom = atom<Account, Account>(
+  (get) => get(accountAtom(get(currentAccountIdAtom))),
+  (get, set, value) => set(accountAtom(get(currentAccountIdAtom)), value)
 );
 
 /**atom family for getting information about accounts */

@@ -1,6 +1,7 @@
 import { RxCollection, RxDocument, RxJsonSchema } from "rxdb";
 
 import { DocumentMember } from "~/types";
+import { Database } from "./types";
 
 export type DocumentMemberDocument = RxDocument<DocumentMember>;
 export type DocumentMemberCollection = RxCollection<DocumentMember>;
@@ -54,11 +55,18 @@ export const schema: RxJsonSchema<DocumentMember> = {
       type: "string",
       format: "uuid",
     },
+    local: {
+      type: "boolean",
+      default: false,
+    },
   },
   required: ["accountId", "documentId"],
 };
 
-export function initCollection(collection: DocumentMemberCollection) {
+export function initCollection(
+  collection: DocumentMemberCollection,
+  db: Database
+) {
   collection.preInsert(
     (data) => (data.createdAt = new Date().toISOString()),
     true
@@ -73,4 +81,17 @@ export function initCollection(collection: DocumentMemberCollection) {
     (data) => (data.deletedAt = new Date().toISOString()),
     true
   );
+
+  const populateFromDoc = async (member: DocumentMember) => {
+    const document = await db.documents
+      .findOne({ selector: { id: member.documentId } })
+      .exec();
+    if (!document) throw new Error("invalid document id");
+
+    member.local = document.local;
+  };
+
+  // propagate document type and local from document
+  collection.preInsert(populateFromDoc, true);
+  collection.preSave(populateFromDoc, true);
 }

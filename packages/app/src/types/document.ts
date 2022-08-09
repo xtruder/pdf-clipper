@@ -45,7 +45,7 @@ export interface Document {
   id: string;
 
   /**type of the document */
-  type?: DocumentType;
+  type: DocumentType;
 
   /**document creation time */
   createdAt?: string;
@@ -62,12 +62,9 @@ export interface Document {
   /**hash of the file associated with document */
   fileHash?: string;
 
-  /**list of document member ids */
-  members?: string[];
-
   /**account that created document */
   createdBy?: string;
 
-  /**whether document is local and wont be synced */
+  /**whether this document is local only */
   local?: boolean;
 }

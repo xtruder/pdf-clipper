@@ -99,17 +99,17 @@ export function initCollection(
     true
   );
 
-  const updateDocType = async (highlight: DocumentHighlight) => {
+  const populateFromDoc = async (highlight: DocumentHighlight) => {
     const document = await db.documents
       .findOne({ selector: { id: highlight.documentId } })
       .exec();
     if (!document) throw new Error("invalid document id");
 
-    // propagate documentType to highlight
     highlight.documentType = document.type;
+    highlight.local = document.local;
   };
 
-  // propagate document type to document highlight
-  collection.preInsert(updateDocType, true);
-  collection.preSave(updateDocType, true);
+  // propagate document type and local from document
+  collection.preInsert(populateFromDoc, true);
+  collection.preSave(populateFromDoc, true);
 }

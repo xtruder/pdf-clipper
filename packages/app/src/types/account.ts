@@ -8,9 +8,9 @@ export interface Account {
   /**account last update time */
   updatedAt?: string;
 
+  /**account deletion time */
+  deletedAt?: string;
+
   /**name of the account */
   name?: string;
-
-  /**whether this is default user account */
-  default?: boolean;
 }

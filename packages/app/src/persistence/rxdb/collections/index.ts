@@ -5,10 +5,11 @@ import * as documents from "./documents";
 import * as documentmembers from "./documentmembers";
 import * as documenthighlights from "./documenthighlights";
 import * as blobinfos from "./blobinfos";
+import { RxCollectionCreator } from "rxdb";
 
 export * from "./types";
 
-export default {
+const collectionCreators = {
   accounts,
   accountinfos,
   sessions,
@@ -17,3 +18,8 @@ export default {
   documenthighlights,
   blobinfos,
 };
+
+// type check collection creators
+collectionCreators as Record<string, RxCollectionCreator>;
+
+export default collectionCreators;

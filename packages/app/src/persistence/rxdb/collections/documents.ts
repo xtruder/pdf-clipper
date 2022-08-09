@@ -45,20 +45,12 @@ export const schema: RxJsonSchema<Document> = {
       type: "object",
       default: {},
     },
-    members: {
-      type: "array",
-      ref: "account",
-      items: {
-        type: "string",
-        format: "uuid",
-      },
-    },
     local: {
       type: "boolean",
       default: false,
     },
   },
-  required: ["id"],
+  required: ["id", "type", "createdBy"],
 };
 
 export function initCollection(collection: DocumentCollection) {

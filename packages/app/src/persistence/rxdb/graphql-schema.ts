@@ -116,66 +116,61 @@ const genObjectType = (name: string, schema: JsonSchema) =>
     new GraphQLObjectType({
       name,
       description: schema.description,
-      fields: {
-        ...Object.fromEntries(
-          Object.entries(schema.properties || {}).map(
-            ([propName, property]) => [
-              propName,
-              schema.required?.includes(propName)
-                ? { type: new GraphQLNonNull(genType(property)) }
-                : { type: genType(property) },
-            ]
-          )
-        ),
-        _deleted: { type: GraphQLBoolean },
-      },
+      fields: Object.fromEntries(
+        Object.entries(schema.properties || {}).map(([propName, property]) => [
+          propName,
+          schema.required?.includes(propName)
+            ? { type: new GraphQLNonNull(genType(property)) }
+            : { type: genType(property) },
+        ])
+      ),
     })
   );
 
-const genBulkUpdateType = (schema: RxJsonSchema<any>) => {
-  const name = `${schema.title!}BulkUpdate`;
+const genOutputType = (schema: RxJsonSchema<any>) =>
+  genObjectType(schema.title!, schema as JsonSchema);
 
-  return memoize(
-    name,
-    new GraphQLObjectType({
-      name,
-      fields: {
-        id: {
-          type: new GraphQLNonNull(GraphQLString),
-          description: "Unique ID of bulk update",
-        },
-        lwt: {
-          type: new GraphQLNonNull(GraphQLInt),
-          description: "Bulk update last write time as number",
-        },
-        updated: {
-          type: new GraphQLNonNull(
-            new GraphQLList(
-              new GraphQLNonNull(genObjectType(schema.title!, schema as any))
-            )
-          ),
-          description: "List of updated docs",
-        },
-      },
-    })
-  );
-};
+// const genBulkUpdateType = (schema: RxJsonSchema<any>) => {
+//   const name = `${schema.title!}BulkUpdate`;
+
+//   return memoize(
+//     name,
+//     new GraphQLObjectType({
+//       name,
+//       fields: {
+//         id: {
+//           type: new GraphQLNonNull(GraphQLString),
+//           description: "Unique ID of bulk update",
+//         },
+//         lwt: {
+//           type: new GraphQLNonNull(GraphQLInt),
+//           description: "Bulk update last write time as number",
+//         },
+//         updated: {
+//           type: new GraphQLNonNull(
+//             new GraphQLList(
+//               new GraphQLNonNull(genObjectType(schema.title!, schema as any))
+//             )
+//           ),
+//           description: "List of updated docs",
+//         },
+//       },
+//     })
+//   );
+// };
 
 const genInputObjectType = (name: string, schema: JsonSchema) =>
   new GraphQLInputObjectType({
     name,
     description: schema.description,
-    fields: {
-      ...Object.fromEntries(
-        Object.entries(schema.properties || {}).map(([propName, property]) => [
-          propName,
-          schema.required?.includes(propName)
-            ? { type: new GraphQLNonNull(genInputType(property)) }
-            : { type: genInputType(property) },
-        ])
-      ),
-      _deleted: { type: GraphQLBoolean },
-    },
+    fields: Object.fromEntries(
+      Object.entries(schema.properties || {}).map(([propName, property]) => [
+        propName,
+        schema.required?.includes(propName)
+          ? { type: new GraphQLNonNull(genInputType(property)) }
+          : { type: genInputType(property) },
+      ])
+    ),
   });
 
 const updateError = new GraphQLObjectType({
@@ -247,7 +242,9 @@ const genSubscriptionType = (schemas: Record<string, RxJsonSchema<any>>) =>
       Object.entries(schemas).map(([, schema]) => [
         getSubscribeOperationNameForSchema(schema),
         {
-          type: new GraphQLNonNull(genBulkUpdateType(schema)),
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(genOutputType(schema)))
+          ),
         },
       ])
     ),
@@ -263,10 +260,12 @@ const genQueryType = (schemas: Record<string, RxJsonSchema<any>>) =>
       Object.entries(schemas).map(([, schema]) => [
         getQueryOperationNameForSchema(schema),
         {
-          type: new GraphQLNonNull(genBulkUpdateType(schema)),
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(genOutputType(schema)))
+          ),
           args: {
             since: {
-              type: GraphQLString,
+              type: new GraphQLNonNull(DateTimeScalar),
             },
             limit: {
               type: GraphQLInt,

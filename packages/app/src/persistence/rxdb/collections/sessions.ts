@@ -30,6 +30,10 @@ export const schema: RxJsonSchema<Session> = {
       type: "string",
       format: "date-time",
     },
+    deletedAt: {
+      type: "string",
+      format: "date-time",
+    },
     syncDocuments: {
       type: "array",
       ref: "documents",

@@ -26,4 +26,7 @@ export interface DocumentMember {
 
   /**account that created document member */
   createdBy?: string;
+
+  /**whether this document member belongs to a document that is local only */
+  local?: boolean;
 }

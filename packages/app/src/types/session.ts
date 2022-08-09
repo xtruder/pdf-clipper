@@ -11,6 +11,9 @@ export interface Session {
   /**session last update time */
   updatedAt?: string;
 
+  /**session deletion time */
+  deletedAt?: string;
+
   /**list of document ids to sync */
   syncDocuments: string[];
 }

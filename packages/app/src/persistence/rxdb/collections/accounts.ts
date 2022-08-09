@@ -25,11 +25,12 @@ export const schema: RxJsonSchema<Account> = {
       type: "string",
       format: "date-time",
     },
+    deletedAt: {
+      type: "string",
+      format: "date-time",
+    },
     name: {
       type: "string",
-    },
-    default: {
-      type: "boolean",
     },
   },
   required: ["id"],
@@ -43,6 +44,11 @@ export function initCollection(collection: AccountCollection) {
 
   collection.preSave(
     (data) => (data.updatedAt = new Date().toISOString()),
+    true
+  );
+
+  collection.preRemove(
+    (data) => (data.deletedAt = new Date().toISOString()),
     true
   );
 }

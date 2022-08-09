@@ -20,6 +20,10 @@ export const schema: RxJsonSchema<AccountInfo> = {
     name: {
       type: "string",
     },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
   },
   required: ["id"],
 };

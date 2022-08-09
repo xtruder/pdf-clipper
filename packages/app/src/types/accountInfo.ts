@@ -4,4 +4,7 @@ export interface AccountInfo {
 
   /**name of the account */
   name?: string;
+
+  /**account information last update time */
+  updatedAt?: string;
 }

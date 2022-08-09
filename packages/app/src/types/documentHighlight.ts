@@ -41,6 +41,6 @@ export interface DocumentHighlight {
   /**hash of the image of the highlight */
   imageHash?: string | null;
 
-  /**whether highlight is local and wont be synced */
+  /**whether this highlight belongs to a document that is local only */
   local?: boolean;
 }

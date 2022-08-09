@@ -42,9 +42,9 @@ export const schema: RxJsonSchema<BlobInfo> = {
       type: "string",
       format: "uri",
     },
-    sync: {
+    local: {
       type: "boolean",
-      default: true,
+      default: false,
     },
   },
   required: ["hash", "type", "mimeType", "size"],

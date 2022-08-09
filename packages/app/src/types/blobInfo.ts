@@ -26,6 +26,6 @@ export interface BlobInfo {
   /**blob sources */
   source?: string;
 
-  /**whether to sync blob */
-  sync?: boolean;
+  /**whether this blob is local */
+  local?: boolean;
 }

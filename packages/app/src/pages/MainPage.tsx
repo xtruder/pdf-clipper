@@ -38,7 +38,6 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
         // update document metadata
         updateDocument({
           type: "PDF",
-          meta: {},
           createdBy: accountId,
         });
 
