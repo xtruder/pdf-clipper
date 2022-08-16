@@ -1,387 +1,284 @@
-directive @constraint(contains: String, endsWith: String, exclusiveMax: Float, exclusiveMin: Float, format: String, max: Float, maxLength: Int, min: Float, minLength: Int, multipleOf: Float, notContains: String, pattern: String, startsWith: String, uniqueTypeName: String) on ARGUMENT_DEFINITION | FIELD_DEFINITION | INPUT_FIELD_DEFINITION
-
+"""schema for account"""
 type Account {
-  """Account creation time"""
-  createdAt: DateTime!
-
-  """Account deletion time"""
+  createdAt: DateTime
   deletedAt: DateTime
-
-  """list of documents that account is member of"""
-  documents: [AccountDocument!]!
-
-  """Account ID"""
-  id: ID!
-
-  """Optional account name"""
+  id: UUID!
   name: String
-
-  """Account last update time"""
-  updatedAt: DateTime!
+  updatedAt: DateTime
 }
 
-type AccountDocument {
-  """Time when account was accepted as member of document"""
-  acceptedAt: DateTime!
-
-  """document member creation time"""
-  createdAt: DateTime!
-
-  """account that created document member"""
-  createdBy: AccountInfo!
-
-  """document associated with account"""
-  document: Document
-
-  """Role of account for document"""
-  role: DocumentRole!
-}
-
+"""schema for account"""
 type AccountInfo {
-  """account ID"""
-  id: ID!
-
-  """optional account name"""
+  id: UUID!
   name: String
+  updatedAt: DateTime
 }
 
-input AccountUpdateInput {
-  """id of the account to update"""
-  id: ID!
-
-  """name of the account"""
+"""schema for account"""
+input AccountInfoInput {
+  id: UUID!
   name: String
+  updatedAt: DateTime
+}
 
-  """update timestamp"""
-  timestamp: DateTime!
+type AccountInfoUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [AccountInfo!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [AccountInfo!]!
+}
+
+"""schema for account"""
+input AccountInput {
+  createdAt: DateTime
+  deletedAt: DateTime
+  id: UUID!
+  name: String
+  updatedAt: DateTime
+}
+
+type AccountUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [Account!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [Account!]!
+}
+
+"""schema for blobinfos collection"""
+type BlobInfo {
+  createdAt: DateTime
+  createdBy: UUID
+  hash: String!
+  local: Boolean
+  mimeType: String!
+  size: Int!
+  source: String
+  type: String!
+  updatedAt: DateTime
+}
+
+"""schema for blobinfos collection"""
+input BlobInfoInput {
+  createdAt: DateTime
+  createdBy: UUID
+  hash: String!
+  local: Boolean
+  mimeType: String!
+  size: Int!
+  source: String
+  type: String!
+  updatedAt: DateTime
+}
+
+type BlobInfoUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [BlobInfo!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [BlobInfo!]!
 }
 
 scalar DateTime
 
+"""schema holding documents"""
 type Document {
-  """document creation time"""
-  createdAt: DateTime!
-
-  """account that created document"""
-  createdBy: AccountInfo!
-
-  """document deletion time"""
+  createdAt: DateTime
+  createdBy: UUID!
   deletedAt: DateTime
-
-  """file associated with document"""
-  file: FileInfo
-
-  """list of highlights associated with document"""
-  highlights(limit: Int, offset: Int): [DocumentHighlight!]!
-
-  """unique document ID"""
-  id: ID!
-
-  """list of document members"""
-  members: [DocumentMember!]!
-
-  """metadata associated with document"""
-  meta: DocumentMeta!
-
-  """type of the document"""
-  type: DocumentType!
-
-  """document last update time"""
-  updatedAt: DateTime!
+  fileHash: String
+  id: UUID!
+  local: Boolean
+  meta: JSON
+  type: String!
+  updatedAt: DateTime
 }
 
-type DocumentChange {
-  """whether document has been deleted"""
-  deleted: Boolean
-
-  """changes regarding document highlights"""
-  highlights: [DocumentHighlightChange!]
-
-  """changes regarding document members"""
-  members: [DocumentMemberChange!]
-
-  """whether document meta has been updated"""
-  meta: DocumentMeta
-
-  """timestamp of change"""
-  timestamp: DateTime!
-}
-
+"""schema for document highlights"""
 type DocumentHighlight {
-  """content associated with highlight"""
-  content: JSON!
-
-  """highlight creation time"""
-  createdAt: DateTime!
-
-  """highlight author ID"""
-  createdBy: AccountInfo!
-
-  """highlight deletion time"""
+  content: JSON
+  createdAt: DateTime
+  createdBy: UUID
   deletedAt: DateTime
-
-  """unique highlight id"""
-  id: ID!
-
-  """URL of image associated with highlight"""
-  image: String
-
-  """highlight location"""
-  location: JSON!
-
-  """highlight last udpate time"""
-  updatedAt: DateTime!
+  documentId: UUID!
+  documentType: String
+  id: UUID!
+  imageHash: String
+  local: Boolean
+  location: JSON
+  sequence: String
+  updatedAt: DateTime
 }
 
-type DocumentHighlightChange {
-  """whether highlight content has been changed"""
-  content: JSON!
-
-  """who has made a change"""
-  createdBy: AccountInfo!
-
-  """whether highlight has been deleted"""
-  deleted: Boolean
-
-  """unique highlight id"""
-  id: ID!
-
-  """whether highlight location has been changed"""
-  location: JSON!
+"""schema for document highlights"""
+input DocumentHighlightInput {
+  content: JSON
+  createdAt: DateTime
+  createdBy: UUID
+  deletedAt: DateTime
+  documentId: UUID!
+  documentType: String
+  id: UUID!
+  imageHash: String
+  local: Boolean
+  location: JSON
+  sequence: String
+  updatedAt: DateTime
 }
 
+type DocumentHighlightUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [DocumentHighlight!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [DocumentHighlight!]!
+}
+
+"""schema holding documents"""
+input DocumentInput {
+  createdAt: DateTime
+  createdBy: UUID!
+  deletedAt: DateTime
+  fileHash: String
+  id: UUID!
+  local: Boolean
+  meta: JSON
+  type: String!
+  updatedAt: DateTime
+}
+
+"""schema holding account documents"""
 type DocumentMember {
-  """Time when account was accepted as member of document"""
   acceptedAt: DateTime
-
-  """member account"""
-  account: AccountInfo!
-
-  """document member creation time"""
-  createdAt: DateTime!
-
-  """account that created document member"""
-  createdBy: AccountInfo!
-
-  """Role of account for document"""
-  role: DocumentRole!
-}
-
-type DocumentMemberChange {
-  """whether member has been accepted"""
-  accepted: Boolean
-
-  """account id that membership has been changed for"""
-  accountId: ID!
-
-  """who has made a change"""
-  createdBy: AccountInfo!
-
-  """whether member has been deleted"""
-  deleted: Boolean
-
-  """whether ddocument role has been changed"""
-  role: DocumentRole
-}
-
-input DocumentMemberInput {
-  """whether document member is accepted"""
-  accepted: Boolean
-
-  """id of account to update"""
-  accountId: ID!
-
-  """role of document member"""
-  role: DocumentRole
-}
-
-"""user provided document metadata"""
-type DocumentMeta {
-  """document author"""
-  author: String
-
-  """url of document cover image"""
-  cover: String
-
-  """document description"""
-  description: String
-
-  """keywords associated with document"""
-  keywords: [String!]
-
-  """number of document pages"""
-  pageCount: Int
-
-  """title of the document"""
-  title: String
-}
-
-input DocumentMetaInput {
-  """document author"""
-  author: String
-
-  """url of document cover image"""
-  cover: String
-
-  """document description"""
-  description: String
-
-  """document outline"""
-  outline: JSON
-
-  """number of pages in document"""
-  pageCount: Int
-
-  """title of the document"""
-  title: String
-}
-
-type DocumentReadingInfo {
-  """account that reading info is associated with"""
-  account: AccountInfo!
-
-  """document creation time"""
-  createdAt: DateTime!
-
-  """document deletion time"""
+  accountId: UUID!
+  createdAt: DateTime
+  createdBy: UUID
   deletedAt: DateTime
-
-  """last read page"""
-  lastPage: Int
-
-  """last reading location"""
-  location: String
-
-  """url of screenshot image"""
-  screenshot: String
-
-  """document last update time"""
-  updatedAt: DateTime!
+  documentId: UUID!
+  id: String
+  local: Boolean
+  role: String
+  updatedAt: DateTime
 }
 
-enum DocumentRole {
-  ADMIN
-  EDITOR
-  VIEWER
+"""schema holding account documents"""
+input DocumentMemberInput {
+  acceptedAt: DateTime
+  accountId: UUID!
+  createdAt: DateTime
+  createdBy: UUID
+  deletedAt: DateTime
+  documentId: UUID!
+  id: String
+  local: Boolean
+  role: String
+  updatedAt: DateTime
 }
 
-enum DocumentType {
-  PDF
+type DocumentMemberUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [DocumentMember!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [DocumentMember!]!
 }
 
-type FileInfo {
-  """file creation time"""
-  createdAt: DateTime!
+type DocumentUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
 
-  """account that created file"""
-  createdBy: AccountInfo!
+  """list of rejected documents, with current returned state"""
+  rejected: [Document!]!
 
-  """sha256 hash of file"""
-  hash: String!
-
-  """file mime type"""
-  mimeType: String!
-
-  """alternative file sources"""
-  sources: [String!]
-
-  """file last update time"""
-  updatedAt: DateTime!
-
-  """primary url of file"""
-  url: String
-}
-
-enum HighlightColor {
-  BLUE
-  GREEN
-  RED
-  YELLOW
+  """list of updated documents that have been successfully processed"""
+  updated: [Document!]!
 }
 
 scalar JSON
 
 type Mutation {
-  """removes account from document"""
-  removeMeFromDocument(documentId: ID!): Boolean!
-
-  """updates account"""
-  updateAccount(account: AccountUpdateInput!): Account!
-
-  """uploads file and returns file information"""
-  uploadFile(file: Upload!): FileInfo!
-
-  """creates or updates a document"""
-  upsertDocument(document: UpsertDocumentInput!): Document!
-
-  """creates or updates document highlight"""
-  upsertDocumentHighlight(documentId: ID!, highlight: UpsertDocumentHighlightInput!): DocumentHighlight!
-  upsertFileInfo(fileInfo: UpsertFileInput): FileInfo!
+  pushAccountChanges(input: [AccountInput!]!): AccountUpdateResult!
+  pushAccountInfoChanges(input: [AccountInfoInput!]!): AccountInfoUpdateResult!
+  pushBlobInfoChanges(input: [BlobInfoInput!]!): BlobInfoUpdateResult!
+  pushDocumentChanges(input: [DocumentInput!]!): DocumentUpdateResult!
+  pushDocumentHighlightChanges(input: [DocumentHighlightInput!]!): DocumentHighlightUpdateResult!
+  pushDocumentMemberChanges(input: [DocumentMemberInput!]!): DocumentMemberUpdateResult!
+  pushSessionChanges(input: [SessionInput!]!): SessionUpdateResult!
 }
 
 type Query {
-  account(id: ID!): Account
+  getAccountChanges(limit: Int = 100, since: DateTime!): [Account!]!
+  getAccountInfoChanges(limit: Int = 100, since: DateTime!): [AccountInfo!]!
+  getBlobInfoChanges(limit: Int = 100, since: DateTime!): [BlobInfo!]!
+  getDocumentChanges(limit: Int = 100, since: DateTime!): [Document!]!
+  getDocumentHighlightChanges(limit: Int = 100, since: DateTime!): [DocumentHighlight!]!
+  getDocumentMemberChanges(limit: Int = 100, since: DateTime!): [DocumentMember!]!
+  getSessionChanges(limit: Int = 100, since: DateTime!): [Session!]!
+}
 
-  """returns information about current account"""
-  currentAccount: Account
+"""schema for session"""
+type Session {
+  accountId: UUID!
+  createdAt: DateTime
+  deletedAt: DateTime
+  id: UUID!
+  syncDocuments: [String]
+  updatedAt: DateTime
+}
 
-  """gets document by id"""
-  document(id: ID!): Document
-  fileInfo(fileHash: String!): FileInfo
+"""schema for session"""
+input SessionInput {
+  accountId: UUID!
+  createdAt: DateTime
+  deletedAt: DateTime
+  id: UUID!
+  syncDocuments: [String]
+  updatedAt: DateTime
+}
+
+type SessionUpdateResult {
+  """List of errors associated with rejected documents"""
+  errors: [UpdateError!]
+
+  """list of rejected documents, with current returned state"""
+  rejected: [Session!]!
+
+  """list of updated documents that have been successfully processed"""
+  updated: [Session!]!
 }
 
 type Subscription {
-  """subscribes to account document updates"""
-  accountDocumentUpdates(accountId: ID!): AccountDocument!
-  documentChanges(id: ID!): DocumentChange
+  syncAccountInfoUpdates: [AccountInfo!]!
+  syncAccountUpdates: [Account!]!
+  syncBlobInfoUpdates: [BlobInfo!]!
+  syncDocumentHighlightUpdates: [DocumentHighlight!]!
+  syncDocumentMemberUpdates: [DocumentMember!]!
+  syncDocumentUpdates: [Document!]!
+  syncSessionUpdates: [Session!]!
 }
 
-scalar Upload
+scalar UUID
 
-input UpsertDocumentHighlightInput {
-  """content associated with highlight serialized as JSON"""
-  content: JSON
+type UpdateError {
+  """Error string associated with upd"""
+  error: String
 
-  """whether highlight has been deleted"""
-  deleted: Boolean
-
-  """unique highlight id"""
-  id: ID
-
-  """image assocaited with highlight"""
-  image: Upload
-
-  """location of a highlight serialized as JSON"""
-  location: JSON
-}
-
-input UpsertDocumentInput {
-  """whether to delete document"""
-  deleted: Boolean
-
-  """hash of file associated with document"""
-  fileHash: String
-
-  """unique document ID"""
-  id: ID
-
-  """list of document members"""
-  members: [DocumentMemberInput!]
-
-  """metadata associates with document"""
-  meta: DocumentMetaInput
-
-  """type of the document"""
-  type: DocumentType
-}
-
-input UpsertFileInput {
-  """sha256 hash of file"""
-  hash: String
-
-  """file mime type"""
-  mimeType: String
-
-  """sources where file can be retrived"""
-  sources: [String!]
+  """Id of the resource that failed update"""
+  id: String!
 }

@@ -1,0 +1,19 @@
+{
+  "plpgsqlLanguageServer.database": "postgres",
+  "plpgsqlLanguageServer.user": "postgres",
+  "plpgsqlLanguageServer.password": "postgrespassword",
+  "plpgsqlLanguageServer.defaultSchema": "public",
+  "plpgsqlLanguageServer.queryParameterPattern": "pggen.arg\\('[A-Za-z_][A-Za-z0-9_]*'\\)",
+  "plpgsqlLanguageServer.keywordQueryParameterPattern": "pggen\\.arg\\('{keyword}'\\)",
+  "plpgsqlLanguageServer.definitionFiles": [
+    // Support glob.
+    "**/*.sql",
+    "**/*.psql",
+    "**/*.pgsql"
+  ],
+  // The supported extention types are ['*.pgsql', '*.psql'].
+  // If you want to use this extension in '*.sql', add the following settings.
+  "files.associations": {
+    "*.sql": "postgres"
+  }
+}

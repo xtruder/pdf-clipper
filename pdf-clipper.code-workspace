@@ -14,6 +14,9 @@
     {
       "name": "server",
       "path": "packages/server"
+    },
+    {
+      "path": "packages/server-go"
     }
   ],
   "settings": {
@@ -41,5 +44,6 @@
     },
     "typescript.tsdk": "./node_modules/typescript/lib",
     "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
+    "sqltools.connections": [],
   }
 }

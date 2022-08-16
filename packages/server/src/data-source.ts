@@ -3,10 +3,11 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import {
   AccountEntity,
+  SessionEntity,
   DocumentEntity,
   DocumentHighlightEntity,
   DocumentMemberEntity,
-  FileEntity,
+  BlobInfoEntity,
 } from "./entities";
 import { DocumentMembersValidatorSubscriber } from "./subscribers";
 
@@ -21,10 +22,11 @@ export const AppDataSource = new DataSource({
   logging: true,
   entities: [
     AccountEntity,
+    SessionEntity,
     DocumentEntity,
     DocumentHighlightEntity,
     DocumentMemberEntity,
-    FileEntity,
+    BlobInfoEntity,
   ],
   migrations: [],
   subscribers: [DocumentMembersValidatorSubscriber],

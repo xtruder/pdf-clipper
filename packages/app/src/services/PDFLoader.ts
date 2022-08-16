@@ -1,3 +1,5 @@
+import createDebugLogger from "debug";
+
 import { PDFDocumentProxy } from "pdfjs-dist";
 import {
   map,
@@ -9,14 +11,13 @@ import {
   tap,
   BehaviorSubject,
 } from "rxjs";
-import debug from "debug";
 
 import { loadPDF, PDFLoadProgress } from "~/lib/pdfjs";
 
 import { Database, DocumentDocument } from "~/persistence/rxdb";
 import { BlobStore } from "~/persistence/blobstore";
 
-const log = debug("services:PDFloader");
+const logger = createDebugLogger("services:PDFloader");
 
 export interface PDFLoadStatus {
   pdf: PDFDocumentProxy | null;
@@ -125,8 +126,8 @@ const logProgress = (docId: string) =>
       pdf,
     }: PDFLoadStatus) =>
       !!pdf
-        ? log("PDF document loaded %s", docId)
-        : log(
+        ? logger("PDF document loaded %s", docId)
+        : logger(
             "loading PDF document %s: %s",
             docId,
             total || loaded ? (total / loaded) * 100 : 0

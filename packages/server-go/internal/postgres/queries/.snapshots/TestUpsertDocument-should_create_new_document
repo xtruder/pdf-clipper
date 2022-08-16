@@ -1,0 +1,43 @@
+(queries.UpsertDocumentRow) {
+  ID: (pgtype.UUID) {
+    Bytes: ([16]uint8) (len=16) {
+      00000000  6c 16 b5 11 88 bb 48 a8  8b d9 b7 ab f3 77 f7 08  |l.....H......w..|
+    },
+    Status: (pgtype.Status) 2
+  },
+  CreatedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 2020-01-01 01:01:01 +0000 UTC,
+    Status: (pgtype.Status) 2,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  UpdatedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 2020-01-01 01:01:01 +0000 UTC,
+    Status: (pgtype.Status) 2,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  DeletedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 0001-01-01 00:00:00 +0000 UTC,
+    Status: (pgtype.Status) 1,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  CreatedBy: (pgtype.UUID) {
+    Bytes: ([16]uint8) (len=16) {
+      00000000  00 c0 ba b4 c4 3b 45 b4  bd 23 20 20 59 e6 7e b2  |.....;E..#  Y.~.|
+    },
+    Status: (pgtype.Status) 2
+  },
+  OwnerID: (pgtype.UUID) {
+    Bytes: ([16]uint8) (len=16) {
+      00000000  00 c0 ba b4 c4 3b 45 b4  bd 23 20 20 59 e6 7e b2  |.....;E..#  Y.~.|
+    },
+    Status: (pgtype.Status) 2
+  },
+  Type: (queries.DocumentType) (len=3) pdf,
+  Meta: (pgtype.JSONB) {
+    Bytes: ([]uint8) (len=2) {
+      00000000  7b 7d                                             |{}|
+    },
+    Status: (pgtype.Status) 2
+  },
+  FileHash: (*string)(<nil>)
+}

@@ -1,0 +1,11 @@
+([]queries.GetDocumentsMembershipRow) (len=1) {
+  (queries.GetDocumentsMembershipRow) {
+    DocumentID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  ec bb 7a c0 8a ac 43 93  ba a1 0d 54 f1 c1 ba fe  |..z...C....T....|
+      },
+      Status: (pgtype.Status) 2
+    },
+    Role: (queries.DocumentRole) (len=6) viewer
+  }
+}

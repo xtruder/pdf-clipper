@@ -1,0 +1,24 @@
+(queries.UpsertAccountRow) {
+  ID: (pgtype.UUID) {
+    Bytes: ([16]uint8) (len=16) {
+      00000000  23 56 0f 28 1f 04 42 f8  96 64 63 b8 44 fd fe 99  |#V.(..B..dc.D...|
+    },
+    Status: (pgtype.Status) 2
+  },
+  CreatedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 2020-01-01 01:01:01 +0000 UTC,
+    Status: (pgtype.Status) 2,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  UpdatedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 2020-01-01 01:01:01 +0000 UTC,
+    Status: (pgtype.Status) 2,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  DeletedAt: (pgtype.Timestamptz) {
+    Time: (time.Time) 0001-01-01 00:00:00 +0000 UTC,
+    Status: (pgtype.Status) 1,
+    InfinityModifier: (pgtype.InfinityModifier) none
+  },
+  Name: (*string)((len=5) "user1")
+}

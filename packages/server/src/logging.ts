@@ -1,5 +1,4 @@
 import winston, { format } from "winston";
-import expressWinston from "express-winston";
 
 const loggerFormat = format.combine(
   format.timestamp(),

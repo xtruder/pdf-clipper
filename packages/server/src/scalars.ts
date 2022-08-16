@@ -1,18 +1,25 @@
 import * as uuid from "uuid";
 
-import { ValidationError } from "apollo-server-errors";
 import { GraphQLScalarType, Kind } from "graphql";
+import { ValidationError } from "apollo-server-errors";
 
-export const idScalar = new GraphQLScalarType<string, string>({
-  name: "ID",
+export const uuidScalar = new GraphQLScalarType<string, string>({
+  name: "UUID",
 
   description: "UUID scalar type",
 
-  serialize(value: string): string {
-    return value;
+  serialize(value: unknown): string {
+    if (typeof value === "string") {
+      return value;
+    }
+
+    throw new ValidationError("invalid uuid value: " + value);
   },
 
-  parseValue(value: string): string {
+  parseValue(value: unknown): string {
+    if (typeof value !== "string")
+      throw new Error("invalid uuid value: " + value);
+
     if (value === "") return "00000000-0000-0000-0000-000000000000";
 
     if (!uuid.validate(value))
@@ -21,17 +28,17 @@ export const idScalar = new GraphQLScalarType<string, string>({
     return value;
   },
 
-  parseLiteral(ast): string | null {
+  parseLiteral(ast): string {
     if (ast.kind === Kind.STRING) {
       if (ast.value === "") return "00000000-0000-0000-0000-000000000000";
 
       if (!uuid.validate(ast.value))
-        throw new Error(`error parsing uuid ${ast.value}`);
+        throw new ValidationError(`error parsing uuid ${ast.value}`);
 
       return ast.value;
     }
 
-    return null;
+    throw new ValidationError(`invalid uuid kind: ${ast.kind}`);
   },
 });
 
@@ -40,11 +47,17 @@ export const dateTimeScalar = new GraphQLScalarType<Date, string>({
 
   description: "DateTime custom scalar type",
 
-  serialize(value: Date): string {
+  serialize(value: unknown): string {
+    if (!(value instanceof Date))
+      throw new ValidationError(`invalid date value: ${value}`);
+
     return value.toISOString();
   },
 
-  parseValue(value: string): Date {
+  parseValue(value: unknown): Date {
+    if (typeof value !== "string" || !((value as any) instanceof Date))
+      throw new ValidationError("invalid date");
+
     const date = new Date(value); // Convert incoming integer to Date
 
     if (isNaN(date.valueOf())) throw new ValidationError("invalid date");
@@ -52,7 +65,7 @@ export const dateTimeScalar = new GraphQLScalarType<Date, string>({
     return date;
   },
 
-  parseLiteral(ast): Date | null {
+  parseLiteral(ast): Date {
     if (ast.kind === Kind.STRING) {
       const date = new Date(ast.value); // Convert hard-coded AST string to Date
 
@@ -61,7 +74,7 @@ export const dateTimeScalar = new GraphQLScalarType<Date, string>({
       return date;
     }
 
-    return null; // Invalid hard-coded value (not an integer)
+    throw new ValidationError(`invalid date kind: ${ast.kind}`);
   },
 });
 
@@ -74,15 +87,18 @@ export const JSONScalar = new GraphQLScalarType<any, string>({
     return JSON.stringify(value);
   },
 
-  parseValue(value: string): any {
+  parseValue(value: unknown): any {
+    if (typeof value !== "string")
+      throw new ValidationError("error parsing JSON value");
+
     return JSON.parse(value);
   },
 
-  parseLiteral(ast): any | null {
+  parseLiteral(ast): any {
     if (ast.kind === Kind.STRING) {
       return JSON.parse(ast.value);
     }
 
-    return null;
+    throw new ValidationError(`invalid JSON kind: ${ast.kind}`);
   },
 });

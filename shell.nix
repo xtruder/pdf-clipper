@@ -1,4 +1,7 @@
-{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-21.11.tar.gz") { } }:
+{
+  # nixos-unstable
+  pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-22.05.tar.gz") { }
+}:
 
 let
   fontConfigEtc = (
@@ -14,10 +17,19 @@ in pkgs.mkShell {
     gnumake
 
     # nodejs
-    nodejs-17_x
+    nodejs-16_x
 
+    # testing
     cypress
     xorg.xorgserver
+
+    # go development
+    go
+    go-outline
+    gopls
+    gopkgs
+    go-tools
+    delve
 
     postgresql
   ];
@@ -26,8 +38,9 @@ in pkgs.mkShell {
 
   FONTCONFIG_PATH = fontConfigEtc;
   CYPRESS_RUN_BINARY= "${pkgs.cypress}/bin/Cypress";
+  GO_TAGS = "postgres";
 
   shellHook = ''
-    PATH=$PWD/node_modules/.bin:$PATH
+    PATH=$PWD/node_modules/.bin:~/go/bin:$PATH
   '';
 }

@@ -1,4 +1,5 @@
-import debug from "debug";
+import createDebugLogger from "debug";
+
 import { from, mergeMap } from "rxjs";
 import { PDFDocumentProxy } from "pdfjs-dist";
 import { PDFHighlight } from "@pdf-clipper/components";
@@ -13,7 +14,7 @@ import { canvasToPNGBlob } from "~/lib/dom";
 import { DocumentHighlightDocument } from "~/persistence/rxdb";
 import { BlobStore } from "~/persistence/blobstore";
 
-const log = debug("services:PDFHighlightScreenshotter");
+const logger = createDebugLogger("services:PDFHighlightScreenshotter");
 
 export function createPDFHighlightScreenshotter(
   db: Database,
@@ -50,7 +51,7 @@ export function createPDFHighlightScreenshotter(
     highlight: DocumentHighlightDocument,
     pdfDocument: PDFDocumentProxy
   ) => {
-    log("new highlight to screenshot %s", highlight.id);
+    logger("new highlight to screenshot %s", highlight.id);
 
     const pdfHighlight = highlight as PDFHighlight;
 
@@ -69,7 +70,7 @@ export function createPDFHighlightScreenshotter(
       await getPageCanvasArea(page, { scale: 5, area })
     );
 
-    log(
+    logger(
       "saving screenshot for highlight %s, size: %s",
       highlight.id,
       screenshot.size
@@ -78,7 +79,7 @@ export function createPDFHighlightScreenshotter(
     // save screehoted image
     const { hash } = await blobStore.store("highlightimg", screenshot);
 
-    log("highlight screenshot saved %s with hash %s", highlight.id, hash);
+    logger("highlight screenshot saved %s with hash %s", highlight.id, hash);
 
     await highlight.atomicPatch({ imageHash: hash });
 

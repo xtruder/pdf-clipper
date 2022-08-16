@@ -1,12 +1,13 @@
 overwrite: true
-schema: "../schema/**.gql"
+schema: "../../schema.gql"
 documents: null
 config:
   scalars:
     DateTime: Date
+    UUID: string
     JSON: any
   useIndexSignature: true
-  defaultMapper: ./types#DeepPartial<{T}>
+  #defaultMapper: ./types#DeepPartial<{T}>
 generates:
   src/graphql.schema.ts:
     plugins:

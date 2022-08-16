@@ -4,7 +4,7 @@ import { create as createIPFSHttpClient } from "ipfs-http-client";
 import { BlobStore } from "~/persistence/blobstore";
 import { IPFSClient } from "~/persistence/ipfs";
 import { NativeFSBlobCache } from "~/persistence/nativefs";
-import { Database, initDB } from "~/persistence/rxdb";
+import { Database, initDB, replicateCollections } from "~/persistence/rxdb";
 
 import {
   createPDFHighlightScreenshotter,
@@ -24,6 +24,7 @@ export async function initPersistence() {
   console.log("app starting");
 
   db = await initDB();
+
   ipfs = new IPFSClient(
     createIPFSHttpClient({
       url: "https://ipfs.infura.io:5001/api/v0",
@@ -44,6 +45,7 @@ export function initServices() {
 
     createPDFHighlightScreenshotter(db, pdfLoader, blobStore).start();
     createPDFMetaExtractor(db, pdfLoader).start();
+    replicateCollections("https://localhost:3333/graphql", db);
 
     log("services intialized");
   });

@@ -9,28 +9,63 @@ import {
   ManyToOne,
   PrimaryColumn,
   JoinColumn,
-  Unique,
   BaseEntity,
 } from "typeorm";
 
 import {
   Account,
-  AccountDocument,
   AccountInfo,
+  Session,
   Document,
   DocumentHighlight,
   DocumentMember,
-  FileInfo,
+  BlobInfo,
 } from "./graphql.schema";
-import { DeepPartial } from "./types";
 
 @Entity({ name: "accounts" })
 export class AccountEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
-  @Column("varchar", { name: "title", nullable: true, length: 200 })
-  name?: string;
+  @Column("varchar", { name: "name", nullable: true, length: 200 })
+  name: string | null;
+
+  @CreateDateColumn({ name: "created_at", type: "timestamp" })
+  createdAt: Date | null;
+
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
+  updatedAt: Date | null;
+
+  @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
+  deletedAt: Date | null;
+
+  @OneToMany(() => DocumentMemberEntity, (table) => table.account)
+  documents: DocumentMemberEntity[];
+
+  @OneToMany(() => DocumentHighlightEntity, (table) => table.creator)
+  createdHighlights: DocumentHighlightEntity[];
+
+  @OneToMany(() => DocumentMemberEntity, (table) => table.creator)
+  createdDocumentMembers: DocumentMemberEntity[];
+
+  @OneToMany(() => DocumentEntity, (table) => table.creator)
+  createdDocuments: DocumentEntity[];
+
+  @OneToMany(() => BlobInfoEntity, (table) => table.creator)
+  createdFiles: BlobInfoEntity[];
+}
+
+@Entity({ name: "sessions" })
+export class SessionEntity extends BaseEntity {
+  @PrimaryGeneratedColumn("uuid", { name: "id" })
+  id: string;
+
+  @Column({ name: "account_id" })
+  accountId: string;
+
+  @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
+  @JoinColumn({ name: "account_id" })
+  account: AccountEntity;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date;
@@ -38,42 +73,30 @@ export class AccountEntity extends BaseEntity {
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
-  deletedAt: Date;
+  @Column("jsonb", { name: "sync_documents", default: [] })
+  syncDocuments: string[];
 
-  @OneToMany(() => DocumentMemberEntity, (table) => table.account)
-  documents: DocumentMemberEntity[];
-
-  @OneToMany(() => DocumentHighlightEntity, (table) => table.createdBy)
-  createdHighlights: DocumentHighlightEntity[];
-
-  @OneToMany(() => DocumentMemberEntity, (table) => table.createdBy)
-  createdDocumentMembers: DocumentMemberEntity[];
-
-  @OneToMany(() => DocumentEntity, (table) => table.createdBy)
-  createdDocuments: DocumentEntity[];
-
-  @OneToMany(() => FileEntity, (table) => table.createdBy)
-  createdFiles: FileEntity[];
-
-  toAccount = (): DeepPartial<Account> => ({
+  toSession = (): Session => ({
     id: this.id,
+    accountId: this.accountId,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    deletedAt: this.deletedAt,
-    name: this.name,
-  });
-
-  toAccountInfo = (): AccountInfo => ({
-    id: this.id,
-    name: this.name,
+    syncDocuments: this.syncDocuments,
   });
 }
 
-@Entity({ name: "files" })
-export class FileEntity extends BaseEntity {
+export enum BlobType {
+  DocFile = "docfile",
+  HighlightImg = "highlightimg",
+}
+
+@Entity({ name: "blobs" })
+export class BlobInfoEntity extends BaseEntity {
   @PrimaryColumn("varchar", { name: "hash", length: 100 })
   hash: string;
+
+  @Column("enum", { name: "type", enum: BlobType })
+  type: BlobType;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date;
@@ -83,26 +106,35 @@ export class FileEntity extends BaseEntity {
 
   @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
   @JoinColumn({ name: "created_by" })
-  createdBy: AccountEntity;
+  creator: AccountEntity;
 
-  @Column({ name: "created_by" })
-  createdById: string;
+  @Column({ name: "created_by", nullable: false })
+  createdBy: string;
 
-  @Column("varchar", { name: "mime_type", length: 50 })
+  @Column("varchar", { name: "mime_type", length: 50, nullable: false })
   mimeType: string;
 
-  @Column("jsonb", { name: "sources", default: [] })
-  sources: string[];
+  @Column("integer", { name: "size", nullable: false })
+  size: number;
+
+  @Column("string", { name: "source" })
+  source: string;
 
   @OneToMany(() => DocumentEntity, (table) => table.id)
   documents: DocumentEntity[];
 
-  toFileInfo = (): DeepPartial<FileInfo> => ({
+  @OneToMany(() => DocumentHighlightEntity, (table) => table.id)
+  highlights: DocumentHighlightEntity[];
+
+  toBlobInfo = (): BlobInfo => ({
+    type: this.mimeType,
     hash: this.hash,
     mimeType: this.mimeType,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    createdBy: { id: this.createdById },
+    createdBy: this.createdBy,
+    size: this.size,
+    source: this.source,
   });
 }
 
@@ -126,10 +158,10 @@ export class DocumentEntity extends BaseEntity {
 
   @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
   @JoinColumn({ name: "created_by" })
-  createdBy: AccountEntity;
+  creator: AccountEntity;
 
   @Column({ name: "created_by" })
-  createdById: string;
+  createdBy: string;
 
   @Column("enum", { name: "type", enum: DocumentType })
   type: DocumentType;
@@ -145,22 +177,22 @@ export class DocumentEntity extends BaseEntity {
   @OneToMany(() => DocumentHighlightEntity, (table) => table.document)
   highlights: DocumentHighlightEntity[];
 
-  @ManyToOne(() => FileEntity, (table) => table.hash)
+  @ManyToOne(() => BlobInfoEntity, (table) => table.hash)
   @JoinColumn({ name: "file_hash" })
-  file: FileEntity;
+  file: BlobInfoEntity;
 
   @Column({ name: "file_hash", nullable: true })
   fileHash: string;
 
-  toDocument = (): DeepPartial<Document> => ({
+  toDocument = (): Document => ({
     id: this.id,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     deletedAt: this.deletedAt,
     type: this.type,
     meta: this.meta,
-    file: this.file ? this.file.toFileInfo() : { hash: this.fileHash },
-    createdBy: { id: this.createdById },
+    createdBy: this.createdBy,
+    fileHash: this.fileHash,
   });
 }
 
@@ -188,10 +220,10 @@ export class DocumentHighlightEntity extends BaseEntity {
     eager: true,
   })
   @JoinColumn({ name: "created_by" })
-  createdBy: AccountEntity;
+  creator: AccountEntity;
 
   @Column({ name: "created_by" })
-  createdById: string;
+  createdBy: string;
 
   @ManyToOne(() => DocumentEntity, (table) => table.highlights)
   @JoinColumn({ name: "document_id" })
@@ -200,14 +232,22 @@ export class DocumentHighlightEntity extends BaseEntity {
   @Column({ name: "document_id" })
   documentId: string;
 
+  @ManyToOne(() => BlobInfoEntity, (table) => table.hash)
+  @JoinColumn({ name: "image_hash" })
+  image: BlobInfoEntity;
+
+  @Column({ name: "image_hash", nullable: true })
+  imageHash: string;
+
   toDocumentHighlight = (): DocumentHighlight => ({
     id: this.id,
+    documentId: this.documentId,
     location: this.location,
     content: this.content,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     deletedAt: this.deletedAt,
-    createdBy: { id: this.createdById },
+    createdBy: this.createdBy,
   });
 }
 
@@ -218,13 +258,18 @@ export enum DocumentRole {
 }
 
 @Entity({ name: "document_members" })
-@Unique(["accountId", "documentId"])
 export class DocumentMemberEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
+  updatedAt: Date;
+
+  @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
+  deletedAt: Date;
 
   @Column("timestamp", { name: "accepted_at", nullable: true })
   acceptedAt?: Date;
@@ -256,38 +301,20 @@ export class DocumentMemberEntity extends BaseEntity {
     eager: true,
   })
   @JoinColumn({ name: "created_by" })
-  createdBy: AccountEntity;
+  creator: AccountEntity;
 
   @Column({ name: "created_by", nullable: true })
-  createdById: string;
+  createdBy: string;
 
-  set accepted(accepted: boolean) {
-    if (accepted) {
-      this.acceptedAt = this.acceptedAt || new Date();
-    } else {
-      if (typeof accepted !== "boolean") return;
-
-      this.acceptedAt = null;
-    }
-  }
-
-  get accepted(): boolean {
-    return !!this.acceptedAt;
-  }
-
-  toDocumentMember = (): DeepPartial<DocumentMember> => ({
+  toDocumentMember = (): DocumentMember => ({
+    id: this.id,
+    documentId: this.documentId,
     role: this.role,
     createdAt: this.createdAt,
+    updatedAt: this.updatedAt,
+    deletedAt: this.deletedAt,
     acceptedAt: this.acceptedAt,
-    account: { id: this.accountId },
-    createdBy: { id: this.createdById },
-  });
-
-  toAccountDocument = (): DeepPartial<AccountDocument> => ({
-    role: this.role,
-    createdAt: this.createdAt,
-    acceptedAt: this.acceptedAt,
-    document: { id: this.documentId },
-    createdBy: { id: this.createdById },
+    accountId: this.accountId,
+    createdBy: this.createdBy,
   });
 }

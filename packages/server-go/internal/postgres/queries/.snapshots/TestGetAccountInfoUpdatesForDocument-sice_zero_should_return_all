@@ -1,0 +1,58 @@
+([]queries.GetAccountInfoUpdatesForDocumentRow) (len=4) {
+  (queries.GetAccountInfoUpdatesForDocumentRow) {
+    ID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  00 c0 ba b4 c4 3b 45 b4  bd 23 20 20 59 e6 7e b2  |.....;E..#  Y.~.|
+      },
+      Status: (pgtype.Status) 2
+    },
+    Name: (*string)((len=6) "admin1"),
+    UpdatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-12 12:28:12.235739 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    }
+  },
+  (queries.GetAccountInfoUpdatesForDocumentRow) {
+    ID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  06 cc be 53 b7 64 4b 59  ba c3 ce 1f 7d 5e 09 c6  |...S.dKY....}^..|
+      },
+      Status: (pgtype.Status) 2
+    },
+    Name: (*string)((len=7) "viewer1"),
+    UpdatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-12 17:01:18.673326 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    }
+  },
+  (queries.GetAccountInfoUpdatesForDocumentRow) {
+    ID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  d9 9f 8d b9 31 08 42 ef  bf 44 f7 cb 1f ab 45 e6  |....1.B..D....E.|
+      },
+      Status: (pgtype.Status) 2
+    },
+    Name: (*string)((len=7) "editor1"),
+    UpdatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-12 17:04:39.92767 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    }
+  },
+  (queries.GetAccountInfoUpdatesForDocumentRow) {
+    ID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  6a 5b 74 bb 57 af 4c 90  9d 10 f6 f4 96 56 56 ac  |j[t.W.L......VV.|
+      },
+      Status: (pgtype.Status) 2
+    },
+    Name: (*string)((len=8) "deleted1"),
+    UpdatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-13 12:47:28.694092 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    }
+  }
+}

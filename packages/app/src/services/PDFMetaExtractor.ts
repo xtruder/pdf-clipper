@@ -1,5 +1,6 @@
+import createDebugLogger from "debug";
+
 import { mergeMap, tap, distinct, forkJoin, of } from "rxjs";
-import debug from "debug";
 
 import { getPageCanvasArea, getDocumentOutline } from "~/lib/pdfjs";
 
@@ -9,7 +10,7 @@ import { Database, DocumentDocument } from "~/persistence/rxdb";
 import { canvasToPNGDataURI } from "~/lib/dom";
 import { PDFDocumentProxy } from "pdfjs-dist";
 
-const log = debug("services:PDFMetaExtractor");
+const logger = createDebugLogger("services:PDFMetaExtractor");
 
 export function createPDFMetaExtractor(db: Database, pdfLoader: PDFLoader) {
   const pdfDocsWithoutMeta$ = db.documents
@@ -61,7 +62,7 @@ export function createPDFMetaExtractor(db: Database, pdfLoader: PDFLoader) {
     // extract each document exactly once
     distinct((document) => document.id),
 
-    tap((document) => log("extracting pdf meta from document", document.id)),
+    tap((document) => logger("extracting pdf meta from document", document.id)),
 
     mergeMap((document) =>
       forkJoin({
@@ -73,7 +74,8 @@ export function createPDFMetaExtractor(db: Database, pdfLoader: PDFLoader) {
     mergeMap(({ document, pdf }) => getPDFDocMeta(document, pdf)),
 
     tap(
-      (document) => document && log("pdf document meta extracted", document.id)
+      (document) =>
+        document && logger("pdf document meta extracted", document.id)
     )
   );
 

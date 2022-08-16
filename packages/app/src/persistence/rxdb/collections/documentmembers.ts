@@ -61,7 +61,7 @@ export const schema: RxJsonSchema<DocumentMember> = {
       default: false,
     },
   },
-  required: ["accountId", "documentId"],
+  required: ["accountId", "documentId", "role"],
 };
 
 export function initCollection(

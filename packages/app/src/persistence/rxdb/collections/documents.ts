@@ -43,14 +43,13 @@ export const schema: RxJsonSchema<Document> = {
     },
     meta: {
       type: "object",
-      default: {},
     },
     local: {
       type: "boolean",
       default: false,
     },
   },
-  required: ["id", "type", "createdBy"],
+  required: ["id"],
 };
 
 export function initCollection(collection: DocumentCollection) {

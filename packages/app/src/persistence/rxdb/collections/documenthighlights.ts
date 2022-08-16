@@ -70,7 +70,7 @@ export const schema: RxJsonSchema<DocumentHighlight> = {
       default: false,
     },
   },
-  required: ["id", "documentId"],
+  required: ["id", "documentId", "sequence"],
 };
 
 export const methods = {

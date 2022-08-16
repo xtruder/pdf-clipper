@@ -1,0 +1,26 @@
+([]queries.GetAccountUpdatesForAccountRow) (len=1) {
+  (queries.GetAccountUpdatesForAccountRow) {
+    ID: (pgtype.UUID) {
+      Bytes: ([16]uint8) (len=16) {
+        00000000  00 c0 ba b4 c4 3b 45 b4  bd 23 20 20 59 e6 7e b2  |.....;E..#  Y.~.|
+      },
+      Status: (pgtype.Status) 2
+    },
+    CreatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-12 12:28:12.235739 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    },
+    UpdatedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 2022-08-12 12:28:12.235739 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    },
+    DeletedAt: (pgtype.Timestamptz) {
+      Time: (time.Time) 0001-01-01 00:00:00 +0000 UTC,
+      Status: (pgtype.Status) 2,
+      InfinityModifier: (pgtype.InfinityModifier) none
+    },
+    Name: (*string)((len=6) "admin1")
+  }
+}

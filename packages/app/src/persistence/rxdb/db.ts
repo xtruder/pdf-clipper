@@ -29,13 +29,6 @@ addRxPlugin(RxDBLocalDocumentsPlugin);
 addRxPlugin(RxDBDevModePlugin);
 
 export async function initDB(): Promise<Database> {
-  const gqlClient = createClient({
-    url: "https://localhost:1111/graphql",
-
-    // retries will be done by graphqlReplication plugin
-    retryAttempts: 0,
-  });
-
   const storage = wrappedValidateAjvStorage({
     storage: getRxStorageDexie(),
   });
@@ -60,6 +53,33 @@ export async function initDB(): Promise<Database> {
       c.initCollection(collection, database);
     }
   }
+
+  // setup debug logging on collections
+  for (const [, c] of Object.entries(collections)) {
+    const log = debug(`rxdb:${c.name}`);
+    const getId = (data: any) => data[c.schema.primaryPath];
+
+    c.preInsert((data) => log(`inserting doc: ${getId(data)}`, data), true);
+    c.postInsert((data) => log(`doc inserted: ${getId(data)}`, data), true);
+    c.preSave((data) => log(`doc saving: ${getId(data)}`, data), true);
+    c.postSave((data) => log(`doc saved: ${getId(data)}`, data), true);
+    c.preRemove((data) => log(`doc removing: ${getId(data)}`, data), true);
+    c.postRemove((data) => log(`doc removed: ${getId(data)}`, data), true);
+  }
+
+  return database;
+}
+
+export function replicateCollections(
+  url: string,
+  collections: DatabaseCollections
+) {
+  const gqlClient = createClient({
+    url,
+
+    // retries will be done by graphqlReplication plugin
+    retryAttempts: 0,
+  });
 
   replicateGraphql({
     replicationIdentifier: "accounts",
@@ -113,19 +133,4 @@ export async function initDB(): Promise<Database> {
     updatedField: "updatedAt",
     deletedField: "deletedAt",
   });
-
-  // setup debug logging on collections
-  for (const [, c] of Object.entries(collections)) {
-    const log = debug(`rxdb:${c.name}`);
-    const getId = (data: any) => data[c.schema.primaryPath];
-
-    c.preInsert((data) => log(`inserting doc: ${getId(data)}`, data), true);
-    c.postInsert((data) => log(`doc inserted: ${getId(data)}`, data), true);
-    c.preSave((data) => log(`doc saving: ${getId(data)}`, data), true);
-    c.postSave((data) => log(`doc saved: ${getId(data)}`, data), true);
-    c.preRemove((data) => log(`doc removing: ${getId(data)}`, data), true);
-    c.postRemove((data) => log(`doc removed: ${getId(data)}`, data), true);
-  }
-
-  return database;
 }

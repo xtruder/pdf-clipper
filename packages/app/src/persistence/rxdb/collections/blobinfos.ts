@@ -47,7 +47,7 @@ export const schema: RxJsonSchema<BlobInfo> = {
       default: false,
     },
   },
-  required: ["hash", "type", "mimeType", "size"],
+  required: ["hash", "type", "mimeType", "size", "mimeType"],
 };
 
 export function initCollection(collection: BlobInfoCollection) {
