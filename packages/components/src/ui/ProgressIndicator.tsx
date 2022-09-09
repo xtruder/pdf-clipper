@@ -1,8 +1,7 @@
 import { createContextState } from "create-context-state";
 import React, { CSSProperties, useEffect } from "react";
 import useState from "react-usestateref";
-
-import { setRandomInterval } from "../lib/utils";
+import setRandomInterval from "set-random-interval";
 
 export interface ProgressIndicatorProps {
   progress: number;
@@ -171,14 +170,14 @@ export const useRandomProgress = (
       setProgress(newProgress);
     };
 
-    const clearInterval = setRandomInterval(
+    const interval = setRandomInterval(
       updateProgress,
       minInterval,
       maxInterval
     );
 
     return () => {
-      clearInterval();
+      interval.clear();
       setProgress(0);
     };
   }, [duration]);

@@ -1,0 +1,45 @@
+type BlobInfo {
+  """hash of a blob"""
+  hash: String!
+
+  """mime type associated with blob"""
+  mimeType: String!
+
+  """size of the blob in bytes"""
+  size: Int
+
+  """blob source URI"""
+  source: String
+
+  """blob download URL"""
+  url: String
+
+  """blob creation time"""
+  createdAt: DateTime!
+
+  """blob last update time"""
+  updatedAt: DateTime!
+
+  """account information about blob creator"""
+  createdBy: AccountInfo!
+}
+
+input UploadBlobInput {
+  """blob mime type"""
+  mimeType: String!
+
+  """blob to upload"""
+  blob: Upload!
+
+  """source where file can be retrieved from"""
+  source: String
+}
+
+extend type Query {
+  blobInfo(hash: String!): BlobInfo!
+}
+
+extend type Mutation {
+  """uploads blob and returns blob information"""
+  uploadBlob(blob: UploadBlobInput!): BlobInfo!
+}

@@ -1,8 +1,14 @@
 import React from "react";
 import { useParams, Navigate } from "react-router-dom";
-import { useAtomValue } from "jotai";
+import { gql, useQuery } from "urql";
 
-import { documentAtom } from "~/state";
+const getDocumentInfoQuery = gql(`
+  query getDocumentInfo($documentId: ID!) @live {
+    document(id: $documentId) {
+      ...DocumentInfoFragment
+    }
+  }
+`);
 
 export interface DocumentViewPageProps {}
 
@@ -10,9 +16,14 @@ export const DocumentViewPage: React.FC<DocumentViewPageProps> = ({}) => {
   const { documentId } = useParams();
   if (!documentId) return <a>Missing document ID</a>;
 
-  const doc = useAtomValue(documentAtom(documentId));
+  const [{ data, error }] = useQuery({
+    query: getDocumentInfoQuery,
+    variables: { documentId },
+    context: { suspense: true },
+  });
+  if (error || !data) throw error;
 
-  const type = doc.type;
+  const type = data.document.type;
 
   switch (type) {
     case "PDF":

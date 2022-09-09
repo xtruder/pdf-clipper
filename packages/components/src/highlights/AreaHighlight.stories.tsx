@@ -34,7 +34,7 @@ export const TheAreaHighlight: Story = (_args) => {
       <p>This is some text</p>
       <AreaHighlight
         boundingRect={boundingRect}
-        onChange={setBoundingRect}
+        onChanged={setBoundingRect}
         isSelected={true}
         blendMode={"multiply"}
         selectedClassName="z-10"

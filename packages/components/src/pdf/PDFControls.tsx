@@ -40,17 +40,17 @@ const roundPlaces = (value: number, places: number): number => {
 };
 
 const highlightColors = [
-  HighlightColor.RED,
-  HighlightColor.GREEN,
-  HighlightColor.BLUE,
-  HighlightColor.YELLOW,
+  HighlightColor.Red,
+  HighlightColor.Green,
+  HighlightColor.Blue,
+  HighlightColor.Yellow,
 ];
 
 const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-300",
-  [HighlightColor.YELLOW]: "bg-yellow-300",
-  [HighlightColor.GREEN]: "bg-green-300",
-  [HighlightColor.BLUE]: "bg-blue-300",
+  [HighlightColor.Red]: "bg-red-300",
+  [HighlightColor.Yellow]: "bg-yellow-300",
+  [HighlightColor.Green]: "bg-green-300",
+  [HighlightColor.Blue]: "bg-blue-300",
 };
 
 export const PDFActionButton: React.FC<{
@@ -72,7 +72,7 @@ export const PDFActionButton: React.FC<{
 }) => {
   const [opened, setOpened] = useState(false);
   const [selectedColor, setSelectedColor] = useState<HighlightColor>(
-    HighlightColor.YELLOW
+    HighlightColor.Yellow
   );
   const [selectedScaleValue, setSelectedScaleValue] = useState("auto");
   const [currentScale, setCurrentScale] = useState(scale);

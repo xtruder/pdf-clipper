@@ -1,31 +1,55 @@
-import React, { FC, useCallback, useEffect } from "react";
-import useState from "react-usestateref";
+import React, { FC, useState, useEffect } from "react";
+import { suspend } from "suspend-react";
+
+import { gql, useMutation, useQuery } from "urql";
+
 import { FullScreen } from "@chiragrupani/fullscreen-react";
 
-import { useAtom, useAtomValue } from "jotai";
-
-import { clearRangeSelection } from "~/lib/dom";
 import { resetValue } from "~/lib/utils";
 
 import {
-  PDFHighlighter,
-  PDFHighlight,
   PDFActionButton,
-  PDFHighlightTooltip,
   PDFSidebar,
   PDFDrawer,
   PDFSidebarNavbar,
-  PDFSelectionTooltip,
-  PDFDisplayProxy,
-  PDFScrollPosition,
   DocumentOutlineView,
   PDFPageThumbnails,
-  HighlightCardList,
   HighlightColor,
+  OutlinePosition,
+  loadPDF,
+  useContextProgress,
 } from "@pdf-clipper/components";
+import { HighlightListView } from "./HighlightListView";
+import { PDFHighlighterContainer } from "./PDFHighlighterContainer";
 
-import { documentAtom, documentHighlightsAtom, pdfLoaderAtom } from "~/state";
-import { HighlightCardContainer } from "./HighlightCardContainer";
+const getDocumentInfoQuery = gql(`
+  query getDocumentInfo($documentId: ID!) @live {
+    document(id: $documentId) {
+      ...DocumentInfoFragment
+    }
+  }
+`);
+
+const getDocumentFileQuery = gql(`
+  query getDocumentFile($documentId: ID!) {
+    document(id: $documentId) {
+      id
+      file {
+        hash
+        url
+        blob
+      }
+    }
+  }
+`);
+
+const updateDocumentMutation = gql(`
+  mutation updateDocument($document: UpdateDocumentInput!) {
+    updateDocument(document: $document) {
+      ...DocumentInfoFragment
+    }
+  }
+`);
 
 export interface PDFReaderProps {
   documentId: string;
@@ -40,166 +64,75 @@ export interface PDFReaderProps {
 export const PDFReader: FC<PDFReaderProps> = ({
   documentId,
   className = "",
-  onClose,
   isDarkMode = false,
-  selectOnCreate = true,
+  onClose,
 }) => {
-  const [{ meta }, setDocument] = useAtom(documentAtom(documentId));
+  const [{ data, error }] = useQuery({
+    query: getDocumentInfoQuery,
+    variables: { documentId },
+  });
+  if (error || !data) throw error;
+
+  const [{ data: docFileData, error: docFileError }] = useQuery({
+    query: getDocumentFileQuery,
+    variables: { documentId },
+  });
+  if (docFileError || !docFileData) throw docFileError;
+
+  const [, updateDocument] = useMutation(updateDocumentMutation);
+
+  let source: Blob | string;
+  if (docFileData.document.file?.blob) {
+    source = docFileData.document.file?.blob;
+  } else if (docFileData.document.file?.url) {
+    source = docFileData.document.file?.url;
+  } else {
+    throw new Error("missing file source");
+  }
+
+  const { setProgress } = useContextProgress();
 
   // load pdf document
-  const pdfDocument = useAtomValue(pdfLoaderAtom(documentId));
-  useEffect(() => () => pdfLoaderAtom.remove(documentId), [documentId]);
+  const pdfDocument = suspend(
+    () => loadPDF(source, ({ loaded, total }) => setProgress(total / loaded)),
+    [documentId]
+  );
 
+  const meta = data.document.meta;
   let { title, description, outline } = meta;
 
-  const [highlights, dispatchHighlight] = useAtom(
-    documentHighlightsAtom(documentId)
-  );
-
-  let pdfHighlights = highlights.map<PDFHighlight>((h) => ({
-    id: h.id,
-    content: h.content!,
-    location: h.location!,
-    sequence: h.sequence,
-  }));
-
-  const [inProgressHighlight, setInProgressHighlight, inProgressHighlightRef] =
-    useState<PDFHighlight>();
-  const [selectedHighlight, setSelectedHighlight, selectedHighlightRef] =
-    useState<PDFHighlight>();
-  const [scrollToHighlight, setScrollToHighlight] = useState<PDFHighlight>();
+  const [selectedHighlightId, setSelectedHighlightId] = useState<string>();
+  const [scrollToHighlightId, setScrollToHighlightId] = useState<string>();
   const [scrollToListViewHighlight, setScrollToListViewHighlight] =
-    useState<PDFHighlight>();
+    useState<string>();
+  const [scrollToOutlinePosition, setScrollToOutlinePosition] =
+    useState<OutlinePosition>();
   const [scrollToPage, setScrollToPage] = useState<number>();
-  const [scrollToPosition, setScrollToPosition] = useState<PDFScrollPosition>();
-  const [enableAreaSelection, setEnableAreaSelection] = useState<boolean>(true);
   const [highlightColor, setHighlightColor] = useState<HighlightColor>(
-    HighlightColor.YELLOW
+    HighlightColor.Yellow
   );
   const [pdfScaleValue, setPdfScaleValue] = useState("auto");
-  const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
   const [scale, setScale] = useState<number>();
   const [isDarkReader, setIsDarkReader] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // if highlight is selected use that one, instead of current one
-  pdfHighlights = pdfHighlights.map((h) =>
-    h.id === selectedHighlight?.id ? selectedHighlight : h
-  );
-
-  const clearAreaSelection = () => {
-    if (!enableAreaSelection) return;
-    resetValue(setEnableAreaSelection, true);
-  };
-
-  // clears range and area selection
-  const clearSelection = () => {
-    clearRangeSelection();
-    clearAreaSelection();
-    setSelectedHighlight(undefined);
-  };
-
-  const createHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
-    if (!pdfHighlight) return;
-
-    const { id, content, location, sequence } = pdfHighlight;
-
-    dispatchHighlight({
-      action: "create",
-      value: {
-        id,
-        documentType: "PDF",
-        documentId,
-        content,
-        location,
-        sequence,
-      },
-    });
-
-    if (selectOnCreate) {
-      setSelectedHighlight(pdfHighlight);
-    } else {
-      setSelectedHighlight(undefined);
-    }
-
-    // clear selection and in progress highlight
-    clearSelection();
-    setInProgressHighlight(undefined);
-  }, []);
-
-  const deleteHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
-    if (!pdfHighlight) return;
-
-    // unselect highlight
-    setSelectedHighlight(undefined);
-
-    dispatchHighlight({ action: "remove", value: pdfHighlight.id });
-  }, []);
-
-  const updateHighlight = useCallback(async (pdfHighlight?: PDFHighlight) => {
-    if (!pdfHighlight) return;
-
-    // update selected highlight, so results immidiately reflect ui
-    setSelectedHighlight(pdfHighlight);
-
-    const { id, content, location, sequence } = pdfHighlight;
-
-    dispatchHighlight({
-      action: "update",
-      value: {
-        id,
-        documentType: "PDF",
-        documentId,
-        content,
-        location,
-        imageHash: null,
-        sequence,
-      },
-    });
-  }, []);
-
   const changeTitle = (title: string) =>
-    setDocument({ id: documentId, meta: { ...meta, title, description } });
-
-  const onKeyDown = (event: KeyboardEvent) => {
-    switch (event.code) {
-      case "Escape":
-        clearSelection();
-        break;
-      case "Enter":
-        if (inProgressHighlightRef.current) {
-          createHighlight(inProgressHighlightRef.current);
-        }
-
-        break;
-      case "Delete":
-        if (selectedHighlightRef.current) {
-          deleteHighlight(selectedHighlightRef.current);
-        }
-
-        break;
-    }
-  };
+    updateDocument({
+      document: {
+        id: documentId,
+        meta: {
+          ...meta,
+          title,
+          description,
+        },
+      },
+    });
 
   useEffect(() => {
-    if (scrollToPage) {
-      setScrollToHighlight(undefined);
-      setScrollToPosition({ pageNumber: scrollToPage });
+    if (selectedHighlightId) {
+      setScrollToListViewHighlight(selectedHighlightId);
     }
-  }, [scrollToPage]);
-
-  useEffect(() => {
-    if (scrollToHighlight) {
-      setScrollToPage(undefined);
-      setScrollToPosition(undefined);
-    }
-  }, [scrollToHighlight]);
-
-  useEffect(() => {
-    if (selectedHighlight) {
-      setScrollToListViewHighlight(selectedHighlight);
-    }
-  }, [selectedHighlight]);
+  }, [selectedHighlightId]);
 
   useEffect(() => setIsDarkReader(isDarkMode), [isDarkMode]);
 
@@ -213,8 +146,8 @@ export const PDFReader: FC<PDFReaderProps> = ({
         />
       }
       onTabChange={() => {
-        if (selectedHighlight)
-          resetValue(setScrollToListViewHighlight, selectedHighlight);
+        if (selectedHighlightId)
+          resetValue(setScrollToListViewHighlight, selectedHighlightId);
       }}
       content={{
         pages: (
@@ -225,48 +158,28 @@ export const PDFReader: FC<PDFReaderProps> = ({
           />
         ),
         highlights: (
-          <HighlightCardList>
-            {pdfHighlights.map((h) => (
-              <HighlightCardContainer
-                key={h.id}
-                documentId={documentId}
-                highlightId={h.id}
-                selected={h.id === selectedHighlight?.id}
-                scrollIntoView={h.id === scrollToListViewHighlight?.id}
-                onClicked={() => setScrollToHighlight(h)}
-                onDeleteClicked={() => deleteHighlight(h)}
-                onEditClicked={() => {
-                  setScrollToHighlight(h);
-                  setSelectedHighlight(h);
-                }}
-                onPageClicked={() => setScrollToPage(h.location.pageNumber)}
-              />
-            ))}
-          </HighlightCardList>
+          <HighlightListView
+            documentId={documentId}
+            selectedHighlightId={selectedHighlightId}
+            scrollToHighlightId={scrollToListViewHighlight}
+            onHighlightClicked={setScrollToHighlightId}
+            onHighlightEditClicked={(id) => {
+              setScrollToHighlightId(id);
+              setSelectedHighlightId(id);
+            }}
+            onHighlightPageClicked={(_, pageNumber) =>
+              setScrollToPage(pageNumber)
+            }
+          />
         ),
         outline: outline ? (
           <DocumentOutlineView
             outline={outline}
-            onOutlineNodeClicked={(position) =>
-              setScrollToPosition({
-                pageNumber: position.pageNumber!,
-                destArray: position.location,
-              })
-            }
+            onOutlineNodeClicked={setScrollToOutlinePosition}
           />
         ) : null,
       }}
     />
-  );
-
-  const highlightTooltip = (
-    <PDFHighlightTooltip
-      onRemoveClicked={() => deleteHighlight(selectedHighlight)}
-    />
-  );
-
-  const selectionTooltip = (
-    <PDFSelectionTooltip onClick={() => createHighlight(inProgressHighlight)} />
   );
 
   return (
@@ -282,29 +195,17 @@ export const PDFReader: FC<PDFReaderProps> = ({
           onFullScreen={() => setIsFullScreen(!isFullScreen)}
         />
 
-        <PDFHighlighter
+        <PDFHighlighterContainer
           pdfDocument={pdfDocument}
-          highlights={pdfHighlights}
-          selectedHighlight={selectedHighlight}
-          scrollTo={scrollToPosition}
-          scrollToHighlight={scrollToHighlight}
-          enableAreaSelection={enableAreaSelection}
+          documentId={documentId}
           pdfScaleValue={pdfScaleValue}
-          highlightColor={highlightColor}
           enableDarkMode={isDarkReader}
-          highlightTooltip={highlightTooltip}
-          selectionTooltip={selectionTooltip}
-          // event handlers
-          onHighlighting={setInProgressHighlight}
-          onHighlightUpdated={updateHighlight}
-          onHighlightClicked={setSelectedHighlight}
-          onDocumentReady={setPdfViewer}
-          onKeyDown={onKeyDown}
-          onScaleChanging={(e) => setScale(e.scale)}
-          onPageScroll={() => {
-            setScrollToHighlight(undefined);
-            setScrollToPosition(undefined);
-          }}
+          onScaleChanged={setScale}
+          scrollToPage={scrollToPage}
+          scrollToHighlightId={scrollToHighlightId}
+          scrollToOutlinePosition={scrollToOutlinePosition}
+          highlightColor={highlightColor}
+          onHighlightSelected={setSelectedHighlightId}
         />
       </PDFDrawer>
     </FullScreen>

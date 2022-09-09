@@ -1,0 +1,122 @@
+enum DocumentType {
+  PDF
+}
+
+enum DocumentVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+"""user provided document metadata"""
+type DocumentMeta {
+  """title of the document"""
+  title: String
+
+  """document author"""
+  author: String
+
+  """document description"""
+  description: String
+
+  """keywords associated with document"""
+  keywords: [String!]
+
+  """url of document cover image"""
+  cover: String
+
+  """number of document pages"""
+  pageCount: Int
+
+  """outline associated with document"""
+  outline: JSON
+}
+
+type Document {
+  """unique document ID"""
+  id: ID!
+
+  """document creation time"""
+  createdAt: DateTime!
+
+  """document last update time"""
+  updatedAt: DateTime!
+
+  """account that created document"""
+  createdBy: AccountInfo!
+
+  """document deletion time"""
+  deletedAt: DateTime
+
+  """file associated with document"""
+  file: BlobInfo
+
+  """type of the document"""
+  type: DocumentType!
+
+  """metadata associated with document"""
+  meta: DocumentMeta!
+
+  """document visibility defines whether document is private or public"""
+  visibility: DocumentVisibility!
+}
+
+input DocumentMetaInput {
+  """title of the document"""
+  title: String
+
+  """document author"""
+  author: String
+
+  """document description"""
+  description: String
+
+  """url of document cover image"""
+  cover: String
+
+  """number of pages in document"""
+  pageCount: Int
+
+  """document outline"""
+  outline: JSON
+}
+
+input CreateDocumentInput {
+  """hash of file associated with document"""
+  fileHash: String!
+
+  """type of the document"""
+  type: DocumentType!
+
+  """metadata associates with document"""
+  meta: DocumentMetaInput
+
+  """update document visibility"""
+  visibility: DocumentVisibility
+}
+
+input UpdateDocumentInput {
+  """document id to update"""
+  id: ID!
+
+  """metadata associates with document"""
+  meta: DocumentMetaInput
+
+  """update document visibility"""
+  visibility: DocumentVisibility
+
+  """whether to make document deleted"""
+  deleted: Boolean
+}
+
+extend type Query {
+  """gets document by ID"""
+  document(id: ID!): Document!
+}
+
+extend type Mutation {
+  """creates a new document"""
+  createDocument(document: CreateDocumentInput!): Document!
+
+  """updates existing document"""
+  updateDocument(document: UpdateDocumentInput!): Document!
+}

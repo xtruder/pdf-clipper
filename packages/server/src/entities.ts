@@ -12,6 +12,8 @@ import {
   BaseEntity,
 } from "typeorm";
 
+import { DeepPartial } from "typeorm";
+
 import {
   Account,
   AccountInfo,
@@ -28,16 +30,16 @@ export class AccountEntity extends BaseEntity {
   id: string;
 
   @Column("varchar", { name: "name", nullable: true, length: 200 })
-  name: string | null;
+  name?: string;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
-  createdAt: Date | null;
+  createdAt: Date;
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
-  updatedAt: Date | null;
+  updatedAt: Date;
 
   @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
-  deletedAt: Date | null;
+  deletedAt?: Date;
 
   @OneToMany(() => DocumentMemberEntity, (table) => table.account)
   documents: DocumentMemberEntity[];
@@ -53,50 +55,26 @@ export class AccountEntity extends BaseEntity {
 
   @OneToMany(() => BlobInfoEntity, (table) => table.creator)
   createdFiles: BlobInfoEntity[];
-}
 
-@Entity({ name: "sessions" })
-export class SessionEntity extends BaseEntity {
-  @PrimaryGeneratedColumn("uuid", { name: "id" })
-  id: string;
-
-  @Column({ name: "account_id" })
-  accountId: string;
-
-  @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
-  @JoinColumn({ name: "account_id" })
-  account: AccountEntity;
-
-  @CreateDateColumn({ name: "created_at", type: "timestamp" })
-  createdAt: Date;
-
-  @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
-  updatedAt: Date;
-
-  @Column("jsonb", { name: "sync_documents", default: [] })
-  syncDocuments: string[];
-
-  toSession = (): Session => ({
+  toAccount = (): DeepPartial<Account> => ({
     id: this.id,
-    accountId: this.accountId,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    syncDocuments: this.syncDocuments,
+    deletedAt: this.deletedAt,
+    name: this.name,
   });
-}
 
-export enum BlobType {
-  DocFile = "docfile",
-  HighlightImg = "highlightimg",
+  toAccountInfo = (): AccountInfo => ({
+    id: this.id,
+    name: this.name,
+    deleted: !!this.deletedAt,
+  });
 }
 
 @Entity({ name: "blobs" })
 export class BlobInfoEntity extends BaseEntity {
   @PrimaryColumn("varchar", { name: "hash", length: 100 })
   hash: string;
-
-  @Column("enum", { name: "type", enum: BlobType })
-  type: BlobType;
 
   @CreateDateColumn({ name: "created_at", type: "timestamp" })
   createdAt: Date;
@@ -127,12 +105,11 @@ export class BlobInfoEntity extends BaseEntity {
   highlights: DocumentHighlightEntity[];
 
   toBlobInfo = (): BlobInfo => ({
-    type: this.mimeType,
     hash: this.hash,
     mimeType: this.mimeType,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
-    createdBy: this.createdBy,
+    createdBy: this.creator.toAccountInfo(),
     size: this.size,
     source: this.source,
   });

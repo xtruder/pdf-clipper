@@ -1,8 +1,8 @@
-import type { UserConfig } from "vite";
+import { mergeConfig } from "vite";
+import { UserConfig } from "vitest/config";
 import type { StorybookConfig } from "@storybook/react/types";
-import merge from "ts-deepmerge";
 
-import { baseConfig } from "../../app/vite.config";
+import config from "../../app/vite.config";
 
 export default {
   stories: ["../src/**/*.stories.mdx", "../src/**/*.stories.@(ts|tsx)"],
@@ -12,9 +12,9 @@ export default {
     "storybook-dark-mode",
   ],
   core: {
-    builder: "storybook-builder-vite" as any,
+    builder: "@storybook/builder-vite",
   },
-  async viteFinal(config: UserConfig) {
-    return merge(baseConfig, config);
+  async viteFinal(storybookConfig: UserConfig) {
+    return mergeConfig(storybookConfig, config);
   },
 } as StorybookConfig;

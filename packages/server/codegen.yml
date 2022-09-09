@@ -1,10 +1,10 @@
 overwrite: true
-schema: "../../schema.gql"
+schema: "./schema/**.gql"
 documents: null
 config:
   scalars:
+    ID: string
     DateTime: Date
-    UUID: string
     JSON: any
   useIndexSignature: true
   #defaultMapper: ./types#DeepPartial<{T}>
@@ -13,6 +13,3 @@ generates:
     plugins:
       - "typescript"
       - "typescript-resolvers"
-  src/graphql.schema.graphql:
-    plugins:
-      - "schema-ast"

@@ -1,60 +1,58 @@
 import React from "react";
 
-import { clearRangeSelection, Rect } from "../lib/dom";
+import { clearRangeSelection, Rect, canvasToPNGBlob } from "../lib/dom";
 import {
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
-} from "../lib/pdf";
+} from "../lib/pageRects";
 
 import { PDFDisplayProxy } from "./PDFDisplay";
 import { AreaHighlight } from "../highlights/AreaHighlight";
 import { TextHighlight } from "../highlights/TextHighlight";
 
-import { PDFHighlight } from "./types";
+import { PDFHighlightInfoWithKey, PDFHighlightWithKey } from "./types";
 import { getHighlightSequence } from "./utils";
 
-export interface PDFHighlightProps {
+export interface PDFHighlightContainerProps {
   pdfViewer: PDFDisplayProxy | null;
-  highlight: PDFHighlight;
-  selectedHighlight?: PDFHighlight;
+  highlight: PDFHighlightInfoWithKey;
+  isSelected?: boolean;
   isDarkReader: boolean;
   highlightTooltip?: JSX.Element;
 
-  onHighlightUpdated: (highlight: PDFHighlight) => void | Promise<void>;
-  onHighlightClicked: (highlight: PDFHighlight) => void;
-  onHighlightEditing: (highlight?: PDFHighlight) => void;
+  onUpdated?: (highlight: PDFHighlightWithKey) => void | Promise<void>;
+  onClicked?: () => void;
+  onEditing?: (isEditing: boolean) => void;
 }
 
-export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
+export const PDFHighlightContainer: React.FC<PDFHighlightContainerProps> = ({
   pdfViewer,
   highlight,
-  selectedHighlight,
+  isSelected,
   isDarkReader,
   highlightTooltip,
 
   // event handlers
-  onHighlightUpdated,
-  onHighlightClicked,
-  onHighlightEditing,
+  onUpdated,
+  onClicked,
+  onEditing,
 }) => {
-  const isSelected = highlight.id === selectedHighlight?.id;
-
-  if (!highlight.content || !highlight.location) return <></>;
+  if (!highlight.location) return <></>;
 
   const viewport = pdfViewer?.getPageView(
     highlight.location.pageNumber
   )?.viewport;
   if (!viewport) return <></>;
 
-  const onAreaHighlightChanged = (boundingRect: Rect) => {
+  const onAreaHighlightChanged = async (boundingRect: Rect) => {
     if (!pdfViewer) return;
-    if (!highlight.content || !highlight.location) return;
+    if (!highlight.location) return;
 
-    const image = pdfViewer.screenshotPageArea(
+    const canvasArea = pdfViewer.getPageArea(
       highlight.location.pageNumber,
       boundingRect
     );
-    if (!image) return;
+    if (!canvasArea) return;
 
     const scaledBoundingRect = viewportRectToScaledPageRect(
       {
@@ -64,25 +62,31 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
       viewport
     );
 
-    const newHighlight: PDFHighlight = {
-      ...highlight,
-      content: { thumbnail: image, color: highlight.content.color },
+    const sequence = getHighlightSequence(
+      scaledBoundingRect.pageNumber,
+      scaledBoundingRect
+    );
+
+    const image = await canvasToPNGBlob(canvasArea);
+
+    const newHighlight: PDFHighlightWithKey = {
+      type: "area",
+      key: highlight.key,
+      color: highlight.color,
       location: {
         ...highlight.location,
         boundingRect: scaledBoundingRect,
       },
-      sequence: getHighlightSequence(
-        highlight.location.pageNumber,
-        scaledBoundingRect
-      ),
+      sequence,
+      image,
     };
 
-    onHighlightUpdated(newHighlight);
+    onUpdated?.(newHighlight);
   };
 
   const blendMode = isDarkReader ? "difference" : "multiply";
 
-  return highlight.content.text ? (
+  return highlight.type === "text" ? (
     <TextHighlight
       tooltip={highlightTooltip}
       tooltipContainerClassName="z-10"
@@ -90,9 +94,9 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
       rects={highlight.location.rects.map((r) =>
         scaledRectToViewportRect(r, viewport)
       )}
-      color={highlight.content.color}
+      color={highlight.color}
       isSelected={isSelected}
-      onSelect={() => onHighlightClicked(highlight)}
+      onSelect={onClicked}
     />
   ) : (
     <AreaHighlight
@@ -104,15 +108,14 @@ export const PDFHighlightComponent: React.FC<PDFHighlightProps> = ({
         highlight.location.boundingRect,
         viewport
       )}
-      color={highlight.content.color}
+      color={highlight.color}
       isSelected={isSelected}
       onClick={() => {
         clearRangeSelection();
-        onHighlightClicked(highlight);
+        onClicked?.();
       }}
-      onChange={onAreaHighlightChanged}
-      onDragStart={() => onHighlightEditing(highlight)}
-      onDragStop={() => onHighlightEditing(undefined)}
+      onChanged={onAreaHighlightChanged}
+      onChanging={onEditing}
       //onEscapeViewport={() => onHighlightClicked(undefined)}
     />
   );

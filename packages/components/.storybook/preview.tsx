@@ -1,9 +1,9 @@
-import React, { Suspense, useEffect, FC, PropsWithChildren } from "react";
+import React, { Suspense, FC, PropsWithChildren, useEffect } from "react";
 
 import { addDecorator } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
 
-import { useViewport } from "../src/lib/react-hooks";
+import { useWindowSize } from "@react-hook/window-size";
 
 import {
   ContextProgressProvider,
@@ -16,9 +16,9 @@ import "virtual:windi.css";
 
 addDecorator((story, ctx) => {
   const isDarkMode = useDarkMode();
+  const [width, height] = useWindowSize();
 
-  const { height, width } = useViewport();
-
+  // define global --vh and --vw css variables that have viewport width and height set
   useEffect(() => {
     document.documentElement.style.setProperty("--vh", `${height}px`);
     document.documentElement.style.setProperty("--vw", `${width}px`);

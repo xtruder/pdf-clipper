@@ -1,4 +1,4 @@
-import { ScaledPageRect } from "../lib/pdf";
+import { ScaledPageRect } from "../lib/pageRects";
 import { HighlightColor } from "../highlights/types";
 
 export interface PDFHighlightLocation {
@@ -12,20 +12,43 @@ export interface PDFHighlightLocation {
   pageNumber: number;
 }
 
-export interface PDFHighlightContent {
-  text?: string;
-  thumbnail?: string;
+/**type of pdf highlight */
+export type PDFHighlightType = "text" | "area";
+
+export interface PDFHighlightInfo {
+  /**type of the highlight whether is text or area highlight */
+  type: PDFHighlightType;
+
+  /**color of the highlight */
   color: HighlightColor;
-}
 
-export interface PDFHighlight {
-  id: string;
+  /**location of pdf highlight */
   location: PDFHighlightLocation;
-  content: PDFHighlightContent;
+
+  /**lexographically sortable pdf highlight sequence */
   sequence: string;
-  image?: {
-    source: string;
-  };
 }
 
-export * from "../highlights/types";
+export type PDFHighlightInfoWithKey = PDFHighlightInfo & {
+  /**unique highlight key */
+  key: string;
+};
+
+export interface TextPDFHighlight extends PDFHighlightInfo {
+  type: "text";
+  text: string;
+}
+
+export interface AreaPDFHighlight extends PDFHighlightInfo {
+  type: "area";
+  image: Blob;
+}
+
+export type PDFHighlight = TextPDFHighlight | AreaPDFHighlight;
+
+export type PDFHighlightWithKey = PDFHighlight & {
+  /**unique highlight key */
+  key: string;
+};
+
+export { HighlightColor } from "../highlights/types";

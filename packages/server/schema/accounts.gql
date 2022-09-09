@@ -1,0 +1,46 @@
+type Account {
+  """Account ID"""
+  id: ID!
+
+  """Optional account name"""
+  name: String
+
+  """Account creation time"""
+  createdAt: DateTime!
+
+  """Account last update time"""
+  updatedAt: DateTime!
+}
+
+type AccountInfo {
+  """account ID"""
+  id: ID!
+
+  """optional account name"""
+  name: String
+
+  """whether account has been deleted"""
+  deleted: Boolean!
+}
+
+# input for acccount update
+input AccountUpdateInput {
+  """id of the account to update"""
+  id: ID!
+
+  """name of the account"""
+  name: String
+}
+
+type Query {
+  """returns information about current account"""
+  me: Account!
+
+  """gets account by ID"""
+  account(id: ID!): Account!
+}
+
+type Mutation {
+  """updates account"""
+  updateAccount(account: AccountUpdateInput!): Account!
+}

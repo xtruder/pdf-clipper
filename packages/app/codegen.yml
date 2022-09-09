@@ -1,0 +1,30 @@
+schema:
+- ../server/schema/*.gql
+- local-schema.gql
+documents:
+- 'src/**/*.ts'
+- 'src/**/*.tsx'
+overwrite: true
+config:
+  scalars:
+    ID: string
+    DateTime: Date
+    JSON: any
+    Blob: Blob
+    Upload: Blob
+generates:
+  src/gql/:
+    preset: gql-tag-operations-preset
+    presetConfig:
+      augmentedModuleName: '@urql/core'
+  src/offline/graphql.schema.ts:
+    plugins:
+      - typescript
+      - typescript-resolvers
+    config:
+      defaultMapper: Partial<{T}>
+  src/offline/schema.graphql:
+    plugins:
+      - schema-ast
+    config:
+      includeDirectives: true

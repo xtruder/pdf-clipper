@@ -1,7 +1,6 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import { VirtualElement } from "@popperjs/core";
-
-import { useIsChanging } from "../lib/react-hooks";
+import { useUpdateEffect, useDebounceEffect } from "ahooks";
 
 import { TooltipContainer } from "./TooltipContainer";
 
@@ -23,18 +22,40 @@ export const RangeTooltipContainer: React.FC<RangeTooltipContainerProps> = ({
   showTooltip = true,
   className = "",
 }) => {
-  const rangeRef = useRef(range);
-  rangeRef.current = range;
+  // whether range selection is changing
+  const [isChanging, setIsChanging] = useState(true);
+
+  // whether range selection has changed in last period
+  const [hasChanged, setHasChanged] = useState(false);
+
+  // delay hasChanged 250ms
+  useDebounceEffect(
+    () => {
+      // set is changing to whether has changed in current period
+      setIsChanging(hasChanged);
+
+      // reset hasChanged
+      setHasChanged(false);
+    },
+    [hasChanged],
+    { wait: 250 }
+  );
+
+  useUpdateEffect(() => {
+    // has changed in last period
+    setHasChanged(true);
+
+    // is currently changing
+    setIsChanging(true);
+  }, [range]);
 
   const tooltipedEl: VirtualElement | null = useMemo(() => {
     return {
       getBoundingClientRect: (): DOMRect => {
-        return rangeRef.current!.getBoundingClientRect();
+        return range!.getBoundingClientRect();
       },
     };
-  }, [rangeRef]);
-
-  const isChanging = useIsChanging(250, rangeRef.current);
+  }, [range]);
 
   return (
     <TooltipContainer

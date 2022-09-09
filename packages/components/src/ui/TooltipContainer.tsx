@@ -1,11 +1,11 @@
 import React, { useEffect, ForwardedRef, useRef, forwardRef } from "react";
+import { useEventListener } from "ahooks";
 import useMergedRef from "@react-hook/merged-ref";
-import useEvent from "@react-hook/event";
 
 import { usePopper } from "react-popper";
 import { Placement, VirtualElement } from "@popperjs/core";
 
-import { filterObject } from "../lib/utils";
+import filterObject from "just-filter-object";
 
 import "./TooltipContainer.css";
 
@@ -65,18 +65,17 @@ export const TooltipContainer: React.FC<TooltipContainerProps> = forwardRef(
       return () => observer.disconnect();
     }, [observeChanges, update, observeEl]);
 
-    useEvent(
-      observeScroll && observeEl instanceof HTMLElement ? observeEl : null,
-      "scroll",
-      () => update && update()
-    );
+    useEventListener("scroll", () => update?.(), {
+      target:
+        observeScroll && observeEl instanceof HTMLElement ? observeEl : null,
+    });
 
     useEffect(() => {
-      if (show) update && update();
+      if (show) update?.();
     }, [show]);
 
     // keep popper attributes that are not false
-    const popperAttrs = filterObject(attributes.popper || {}, ([_, v]) => !!v);
+    const popperAttrs = filterObject(attributes.popper || {}, (_, v) => !!v);
 
     const shouldShow = show && tooltipedEl;
 

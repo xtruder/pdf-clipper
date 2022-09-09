@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import useEvent from "@react-hook/event";
+import { useEventListener, useUpdateEffect } from "ahooks";
 
 import {
   Rect,
@@ -39,8 +39,8 @@ export type MouseSelectionProps = {
   // minimal number of pixels that must be selected
   minSelection?: number;
 
-  // whether selection selection is active
-  active?: boolean;
+  /**clear the selection  */
+  clearSelection?: boolean;
 
   // key to start selection
   selectionKey?: "alt" | "ctrl";
@@ -58,20 +58,10 @@ export type MouseSelectionProps = {
   blendMode?: "normal" | "multiply" | "difference";
 
   // onSelection is triggered when selection is made
-  onSelection?: (
-    start: Target,
-    end: Target,
-    boundingRect: Rect,
-    resetSelection: () => void
-  ) => void;
+  onSelection?: (start: Target, end: Target, boundingRect: Rect) => void;
 
   // onSelecting is being triggered while dragging
-  onSelecting?: (
-    start: Target,
-    cur: Target,
-    boundingRect: Rect,
-    resetSelection: () => void
-  ) => void;
+  onSelecting?: (start: Target, cur: Target, boundingRect: Rect) => void;
 
   // shouldStart determines whether mouse selection should be started
   shouldStart?: (event: MouseEvent | TouchEvent) => boolean;
@@ -96,7 +86,7 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
   className = "",
   containerClassName = "",
   minSelection = 10,
-  active = true,
+  clearSelection = false,
   selectionKey = "alt",
   tooltip,
   tooltipContainerClassName,
@@ -256,13 +246,13 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     onEnd(containerCoords(pageX, pageY));
   };
 
-  useEvent(document, "keyup", onKeyUp);
-  useEvent(eventsElRef, "mousedown", onPointerDown);
-  useEvent(eventsElRef, "touchstart", onPointerDown);
-  useEvent(eventsElRef, "mousemove", onPointerMove);
-  useEvent(eventsElRef, "touchmove", onPointerMove);
-  useEvent(eventsElRef, "mouseup", onPointerUp);
-  useEvent(eventsElRef, "touchend", onPointerUp);
+  useEventListener("keyup", onKeyUp, { target: document });
+  useEventListener("mousedown", onPointerDown, { target: eventsElRef });
+  useEventListener("touchstart", onPointerDown, { target: eventsElRef });
+  useEventListener("mousemove", onPointerMove, { target: eventsElRef });
+  useEventListener("touchmove", onPointerMove, { target: eventsElRef });
+  useEventListener("mouseup", onPointerUp, { target: eventsElRef });
+  useEventListener("touchend", onPointerUp, { target: eventsElRef });
 
   const { start, end, selected } = dragState;
 
@@ -271,22 +261,20 @@ export const MouseSelection: React.FC<MouseSelectionProps> = ({
     if (!selected && start && !end) {
       onDragStart(start);
     } else if (!selected && start && end) {
-      onSelecting(start, end, getBoundingRect(start, end), resetSelection);
+      onSelecting(start, end, getBoundingRect(start, end));
     } else if (selected && start) {
       onDragEnd(start, end);
 
-      if (end)
-        onSelection(start, end, getBoundingRect(start, end), resetSelection);
+      if (end) onSelection(start, end, getBoundingRect(start, end));
     }
   }, [dragState]);
 
-  useEffect(() => {
-    if (!active) resetSelection();
-  }, [active]);
+  // when clear selection is changed, reset current selection
+  useUpdateEffect(resetSelection, [clearSelection]);
 
   return (
     <div ref={containerRef} className={containerClassName}>
-      {active && start && end && (
+      {start && end && (
         <>
           <div
             className={`absolute mix-blend-${blendMode} ${className}`}

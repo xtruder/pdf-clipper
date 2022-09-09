@@ -13,6 +13,7 @@ import {
   Rect,
   getCanvasArea,
 } from "./dom";
+import { PageElement } from "./pageRects";
 
 export interface PageView {
   viewport: Viewport;
@@ -28,11 +29,6 @@ export interface Viewport {
   convertToViewportRectangle: (pdfRectangle: Array<number>) => Array<number>;
   width: number;
   height: number;
-}
-
-export interface PageElement {
-  number: number;
-  node: HTMLElement;
 }
 
 export function getPageFromElement(target: HTMLElement): PageElement | null {

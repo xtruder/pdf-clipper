@@ -1,0 +1,303 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+"""
+Instruction for establishing a live connection that is updated once the underlying data changes.
+"""
+directive @live(
+  """Whether the query should be live or not."""
+  if: Boolean = true
+  """
+  Propose a desired throttle interval ot the server in order to receive updates to at most once per "throttle" milliseconds. The server must not accept this value.
+  """
+  throttle: Int
+) on QUERY
+
+type Account {
+  """Account creation time"""
+  createdAt: DateTime!
+  """list of documents associated with account"""
+  documents: [DocumentMember!]!
+  """Account ID"""
+  id: ID!
+  """Optional account name"""
+  name: String
+  """Account last update time"""
+  updatedAt: DateTime!
+}
+
+type AccountInfo {
+  """whether account has been deleted"""
+  deleted: Boolean!
+  """account ID"""
+  id: ID!
+  """optional account name"""
+  name: String
+}
+
+input AccountUpdateInput {
+  """id of the account to update"""
+  id: ID!
+  """name of the account"""
+  name: String
+}
+
+scalar Blob
+
+type BlobInfo {
+  blob: Blob
+  """blob creation time"""
+  createdAt: DateTime!
+  """account information about blob creator"""
+  createdBy: AccountInfo!
+  """hash of a blob"""
+  hash: String!
+  """mime type associated with blob"""
+  mimeType: String!
+  """size of the blob in bytes"""
+  size: Int
+  """blob source URI"""
+  source: String
+  """blob last update time"""
+  updatedAt: DateTime!
+  """blob download URL"""
+  url: String
+}
+
+input CreateDocumentHighlightInput {
+  """color associated with highlight"""
+  color: HighlightColor!
+  """content associated with highlight serialized as JSON"""
+  content: JSON
+  """id of the document that highlight is associated with"""
+  documentId: ID!
+  """unique highlight id"""
+  id: ID!
+  """hash of the image associated with document highlight"""
+  imageHash: String
+  """location of a highlight serialized as JSON"""
+  location: JSON!
+  """sequential document highlight index"""
+  sequence: String!
+}
+
+input CreateDocumentInput {
+  """hash of document cover image"""
+  coverHash: String
+  """hash of file associated with document"""
+  fileHash: String!
+  """metadata associates with document"""
+  meta: DocumentMetaInput
+  """type of the document"""
+  type: DocumentType!
+  """update document visibility"""
+  visibility: DocumentVisibility
+}
+
+scalar DateTime
+
+type Document {
+  """info about document cover image"""
+  cover: BlobInfo
+  """document creation time"""
+  createdAt: DateTime!
+  """account that created document"""
+  createdBy: AccountInfo!
+  """document deletion time"""
+  deletedAt: DateTime
+  """file associated with document"""
+  file: BlobInfo
+  """gets all highlights associated with document"""
+  highlights: [DocumentHighlight!]!
+  """unique document ID"""
+  id: ID!
+  """list of document members associated with document"""
+  members: [DocumentMember!]!
+  """metadata associated with document"""
+  meta: DocumentMeta!
+  """type of the document"""
+  type: DocumentType!
+  """document last update time"""
+  updatedAt: DateTime!
+  """document visibility defines whether document is private or public"""
+  visibility: DocumentVisibility!
+}
+
+type DocumentHighlight {
+  """color associated with highlight"""
+  color: HighlightColor!
+  """content associated with highlight"""
+  content: JSON
+  """highlight creation time"""
+  createdAt: DateTime!
+  """highlight author ID"""
+  createdBy: AccountInfo!
+  """document associated with highlight"""
+  document: Document!
+  """unique highlight id"""
+  id: ID!
+  """image associated with highlight"""
+  image: BlobInfo
+  """highlight location"""
+  location: JSON!
+  """sequential document highlight index"""
+  sequence: String!
+  """highlight last udpate time"""
+  updatedAt: DateTime!
+}
+
+type DocumentMember {
+  """Time when account was accepted as member of document"""
+  acceptedAt: DateTime
+  """member account information"""
+  account: AccountInfo!
+  """document member creation time"""
+  createdAt: DateTime!
+  """account that added document member"""
+  createdBy: AccountInfo!
+  """membership document"""
+  document: Document!
+  """id of this document member relation"""
+  id: String!
+  """Role of account for document"""
+  role: DocumentRole!
+}
+
+input DocumentMemberInput {
+  """document member membership status"""
+  accepted: Boolean
+  """id of the member account"""
+  accountId: ID!
+  """id of the document that member belongs to"""
+  documentId: ID!
+  """document member role"""
+  role: DocumentRole
+}
+
+"""user provided document metadata"""
+type DocumentMeta {
+  """document author"""
+  author: String
+  """document description"""
+  description: String
+  """keywords associated with document"""
+  keywords: [String!]
+  """outline associated with document"""
+  outline: JSON
+  """number of document pages"""
+  pageCount: Int
+  """title of the document"""
+  title: String
+}
+
+input DocumentMetaInput {
+  """document author"""
+  author: String
+  """document description"""
+  description: String
+  """document outline"""
+  outline: JSON
+  """number of pages in document"""
+  pageCount: Int
+  """title of the document"""
+  title: String
+}
+
+enum DocumentRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum DocumentType {
+  PDF
+}
+
+enum DocumentVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum HighlightColor {
+  BLUE
+  GREEN
+  RED
+  YELLOW
+}
+
+scalar JSON
+
+type Mutation {
+  """creates a new document"""
+  createDocument(document: CreateDocumentInput!): Document!
+  """creates document highlight"""
+  createDocumentHighlight(highlight: CreateDocumentHighlightInput!): DocumentHighlight!
+  """updates account"""
+  updateAccount(account: AccountUpdateInput!): Account!
+  """updates existing document"""
+  updateDocument(document: UpdateDocumentInput!): Document!
+  """updates document highlight"""
+  updateDocumentHighlight(highlight: UpdateDocumentHighlightInput!): DocumentHighlight!
+  """uploads blob and returns blob information"""
+  uploadBlob(blob: UploadBlobInput!): BlobInfo!
+  """creates or updates document member"""
+  upsertDocumentMember(member: DocumentMemberInput!): DocumentHighlight!
+}
+
+type PageInfo {
+  """When paginating forwards, the cursor to continue."""
+  endCursor: String
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+  """When paginating backwards, the cursor to continue."""
+  startCursor: String
+}
+
+type Query {
+  """gets account by ID"""
+  account(id: ID!): Account!
+  blobInfo(hash: String!): BlobInfo!
+  """gets document by ID"""
+  document(id: ID!): Document!
+  """returns information about current account"""
+  me: Account!
+}
+
+input UpdateDocumentHighlightInput {
+  """content associated with highlight serialized as JSON"""
+  content: JSON
+  """whether highlight has been deleted"""
+  deleted: Boolean
+  """id of the highlight to update"""
+  id: ID!
+  """hash of the image associated with document highlight"""
+  imageHash: String
+  """location of a highlight serialized as JSON"""
+  location: JSON
+}
+
+input UpdateDocumentInput {
+  """whether to make document deleted"""
+  deleted: Boolean
+  """document id to update"""
+  id: ID!
+  """metadata associates with document"""
+  meta: DocumentMetaInput
+  """update document visibility"""
+  visibility: DocumentVisibility
+}
+
+scalar Upload
+
+input UploadBlobInput {
+  """blob to upload"""
+  blob: Upload!
+  """blob mime type"""
+  mimeType: String!
+  """source where file can be retrieved from"""
+  source: String
+}

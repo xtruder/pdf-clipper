@@ -1,0 +1,57 @@
+enum DocumentRole {
+  ADMIN
+  VIEWER
+  EDITOR
+}
+
+type DocumentMember {
+  """id of this document member relation"""
+  id: String!
+
+  """member account information"""
+  account: AccountInfo!
+
+  """membership document"""
+  document: Document!
+
+  """Role of account for document"""
+  role: DocumentRole!
+
+  """account that added document member"""
+  createdBy: AccountInfo!
+
+  """document member creation time"""
+  createdAt: DateTime!
+
+  """Time when account was accepted as member of document"""
+  acceptedAt: DateTime
+}
+
+input DocumentMemberInput {
+  """id of the member account"""
+  accountId: ID!
+
+  """id of the document that member belongs to"""
+  documentId: ID!
+
+  """document member role"""
+  role: DocumentRole
+
+  """document member membership status"""
+  accepted: Boolean
+}
+
+extend type Account {
+  """list of documents associated with account"""
+  documents: [DocumentMember!]!
+}
+
+extend type Document {
+  """list of document members associated with document"""
+  members: [DocumentMember!]!
+}
+
+extend type Mutation {
+  """creates or updates document member"""
+  upsertDocumentMember(member: DocumentMemberInput!): DocumentHighlight!
+}

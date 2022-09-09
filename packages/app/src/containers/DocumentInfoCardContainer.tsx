@@ -1,42 +1,74 @@
-import { useAtom, useAtomValue } from "jotai";
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import filterObject from "just-filter-object";
+
+import { gql, useMutation, useQuery } from "urql";
 
 import { ErrorFallback, DocumentInfoCard } from "@pdf-clipper/components";
 
-import { currentAccountAtom, documentAtom, documentMembersAtom } from "~/state";
+const getDocumentInfoQuery = gql(`
+  query getDocumentInfo($documentId: ID!) @live {
+    document(id: $documentId) {
+      ...DocumentInfoFragment
+    }
+  }
+`);
+
+const updateDocumentMutation = gql(`
+  mutation updateDocument($document: UpdateDocumentInput!) {
+    updateDocument(document: $document) {
+      ...DocumentInfoFragment
+    }
+  }
+`);
 
 export const DocumentInfoCardContainer: React.FC<{
   documentId: string;
   onOpen?: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardLoader = useCallback(() => {
-    const { id: accountId } = useAtomValue(currentAccountAtom);
-    const [{ meta = {} }, setDocument] = useAtom(documentAtom(documentId));
-    const [documentMembers, dispatchDocumentMembers] = useAtom(
-      documentMembersAtom(documentId)
+    const [{ data, error }] = useQuery({
+      query: getDocumentInfoQuery,
+      variables: {
+        documentId,
+      },
+    });
+
+    if (!data || error) throw error;
+
+    const [{ error: updateError }, updateDocument] = useMutation(
+      updateDocumentMutation
     );
 
-    let { title, description, cover, pageCount } = meta;
+    if (updateError) throw updateError;
+
+    const meta = filterObject(data.document.meta, (k) => k !== "__typename");
+
+    const { title, description, pageCount } = meta;
+
+    const cover = data.document.cover?.blob
+      ? data.document.cover.blob
+      : data.document.cover?.url ?? undefined;
 
     return (
       <DocumentInfoCard
         title={title ?? undefined}
         description={description ?? undefined}
-        cover={cover ?? undefined}
+        cover={cover}
         pages={pageCount ?? 0}
         onDescriptionChanged={(description) =>
-          setDocument({ id: documentId, meta: { ...meta, description } })
+          updateDocument({
+            document: { id: documentId, meta: { ...meta, description } },
+          })
         }
         onTitleChanged={(title) =>
-          setDocument({ id: documentId, meta: { ...meta, title } })
+          updateDocument({
+            document: { id: documentId, meta: { ...meta, title } },
+          })
         }
         onDeleteClicked={() =>
-          dispatchDocumentMembers({
-            action: "remove",
-            value: documentMembers.find(
-              (member) => member.accountId === accountId
-            )?.id,
+          updateDocument({
+            document: { id: documentId, deleted: true },
           })
         }
         onOpen={onOpen}

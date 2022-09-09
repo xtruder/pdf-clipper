@@ -2,7 +2,7 @@ import createDebugLogger from "debug";
 
 import { from, mergeMap } from "rxjs";
 import { PDFDocumentProxy } from "pdfjs-dist";
-import { PDFHighlight } from "@pdf-clipper/components";
+import { PDFHighlightInfo } from "@pdf-clipper/components";
 
 import { PDFLoader } from "./PDFLoader";
 import { Database } from "~/persistence/rxdb";
@@ -53,7 +53,7 @@ export function createPDFHighlightScreenshotter(
   ) => {
     logger("new highlight to screenshot %s", highlight.id);
 
-    const pdfHighlight = highlight as PDFHighlight;
+    const pdfHighlight = highlight as PDFHighlightInfo;
 
     const page = await pdfDocument.getPage(
       pdfHighlight.location.boundingRect.pageNumber

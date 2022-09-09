@@ -7,12 +7,13 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import useState from "react-usestateref";
-import useMergedRef from "@react-hook/merged-ref";
 import ReactDOM from "react-dom";
-import debounce from "lodash.debounce";
-import useEvent from "@react-hook/event";
+import useState from "react-usestateref";
+import { useEventListener } from "ahooks";
 import { useDoubleTap } from "use-double-tap";
+import useMergedRef from "@react-hook/merged-ref";
+
+import debounce from "just-debounce-it";
 
 import { GlobalWorkerOptions, PDFDocumentProxy } from "pdfjs-dist";
 import {
@@ -22,13 +23,7 @@ import {
   PDFViewer,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import {
-  Rect,
-  getWindow,
-  getCanvasArea,
-  canvasToPNGDataURI,
-  asElement,
-} from "../lib/dom";
+import { Rect, getWindow, getCanvasArea, asElement } from "../lib/dom";
 import { PageView, findOrCreateContainerLayer } from "../lib/pdfjs";
 
 // import worker src to set for pdfjs global worker options
@@ -68,7 +63,7 @@ export interface PDFDisplayProxy {
   currentScale: number;
   container: HTMLDivElement;
   getPageView(pageNumber: number): PageView | null;
-  screenshotPageArea(pageNumber: number, area: Rect): string | null;
+  getPageArea(pageNumber: number, area: Rect): HTMLCanvasElement | null;
 }
 
 interface PDFDisplayEvents {
@@ -90,7 +85,7 @@ export interface PDFDisplayProps extends PDFDisplayEvents {
   pdfScaleValue?: string;
   children?: JSX.Element | null;
   containerChildren?: JSX.Element | null;
-  scrollTo?: PDFScrollPosition;
+  scrollTo?: PDFScrollPosition | null;
   layers?: ReactElement<PDFLayerProps>[];
 
   // whether dark mode is enabled
@@ -111,20 +106,20 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   pdfScaleValue = "auto",
   children = null,
   containerChildren = null,
-  scrollTo,
+  scrollTo = null,
   layers = [],
   enableDarkMode = false,
   disableInteractions = false,
   disableTextDoubleClick = false,
 
-  onDocumentReady = () => null,
-  onTextLayerRendered = () => null,
-  onKeyDown = () => null,
-  onRangeSelection = () => null,
-  onPageScroll = () => null,
-  onScaleChanging = () => null,
-  onSingleTap = () => null,
-  onDoubleTap = () => null,
+  onDocumentReady,
+  onTextLayerRendered,
+  onKeyDown,
+  onRangeSelection,
+  onPageScroll,
+  onScaleChanging,
+  onSingleTap,
+  onDoubleTap,
 }) => {
   // current pdf document that we are displaying
   const [currentPdfDocument, setCurrentPdfDocument] =
@@ -174,16 +169,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   // helper function to make a screeen of a page area
-  const screenshotPageArea = (
+  const getPageArea = (
     pageNumber: number,
     area: Rect
-  ): string | null => {
+  ): HTMLCanvasElement | null => {
     const page = getPageView(pageNumber);
     if (!page || !page.canvas) return null;
 
-    return canvasToPNGDataURI(
-      getCanvasArea(page.canvas, area, window.devicePixelRatio)
-    );
+    return getCanvasArea(page.canvas, area, window.devicePixelRatio);
   };
 
   // when selected text on pdf has changed
@@ -198,14 +191,14 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       range = null;
     }
 
-    onRangeSelection(selection.isCollapsed, range);
+    onRangeSelection?.(selection.isCollapsed, range);
   };
 
   const onScroll = () => {
     if (!pdfViewerRef.current) return;
 
     setScrolledTo(undefined);
-    onPageScroll({
+    onPageScroll?.({
       pageNumber: pdfViewerRef.current.currentPageNumber,
       top: containerRef.current?.scrollTop,
       left: containerRef.current?.scrollLeft,
@@ -286,10 +279,10 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   const onPagesInit = () => {
-    onDocumentReady({
+    onDocumentReady?.({
       container: containerRef.current!,
       getPageView,
-      screenshotPageArea,
+      getPageArea: getPageArea,
       pdfDocument,
       get currentScale(): number {
         return pdfViewerRef.current!.currentScale;
@@ -307,7 +300,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
     };
   }) => {
     setRenderedPages((pages) => new Set([...pages, event.pageNumber]));
-    onTextLayerRendered(event);
+    onTextLayerRendered?.(event);
   };
 
   const doScroll = (position: PDFScrollPosition) => {
@@ -367,7 +360,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
       textLayerMode: 1,
       removePageBorders: true,
       linkService,
-      renderer: "canvas",
       l10n: NullL10n,
       annotationMode: 2,
       maxCanvasPixels: -1,
@@ -395,12 +387,12 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   useEffect(() => {
     eventBus.on("textlayerrendered", textLayerRendered);
     eventBus.on("pagesinit", onPagesInit);
-    eventBus.on("scalechanging", onScaleChanging);
+    eventBus.on("scalechanging", (e: any) => onScaleChanging?.(e));
 
     return () => {
       eventBus.off("pagesinit", onPagesInit);
-      eventBus.off("textlayerrendered", onTextLayerRendered);
-      eventBus.off("scalechanging", onScaleChanging);
+      eventBus.off("textlayerrendered", (e: any) => onTextLayerRendered?.(e));
+      eventBus.off("scalechanging", (e: any) => onScaleChanging?.(e));
     };
   }, [pdfViewer]);
 
@@ -432,12 +424,16 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   }, [disableInteractions, pdfViewer]);
 
   // add event handlers for selection and resize
-  const doc = containerRef.current?.ownerDocument || null;
-  useEvent(doc, "selectionchange", onSelectionChanged);
-  useEvent(doc, "keydown", onKeyDown);
-  useEvent(doc?.defaultView || null, "resize", handleScaledValue);
+  const doc = containerRef.current?.ownerDocument;
+  useEventListener("selectionchange", onSelectionChanged, { target: doc });
+  useEventListener("keydown", (e) => onKeyDown?.(e), { target: doc });
+  useEventListener("resize", handleScaledValue, {
+    target: doc?.defaultView,
+  });
 
-  const doubleTapProps = useDoubleTap(onDoubleTap, 250, { onSingleTap });
+  const doubleTapProps = useDoubleTap((e) => onDoubleTap?.(e), 250, {
+    onSingleTap,
+  });
 
   return (
     <div className={`${className} h-full`}>
@@ -445,7 +441,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
         ref={
           _containerRef
             ? useMergedRef(containerRef, _containerRef)
-            : containerRef
+            : (containerRef as any)
         }
         className={`pdfViewerContainer absolute overflow-y-scroll w-full h-full
           ${enableDarkMode ? "pdfViewerContainerDark" : ""}

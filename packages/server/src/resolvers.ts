@@ -19,7 +19,7 @@ import {
   Session,
   AccountUpdateResult,
 } from "./graphql.schema";
-import { uuidScalar, dateTimeScalar, JSONScalar } from "./scalars";
+import { dateTimeScalar, JSONScalar } from "./scalars";
 import { onNotification } from "./subscriptions";
 import { AppDataSource } from "./data-source";
 
@@ -44,7 +44,6 @@ export interface GqlContext {
 }
 
 export const resolvers: Resolvers<GqlContext> = {
-  UUID: uuidScalar,
   DateTime: dateTimeScalar,
   JSON: JSONScalar,
   Upload: GraphQLUpload,

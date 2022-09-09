@@ -37,7 +37,7 @@ export const asElement = (x: any): HTMLElement => x;
 export const getCanvasArea = (
   canvas: HTMLCanvasElement,
   rect?: Rect,
-  devicePixelRatio: number = 1
+  devicePixelRatio: number = window.devicePixelRatio
 ): HTMLCanvasElement => {
   // if no rect provided, capture whole canvas area as image/png
   if (!rect) {
@@ -89,25 +89,6 @@ export const blobToDataURL = (blob: Blob): Promise<string> =>
     reader.onload = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
-
-export function dataURItoBlob(dataURI: string) {
-  // convert base64/URLEncoded data component to raw binary data held in a string
-  var byteString;
-  if (dataURI.split(",")[0].indexOf("base64") >= 0)
-    byteString = atob(dataURI.split(",")[1]);
-  else byteString = unescape(dataURI.split(",")[1]);
-
-  // separate out the mime component
-  var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
-
-  // write the bytes of the string to a typed array
-  var ia = new Uint8Array(byteString.length);
-  for (var i = 0; i < byteString.length; i++) {
-    ia[i] = byteString.charCodeAt(i);
-  }
-
-  return new Blob([ia], { type: mimeString });
-}
 
 export const clearRangeSelection = () => {
   if (window.getSelection()?.empty) {
@@ -199,13 +180,6 @@ export const isDOMRectInside = (rect1: DOMRect, rect2: DOMRect) => {
   }
 
   return true;
-};
-
-export const stripHtml = (html: string): string => {
-  const div = document.createElement("DIV");
-  div.innerHTML = html;
-
-  return div.textContent || div.innerText || "";
 };
 
 export const setEndOfContenteditable = (

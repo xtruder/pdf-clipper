@@ -14,366 +14,326 @@ export type Scalars = {
   Float: number;
   DateTime: Date;
   JSON: any;
-  UUID: string;
+  Upload: any;
 };
 
-/** schema for account */
 export type Account = {
   __typename?: 'Account';
-  createdAt?: Maybe<Scalars['DateTime']>;
+  /** Account creation time */
+  createdAt: Scalars['DateTime'];
+  /** Account deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
-  id: Scalars['UUID'];
+  /** list of documents associated with account */
+  documents: Array<DocumentMember>;
+  /** Account ID */
+  id: Scalars['ID'];
+  /** Optional account name */
   name?: Maybe<Scalars['String']>;
-  updatedAt?: Maybe<Scalars['DateTime']>;
+  /** Account last update time */
+  updatedAt: Scalars['DateTime'];
 };
 
-/** schema for account */
 export type AccountInfo = {
   __typename?: 'AccountInfo';
-  id: Scalars['UUID'];
+  /** whether account has been deleted */
+  deleted: Scalars['Boolean'];
+  /** account ID */
+  id: Scalars['ID'];
+  /** optional account name */
   name?: Maybe<Scalars['String']>;
-  updatedAt?: Maybe<Scalars['DateTime']>;
 };
 
-/** schema for account */
-export type AccountInfoInput = {
-  id: Scalars['UUID'];
+export type AccountUpdateInput = {
+  /** id of the account to update */
+  id: Scalars['ID'];
+  /** name of the account */
   name?: InputMaybe<Scalars['String']>;
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
 };
 
-export type AccountInfoUpdateResult = {
-  __typename?: 'AccountInfoUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<AccountInfo>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<AccountInfo>;
-};
-
-/** schema for account */
-export type AccountInput = {
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  deletedAt?: InputMaybe<Scalars['DateTime']>;
-  id: Scalars['UUID'];
-  name?: InputMaybe<Scalars['String']>;
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
-};
-
-export type AccountUpdateResult = {
-  __typename?: 'AccountUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<Account>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<Account>;
-};
-
-/** schema for blobinfos collection */
 export type BlobInfo = {
   __typename?: 'BlobInfo';
-  createdAt?: Maybe<Scalars['DateTime']>;
-  createdBy?: Maybe<Scalars['UUID']>;
+  /** blob creation time */
+  createdAt: Scalars['DateTime'];
+  /** account information about blob creator */
+  createdBy: AccountInfo;
+  /** hash of a blob */
   hash: Scalars['String'];
-  local?: Maybe<Scalars['Boolean']>;
+  /** mime type associated with blob */
   mimeType: Scalars['String'];
-  size: Scalars['Int'];
+  /** size of the blob in bytes */
+  size?: Maybe<Scalars['Int']>;
+  /** blob source URI */
   source?: Maybe<Scalars['String']>;
-  type: Scalars['String'];
-  updatedAt?: Maybe<Scalars['DateTime']>;
+  /** blob last update time */
+  updatedAt: Scalars['DateTime'];
+  /** blob download URL */
+  url?: Maybe<Scalars['String']>;
 };
 
-/** schema for blobinfos collection */
-export type BlobInfoInput = {
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  createdBy?: InputMaybe<Scalars['UUID']>;
-  hash: Scalars['String'];
-  local?: InputMaybe<Scalars['Boolean']>;
-  mimeType: Scalars['String'];
-  size: Scalars['Int'];
-  source?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
-};
-
-export type BlobInfoUpdateResult = {
-  __typename?: 'BlobInfoUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<BlobInfo>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<BlobInfo>;
-};
-
-/** schema holding documents */
 export type Document = {
   __typename?: 'Document';
-  createdAt?: Maybe<Scalars['DateTime']>;
-  createdBy: Scalars['UUID'];
+  /** document creation time */
+  createdAt: Scalars['DateTime'];
+  /** account that created document */
+  createdBy: AccountInfo;
+  /** document deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
-  fileHash?: Maybe<Scalars['String']>;
-  id: Scalars['UUID'];
-  local?: Maybe<Scalars['Boolean']>;
-  meta?: Maybe<Scalars['JSON']>;
-  type: Scalars['String'];
-  updatedAt?: Maybe<Scalars['DateTime']>;
+  /** file associated with document */
+  file?: Maybe<BlobInfo>;
+  /** list of highlights associated with document */
+  highlights: Array<DocumentHighlight>;
+  /** unique document ID */
+  id: Scalars['ID'];
+  /** list of document members associated with document */
+  members: Array<DocumentMember>;
+  /** metadata associated with document */
+  meta: DocumentMeta;
+  /** type of the document */
+  type: DocumentType;
+  /** document last update time */
+  updatedAt: Scalars['DateTime'];
+  /** document visibility defines whether document is private or public */
+  visibility: DocumentVisibility;
 };
 
-/** schema for document highlights */
+
+export type DocumentHighlightsArgs = {
+  limit?: InputMaybe<Scalars['Int']>;
+  offset?: InputMaybe<Scalars['Int']>;
+};
+
 export type DocumentHighlight = {
   __typename?: 'DocumentHighlight';
-  content?: Maybe<Scalars['JSON']>;
-  createdAt?: Maybe<Scalars['DateTime']>;
-  createdBy?: Maybe<Scalars['UUID']>;
+  /** content associated with highlight */
+  content: Scalars['JSON'];
+  /** highlight creation time */
+  createdAt: Scalars['DateTime'];
+  /** highlight author ID */
+  createdBy: AccountInfo;
+  /** highlight deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
-  documentId: Scalars['UUID'];
-  documentType?: Maybe<Scalars['String']>;
-  id: Scalars['UUID'];
-  imageHash?: Maybe<Scalars['String']>;
-  local?: Maybe<Scalars['Boolean']>;
-  location?: Maybe<Scalars['JSON']>;
-  sequence?: Maybe<Scalars['String']>;
-  updatedAt?: Maybe<Scalars['DateTime']>;
+  /** unique highlight id */
+  id: Scalars['ID'];
+  /** highlight location */
+  location: Scalars['JSON'];
+  /** highlight last udpate time */
+  updatedAt: Scalars['DateTime'];
 };
 
-/** schema for document highlights */
 export type DocumentHighlightInput = {
+  /** content associated with highlight serialized as JSON */
   content?: InputMaybe<Scalars['JSON']>;
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  createdBy?: InputMaybe<Scalars['UUID']>;
-  deletedAt?: InputMaybe<Scalars['DateTime']>;
-  documentId: Scalars['UUID'];
-  documentType?: InputMaybe<Scalars['String']>;
-  id: Scalars['UUID'];
-  imageHash?: InputMaybe<Scalars['String']>;
-  local?: InputMaybe<Scalars['Boolean']>;
+  /** whether highlight has been deleted */
+  deleted?: InputMaybe<Scalars['Boolean']>;
+  /** id of the document that highlight is associated with */
+  documentID: Scalars['ID'];
+  /** unique highlight id */
+  id: Scalars['ID'];
+  /** location of a highlight serialized as JSON */
   location?: InputMaybe<Scalars['JSON']>;
-  sequence?: InputMaybe<Scalars['String']>;
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
 };
 
-export type DocumentHighlightUpdateResult = {
-  __typename?: 'DocumentHighlightUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<DocumentHighlight>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<DocumentHighlight>;
-};
-
-/** schema holding documents */
-export type DocumentInput = {
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  createdBy: Scalars['UUID'];
-  deletedAt?: InputMaybe<Scalars['DateTime']>;
-  fileHash?: InputMaybe<Scalars['String']>;
-  id: Scalars['UUID'];
-  local?: InputMaybe<Scalars['Boolean']>;
-  meta?: InputMaybe<Scalars['JSON']>;
-  type: Scalars['String'];
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
-};
-
-/** schema holding account documents */
 export type DocumentMember = {
   __typename?: 'DocumentMember';
+  /** Time when account was accepted as member of document */
   acceptedAt?: Maybe<Scalars['DateTime']>;
-  accountId: Scalars['UUID'];
-  createdAt?: Maybe<Scalars['DateTime']>;
-  createdBy?: Maybe<Scalars['UUID']>;
-  deletedAt?: Maybe<Scalars['DateTime']>;
-  documentId: Scalars['UUID'];
-  id?: Maybe<Scalars['String']>;
-  local?: Maybe<Scalars['Boolean']>;
-  role?: Maybe<Scalars['String']>;
-  updatedAt?: Maybe<Scalars['DateTime']>;
+  /** member account information */
+  account: AccountInfo;
+  /** document member creation time */
+  createdAt: Scalars['DateTime'];
+  /** account that added document member */
+  createdBy: AccountInfo;
+  /** membership document */
+  document: Document;
+  /** Role of account for document */
+  role: DocumentRole;
 };
 
-/** schema holding account documents */
 export type DocumentMemberInput = {
-  acceptedAt?: InputMaybe<Scalars['DateTime']>;
-  accountId: Scalars['UUID'];
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  createdBy?: InputMaybe<Scalars['UUID']>;
-  deletedAt?: InputMaybe<Scalars['DateTime']>;
-  documentId: Scalars['UUID'];
-  id?: InputMaybe<Scalars['String']>;
-  local?: InputMaybe<Scalars['Boolean']>;
-  role?: InputMaybe<Scalars['String']>;
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
+  /** document member membership status */
+  accepted?: InputMaybe<Scalars['Boolean']>;
+  /** id of the member account */
+  accountId: Scalars['ID'];
+  /** id of the document that member belongs to */
+  documentId: Scalars['ID'];
+  /** document member role */
+  role?: InputMaybe<DocumentRole>;
 };
 
-export type DocumentMemberUpdateResult = {
-  __typename?: 'DocumentMemberUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<DocumentMember>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<DocumentMember>;
+/** user provided document metadata */
+export type DocumentMeta = {
+  __typename?: 'DocumentMeta';
+  /** document author */
+  author?: Maybe<Scalars['String']>;
+  /** url of document cover image */
+  cover?: Maybe<Scalars['String']>;
+  /** document description */
+  description?: Maybe<Scalars['String']>;
+  /** keywords associated with document */
+  keywords?: Maybe<Array<Scalars['String']>>;
+  /** outline associated with document */
+  outline?: Maybe<DocumentOutline>;
+  /** number of document pages */
+  pageCount?: Maybe<Scalars['Int']>;
+  /** title of the document */
+  title?: Maybe<Scalars['String']>;
 };
 
-export type DocumentUpdateResult = {
-  __typename?: 'DocumentUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<Document>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<Document>;
+export type DocumentMetaInput = {
+  /** document author */
+  author?: InputMaybe<Scalars['String']>;
+  /** url of document cover image */
+  cover?: InputMaybe<Scalars['String']>;
+  /** document description */
+  description?: InputMaybe<Scalars['String']>;
+  /** document outline */
+  outline?: InputMaybe<DocumentOutlineInput>;
+  /** number of pages in document */
+  pageCount?: InputMaybe<Scalars['Int']>;
+  /** title of the document */
+  title?: InputMaybe<Scalars['String']>;
 };
+
+/** outline of the document */
+export type DocumentOutline = {
+  __typename?: 'DocumentOutline';
+  items: Array<OutlineNode>;
+};
+
+export type DocumentOutlineInput = {
+  items: Array<OutlineNodeInput>;
+};
+
+export enum DocumentRole {
+  Admin = 'ADMIN',
+  Editor = 'EDITOR',
+  Viewer = 'VIEWER'
+}
+
+export enum DocumentType {
+  Pdf = 'PDF'
+}
+
+export enum DocumentVisibility {
+  Private = 'PRIVATE',
+  Public = 'PUBLIC'
+}
+
+export enum HighlightColor {
+  Blue = 'BLUE',
+  Green = 'GREEN',
+  Red = 'RED',
+  Yellow = 'YELLOW'
+}
 
 export type Mutation = {
   __typename?: 'Mutation';
-  pushAccountChanges: AccountUpdateResult;
-  pushAccountInfoChanges: AccountInfoUpdateResult;
-  pushBlobInfoChanges: BlobInfoUpdateResult;
-  pushDocumentChanges: DocumentUpdateResult;
-  pushDocumentHighlightChanges: DocumentHighlightUpdateResult;
-  pushDocumentMemberChanges: DocumentMemberUpdateResult;
-  pushSessionChanges: SessionUpdateResult;
+  /** updates account */
+  updateAccount: Account;
+  /** uploads blob and returns blob information */
+  uploadBlob: BlobInfo;
+  /** creates or updates a document */
+  upsertDocument: Document;
+  /** creates or updates document highlight */
+  upsertDocumentHighlight: DocumentHighlight;
+  /** creates or updates document member */
+  upsertDocumentMember: DocumentHighlight;
 };
 
 
-export type MutationPushAccountChangesArgs = {
-  input: Array<AccountInput>;
+export type MutationUpdateAccountArgs = {
+  account: AccountUpdateInput;
 };
 
 
-export type MutationPushAccountInfoChangesArgs = {
-  input: Array<AccountInfoInput>;
+export type MutationUploadBlobArgs = {
+  blob: UploadBlobInput;
 };
 
 
-export type MutationPushBlobInfoChangesArgs = {
-  input: Array<BlobInfoInput>;
+export type MutationUpsertDocumentArgs = {
+  document: UpsertDocumentInput;
 };
 
 
-export type MutationPushDocumentChangesArgs = {
-  input: Array<DocumentInput>;
+export type MutationUpsertDocumentHighlightArgs = {
+  highlight: DocumentHighlightInput;
 };
 
 
-export type MutationPushDocumentHighlightChangesArgs = {
-  input: Array<DocumentHighlightInput>;
+export type MutationUpsertDocumentMemberArgs = {
+  member: DocumentMemberInput;
 };
 
-
-export type MutationPushDocumentMemberChangesArgs = {
-  input: Array<DocumentMemberInput>;
+export type OutlineNode = {
+  __typename?: 'OutlineNode';
+  /** list of children outline nodes */
+  children?: Maybe<Array<OutlineNode>>;
+  /** sequential index of the outline node */
+  index: Scalars['Int'];
+  /** location of the outline based on document type */
+  location: Scalars['JSON'];
+  /** outline node title */
+  title: Scalars['String'];
 };
 
-
-export type MutationPushSessionChangesArgs = {
-  input: Array<SessionInput>;
+export type OutlineNodeInput = {
+  /** list of children outline nodes */
+  children?: InputMaybe<Array<OutlineNodeInput>>;
+  /** sequential index of the outline node */
+  index: Scalars['Int'];
+  /** location of the outline based on document type */
+  location: Scalars['JSON'];
+  /** outline node title */
+  title: Scalars['String'];
 };
 
 export type Query = {
   __typename?: 'Query';
-  getAccountChanges: Array<Account>;
-  getAccountInfoChanges: Array<AccountInfo>;
-  getBlobInfoChanges: Array<BlobInfo>;
-  getDocumentChanges: Array<Document>;
-  getDocumentHighlightChanges: Array<DocumentHighlight>;
-  getDocumentMemberChanges: Array<DocumentMember>;
-  getSessionChanges: Array<Session>;
+  /** gets account by ID */
+  account: Account;
+  blobInfo: BlobInfo;
+  /** returns information about current account */
+  currentAccount: Account;
+  /** gets document by ID */
+  document: Document;
 };
 
 
-export type QueryGetAccountChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
+export type QueryAccountArgs = {
+  id: Scalars['ID'];
 };
 
 
-export type QueryGetAccountInfoChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
+export type QueryBlobInfoArgs = {
+  hash: Scalars['String'];
 };
 
 
-export type QueryGetBlobInfoChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
+export type QueryDocumentArgs = {
+  id: Scalars['ID'];
 };
 
-
-export type QueryGetDocumentChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
+export type UploadBlobInput = {
+  /** blob to upload */
+  blob?: InputMaybe<Scalars['Upload']>;
+  /** blob mime type */
+  mimeType?: InputMaybe<Scalars['String']>;
+  /** source where file can be retrieved from */
+  source?: InputMaybe<Scalars['String']>;
 };
 
-
-export type QueryGetDocumentHighlightChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
-};
-
-
-export type QueryGetDocumentMemberChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
-};
-
-
-export type QueryGetSessionChangesArgs = {
-  limit?: InputMaybe<Scalars['Int']>;
-  since: Scalars['DateTime'];
-};
-
-/** schema for session */
-export type Session = {
-  __typename?: 'Session';
-  accountId: Scalars['UUID'];
-  createdAt?: Maybe<Scalars['DateTime']>;
-  deletedAt?: Maybe<Scalars['DateTime']>;
-  id: Scalars['UUID'];
-  syncDocuments?: Maybe<Array<Maybe<Scalars['String']>>>;
-  updatedAt?: Maybe<Scalars['DateTime']>;
-};
-
-/** schema for session */
-export type SessionInput = {
-  accountId: Scalars['UUID'];
-  createdAt?: InputMaybe<Scalars['DateTime']>;
-  deletedAt?: InputMaybe<Scalars['DateTime']>;
-  id: Scalars['UUID'];
-  syncDocuments?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
-  updatedAt?: InputMaybe<Scalars['DateTime']>;
-};
-
-export type SessionUpdateResult = {
-  __typename?: 'SessionUpdateResult';
-  /** List of errors associated with rejected documents */
-  errors?: Maybe<Array<UpdateError>>;
-  /** list of rejected documents, with current returned state */
-  rejected: Array<Session>;
-  /** list of updated documents that have been successfully processed */
-  updated: Array<Session>;
-};
-
-export type Subscription = {
-  __typename?: 'Subscription';
-  syncAccountInfoUpdates: Array<AccountInfo>;
-  syncAccountUpdates: Array<Account>;
-  syncBlobInfoUpdates: Array<BlobInfo>;
-  syncDocumentHighlightUpdates: Array<DocumentHighlight>;
-  syncDocumentMemberUpdates: Array<DocumentMember>;
-  syncDocumentUpdates: Array<Document>;
-  syncSessionUpdates: Array<Session>;
-};
-
-export type UpdateError = {
-  __typename?: 'UpdateError';
-  /** Error string associated with upd */
-  error?: Maybe<Scalars['String']>;
-  /** Id of the resource that failed update */
-  id: Scalars['String'];
+export type UpsertDocumentInput = {
+  /** hash of file associated with document */
+  fileHash?: InputMaybe<Scalars['String']>;
+  /** unique document ID */
+  id: Scalars['ID'];
+  /** metadata associates with document */
+  meta?: InputMaybe<DocumentMetaInput>;
+  /** type of the document */
+  type?: InputMaybe<DocumentType>;
+  /** update document visibility */
+  visibility?: InputMaybe<DocumentVisibility>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -448,119 +408,99 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = ResolversObject<{
   Account: ResolverTypeWrapper<Account>;
   AccountInfo: ResolverTypeWrapper<AccountInfo>;
-  AccountInfoInput: AccountInfoInput;
-  AccountInfoUpdateResult: ResolverTypeWrapper<AccountInfoUpdateResult>;
-  AccountInput: AccountInput;
-  AccountUpdateResult: ResolverTypeWrapper<AccountUpdateResult>;
+  AccountUpdateInput: AccountUpdateInput;
   BlobInfo: ResolverTypeWrapper<BlobInfo>;
-  BlobInfoInput: BlobInfoInput;
-  BlobInfoUpdateResult: ResolverTypeWrapper<BlobInfoUpdateResult>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
   Document: ResolverTypeWrapper<Document>;
   DocumentHighlight: ResolverTypeWrapper<DocumentHighlight>;
   DocumentHighlightInput: DocumentHighlightInput;
-  DocumentHighlightUpdateResult: ResolverTypeWrapper<DocumentHighlightUpdateResult>;
-  DocumentInput: DocumentInput;
   DocumentMember: ResolverTypeWrapper<DocumentMember>;
   DocumentMemberInput: DocumentMemberInput;
-  DocumentMemberUpdateResult: ResolverTypeWrapper<DocumentMemberUpdateResult>;
-  DocumentUpdateResult: ResolverTypeWrapper<DocumentUpdateResult>;
+  DocumentMeta: ResolverTypeWrapper<DocumentMeta>;
+  DocumentMetaInput: DocumentMetaInput;
+  DocumentOutline: ResolverTypeWrapper<DocumentOutline>;
+  DocumentOutlineInput: DocumentOutlineInput;
+  DocumentRole: DocumentRole;
+  DocumentType: DocumentType;
+  DocumentVisibility: DocumentVisibility;
+  HighlightColor: HighlightColor;
+  ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']>;
   Mutation: ResolverTypeWrapper<{}>;
+  OutlineNode: ResolverTypeWrapper<OutlineNode>;
+  OutlineNodeInput: OutlineNodeInput;
   Query: ResolverTypeWrapper<{}>;
-  Session: ResolverTypeWrapper<Session>;
-  SessionInput: SessionInput;
-  SessionUpdateResult: ResolverTypeWrapper<SessionUpdateResult>;
   String: ResolverTypeWrapper<Scalars['String']>;
-  Subscription: ResolverTypeWrapper<{}>;
-  UUID: ResolverTypeWrapper<Scalars['UUID']>;
-  UpdateError: ResolverTypeWrapper<UpdateError>;
+  Upload: ResolverTypeWrapper<Scalars['Upload']>;
+  UploadBlobInput: UploadBlobInput;
+  UpsertDocumentInput: UpsertDocumentInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   Account: Account;
   AccountInfo: AccountInfo;
-  AccountInfoInput: AccountInfoInput;
-  AccountInfoUpdateResult: AccountInfoUpdateResult;
-  AccountInput: AccountInput;
-  AccountUpdateResult: AccountUpdateResult;
+  AccountUpdateInput: AccountUpdateInput;
   BlobInfo: BlobInfo;
-  BlobInfoInput: BlobInfoInput;
-  BlobInfoUpdateResult: BlobInfoUpdateResult;
   Boolean: Scalars['Boolean'];
   DateTime: Scalars['DateTime'];
   Document: Document;
   DocumentHighlight: DocumentHighlight;
   DocumentHighlightInput: DocumentHighlightInput;
-  DocumentHighlightUpdateResult: DocumentHighlightUpdateResult;
-  DocumentInput: DocumentInput;
   DocumentMember: DocumentMember;
   DocumentMemberInput: DocumentMemberInput;
-  DocumentMemberUpdateResult: DocumentMemberUpdateResult;
-  DocumentUpdateResult: DocumentUpdateResult;
+  DocumentMeta: DocumentMeta;
+  DocumentMetaInput: DocumentMetaInput;
+  DocumentOutline: DocumentOutline;
+  DocumentOutlineInput: DocumentOutlineInput;
+  ID: Scalars['ID'];
   Int: Scalars['Int'];
   JSON: Scalars['JSON'];
   Mutation: {};
+  OutlineNode: OutlineNode;
+  OutlineNodeInput: OutlineNodeInput;
   Query: {};
-  Session: Session;
-  SessionInput: SessionInput;
-  SessionUpdateResult: SessionUpdateResult;
   String: Scalars['String'];
-  Subscription: {};
-  UUID: Scalars['UUID'];
-  UpdateError: UpdateError;
+  Upload: Scalars['Upload'];
+  UploadBlobInput: UploadBlobInput;
+  UpsertDocumentInput: UpsertDocumentInput;
 }>;
 
+export type LiveDirectiveArgs = {
+  if?: Maybe<Scalars['Boolean']>;
+  throttle?: Maybe<Scalars['Int']>;
+};
+
+export type LiveDirectiveResolver<Result, Parent, ContextType = any, Args = LiveDirectiveArgs> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
 export type AccountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Account'] = ResolversParentTypes['Account']> = ResolversObject<{
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  documents?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type AccountInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountInfo'] = ResolversParentTypes['AccountInfo']> = ResolversObject<{
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  deleted?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type AccountInfoUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountInfoUpdateResult'] = ResolversParentTypes['AccountInfoUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['AccountInfo']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['AccountInfo']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type AccountUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountUpdateResult'] = ResolversParentTypes['AccountUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type BlobInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['BlobInfo'] = ResolversParentTypes['BlobInfo']> = ResolversObject<{
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  createdBy?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  local?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   mimeType?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  size?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  size?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   source?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type BlobInfoUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['BlobInfoUpdateResult'] = ResolversParentTypes['BlobInfoUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  url?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -569,66 +509,54 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
 }
 
 export type DocumentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Document'] = ResolversParentTypes['Document']> = ResolversObject<{
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  createdBy?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  fileHash?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  local?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  meta?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  file?: Resolver<Maybe<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
+  highlights?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType, Partial<DocumentHighlightsArgs>>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  members?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
+  meta?: Resolver<ResolversTypes['DocumentMeta'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['DocumentType'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  visibility?: Resolver<ResolversTypes['DocumentVisibility'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type DocumentHighlightResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentHighlight'] = ResolversParentTypes['DocumentHighlight']> = ResolversObject<{
-  content?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  createdBy?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
+  content?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  documentId?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  documentType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  imageHash?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  local?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  location?: Resolver<Maybe<ResolversTypes['JSON']>, ParentType, ContextType>;
-  sequence?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type DocumentHighlightUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentHighlightUpdateResult'] = ResolversParentTypes['DocumentHighlightUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type DocumentMemberResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentMember'] = ResolversParentTypes['DocumentMember']> = ResolversObject<{
   acceptedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  accountId?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  createdBy?: Resolver<Maybe<ResolversTypes['UUID']>, ParentType, ContextType>;
-  deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  documentId?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  local?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
-  role?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  account?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
+  document?: Resolver<ResolversTypes['Document'], ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['DocumentRole'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type DocumentMemberUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentMemberUpdateResult'] = ResolversParentTypes['DocumentMemberUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
+export type DocumentMetaResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentMeta'] = ResolversParentTypes['DocumentMeta']> = ResolversObject<{
+  author?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  cover?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  keywords?: Resolver<Maybe<Array<ResolversTypes['String']>>, ParentType, ContextType>;
+  outline?: Resolver<Maybe<ResolversTypes['DocumentOutline']>, ParentType, ContextType>;
+  pageCount?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  title?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type DocumentUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentUpdateResult'] = ResolversParentTypes['DocumentUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['Document']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['Document']>, ParentType, ContextType>;
+export type DocumentOutlineResolvers<ContextType = any, ParentType extends ResolversParentTypes['DocumentOutline'] = ResolversParentTypes['DocumentOutline']> = ResolversObject<{
+  items?: Resolver<Array<ResolversTypes['OutlineNode']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -637,83 +565,49 @@ export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  pushAccountChanges?: Resolver<ResolversTypes['AccountUpdateResult'], ParentType, ContextType, RequireFields<MutationPushAccountChangesArgs, 'input'>>;
-  pushAccountInfoChanges?: Resolver<ResolversTypes['AccountInfoUpdateResult'], ParentType, ContextType, RequireFields<MutationPushAccountInfoChangesArgs, 'input'>>;
-  pushBlobInfoChanges?: Resolver<ResolversTypes['BlobInfoUpdateResult'], ParentType, ContextType, RequireFields<MutationPushBlobInfoChangesArgs, 'input'>>;
-  pushDocumentChanges?: Resolver<ResolversTypes['DocumentUpdateResult'], ParentType, ContextType, RequireFields<MutationPushDocumentChangesArgs, 'input'>>;
-  pushDocumentHighlightChanges?: Resolver<ResolversTypes['DocumentHighlightUpdateResult'], ParentType, ContextType, RequireFields<MutationPushDocumentHighlightChangesArgs, 'input'>>;
-  pushDocumentMemberChanges?: Resolver<ResolversTypes['DocumentMemberUpdateResult'], ParentType, ContextType, RequireFields<MutationPushDocumentMemberChangesArgs, 'input'>>;
-  pushSessionChanges?: Resolver<ResolversTypes['SessionUpdateResult'], ParentType, ContextType, RequireFields<MutationPushSessionChangesArgs, 'input'>>;
+  updateAccount?: Resolver<ResolversTypes['Account'], ParentType, ContextType, RequireFields<MutationUpdateAccountArgs, 'account'>>;
+  uploadBlob?: Resolver<ResolversTypes['BlobInfo'], ParentType, ContextType, RequireFields<MutationUploadBlobArgs, 'blob'>>;
+  upsertDocument?: Resolver<ResolversTypes['Document'], ParentType, ContextType, RequireFields<MutationUpsertDocumentArgs, 'document'>>;
+  upsertDocumentHighlight?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationUpsertDocumentHighlightArgs, 'highlight'>>;
+  upsertDocumentMember?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationUpsertDocumentMemberArgs, 'member'>>;
+}>;
+
+export type OutlineNodeResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutlineNode'] = ResolversParentTypes['OutlineNode']> = ResolversObject<{
+  children?: Resolver<Maybe<Array<ResolversTypes['OutlineNode']>>, ParentType, ContextType>;
+  index?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  location?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  getAccountChanges?: Resolver<Array<ResolversTypes['Account']>, ParentType, ContextType, RequireFields<QueryGetAccountChangesArgs, 'limit' | 'since'>>;
-  getAccountInfoChanges?: Resolver<Array<ResolversTypes['AccountInfo']>, ParentType, ContextType, RequireFields<QueryGetAccountInfoChangesArgs, 'limit' | 'since'>>;
-  getBlobInfoChanges?: Resolver<Array<ResolversTypes['BlobInfo']>, ParentType, ContextType, RequireFields<QueryGetBlobInfoChangesArgs, 'limit' | 'since'>>;
-  getDocumentChanges?: Resolver<Array<ResolversTypes['Document']>, ParentType, ContextType, RequireFields<QueryGetDocumentChangesArgs, 'limit' | 'since'>>;
-  getDocumentHighlightChanges?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType, RequireFields<QueryGetDocumentHighlightChangesArgs, 'limit' | 'since'>>;
-  getDocumentMemberChanges?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType, RequireFields<QueryGetDocumentMemberChangesArgs, 'limit' | 'since'>>;
-  getSessionChanges?: Resolver<Array<ResolversTypes['Session']>, ParentType, ContextType, RequireFields<QueryGetSessionChangesArgs, 'limit' | 'since'>>;
+  account?: Resolver<ResolversTypes['Account'], ParentType, ContextType, RequireFields<QueryAccountArgs, 'id'>>;
+  blobInfo?: Resolver<ResolversTypes['BlobInfo'], ParentType, ContextType, RequireFields<QueryBlobInfoArgs, 'hash'>>;
+  currentAccount?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
+  document?: Resolver<ResolversTypes['Document'], ParentType, ContextType, RequireFields<QueryDocumentArgs, 'id'>>;
 }>;
 
-export type SessionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Session'] = ResolversParentTypes['Session']> = ResolversObject<{
-  accountId?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['UUID'], ParentType, ContextType>;
-  syncDocuments?: Resolver<Maybe<Array<Maybe<ResolversTypes['String']>>>, ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type SessionUpdateResultResolvers<ContextType = any, ParentType extends ResolversParentTypes['SessionUpdateResult'] = ResolversParentTypes['SessionUpdateResult']> = ResolversObject<{
-  errors?: Resolver<Maybe<Array<ResolversTypes['UpdateError']>>, ParentType, ContextType>;
-  rejected?: Resolver<Array<ResolversTypes['Session']>, ParentType, ContextType>;
-  updated?: Resolver<Array<ResolversTypes['Session']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type SubscriptionResolvers<ContextType = any, ParentType extends ResolversParentTypes['Subscription'] = ResolversParentTypes['Subscription']> = ResolversObject<{
-  syncAccountInfoUpdates?: SubscriptionResolver<Array<ResolversTypes['AccountInfo']>, "syncAccountInfoUpdates", ParentType, ContextType>;
-  syncAccountUpdates?: SubscriptionResolver<Array<ResolversTypes['Account']>, "syncAccountUpdates", ParentType, ContextType>;
-  syncBlobInfoUpdates?: SubscriptionResolver<Array<ResolversTypes['BlobInfo']>, "syncBlobInfoUpdates", ParentType, ContextType>;
-  syncDocumentHighlightUpdates?: SubscriptionResolver<Array<ResolversTypes['DocumentHighlight']>, "syncDocumentHighlightUpdates", ParentType, ContextType>;
-  syncDocumentMemberUpdates?: SubscriptionResolver<Array<ResolversTypes['DocumentMember']>, "syncDocumentMemberUpdates", ParentType, ContextType>;
-  syncDocumentUpdates?: SubscriptionResolver<Array<ResolversTypes['Document']>, "syncDocumentUpdates", ParentType, ContextType>;
-  syncSessionUpdates?: SubscriptionResolver<Array<ResolversTypes['Session']>, "syncSessionUpdates", ParentType, ContextType>;
-}>;
-
-export interface UuidScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UUID'], any> {
-  name: 'UUID';
+export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
+  name: 'Upload';
 }
-
-export type UpdateErrorResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateError'] = ResolversParentTypes['UpdateError']> = ResolversObject<{
-  error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
 
 export type Resolvers<ContextType = any> = ResolversObject<{
   Account?: AccountResolvers<ContextType>;
   AccountInfo?: AccountInfoResolvers<ContextType>;
-  AccountInfoUpdateResult?: AccountInfoUpdateResultResolvers<ContextType>;
-  AccountUpdateResult?: AccountUpdateResultResolvers<ContextType>;
   BlobInfo?: BlobInfoResolvers<ContextType>;
-  BlobInfoUpdateResult?: BlobInfoUpdateResultResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
   Document?: DocumentResolvers<ContextType>;
   DocumentHighlight?: DocumentHighlightResolvers<ContextType>;
-  DocumentHighlightUpdateResult?: DocumentHighlightUpdateResultResolvers<ContextType>;
   DocumentMember?: DocumentMemberResolvers<ContextType>;
-  DocumentMemberUpdateResult?: DocumentMemberUpdateResultResolvers<ContextType>;
-  DocumentUpdateResult?: DocumentUpdateResultResolvers<ContextType>;
+  DocumentMeta?: DocumentMetaResolvers<ContextType>;
+  DocumentOutline?: DocumentOutlineResolvers<ContextType>;
   JSON?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
+  OutlineNode?: OutlineNodeResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  Session?: SessionResolvers<ContextType>;
-  SessionUpdateResult?: SessionUpdateResultResolvers<ContextType>;
-  Subscription?: SubscriptionResolvers<ContextType>;
-  UUID?: GraphQLScalarType;
-  UpdateError?: UpdateErrorResolvers<ContextType>;
+  Upload?: GraphQLScalarType;
 }>;
 
+export type DirectiveResolvers<ContextType = any> = ResolversObject<{
+  live?: LiveDirectiveResolver<any, any, ContextType>;
+}>;

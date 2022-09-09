@@ -1,14 +1,12 @@
 import { Story } from "@storybook/react";
 
 // react
-import React from "react";
-import useState from "react-usestateref";
+import React, { useCallback, useState } from "react";
 import { suspend } from "suspend-react";
+import { useResetState, useToggle } from "ahooks";
 
 // utils
 import { loadPDF } from "../lib/pdfjs";
-import { clearRangeSelection } from "../lib/dom";
-import { resetValue } from "../lib/utils";
 
 // components
 import { useContextProgress } from "../ui/ProgressIndicator";
@@ -16,7 +14,7 @@ import { PDFHighlighter } from "./PDFHighlighter";
 import { PDFHighlightTooltip, PDFSelectionTooltip } from "./PDFControls";
 
 // types
-import { PDFHighlight } from "./types";
+import { PDFHighlight, PDFHighlightWithKey } from "./types";
 
 export default {
   title: "pdf/PDFHighlighter",
@@ -29,47 +27,49 @@ export const ThePDFHighlighter: Story = (args) => {
     [args.url]
   );
 
-  const [highlights, setHighlights, highlightsRef] = useState<PDFHighlight[]>(
-    []
-  );
-  const [_, setInProgressHighlight, inProgressHighlightRef] =
-    useState<PDFHighlight>();
-  const [selectedHighlight, setSelectedHighlight] = useState<PDFHighlight>();
-  const [enableAreaSelection, setEnableAreaSelection] = useState(true);
+  const [highlights, setHighlights] = useState<PDFHighlightWithKey[]>([]);
+  const [
+    inProgressHighlight,
+    setInProgressHighlight,
+    resetInProgressHighlight,
+  ] = useResetState<PDFHighlight | null>(null);
+  const [selectedHighlight, setSelectedHighlight, resetSelectedHighlight] =
+    useResetState<string | null>(null);
+  const [clearSelection, { toggle: doClearSelection }] = useToggle();
 
-  const addHighlight = () => {
-    if (!inProgressHighlightRef.current) return;
+  const addHighlight = useCallback(() => {
+    if (!inProgressHighlight) return;
 
-    const highlight = inProgressHighlightRef.current;
+    const highlight = {
+      ...inProgressHighlight,
+      key: (Math.random() + 1).toString(36).substring(7),
+    };
 
-    resetValue(setEnableAreaSelection, true);
-    clearRangeSelection();
-    setInProgressHighlight(undefined);
+    doClearSelection();
+    resetInProgressHighlight();
 
-    setHighlights([...highlightsRef.current, highlight]);
-    setSelectedHighlight(highlight);
-  };
+    setHighlights([...highlights, highlight]);
+    setSelectedHighlight(highlight.key);
+  }, [inProgressHighlight, highlights]);
 
-  const deleteHighlight = () => {
+  const deleteHighlight = useCallback(() => {
     if (!selectedHighlight) return;
 
-    const newHighlights = highlightsRef.current.filter(
-      (h) => h.id !== selectedHighlight.id
-    );
+    const newHighlights = highlights.filter((h) => h.key !== selectedHighlight);
 
-    setSelectedHighlight(undefined);
+    setSelectedHighlight(null);
     setHighlights(newHighlights);
-  };
+  }, [selectedHighlight, highlights]);
 
   return (
-    <div onKeyDown={() => console.log("here")}>
+    <div>
       <PDFHighlighter
         pdfDocument={pdfDocument}
         highlights={highlights}
         pdfScaleValue={args.pdfScaleValue}
         highlightColor={args.highlightColor}
         selectedHighlight={selectedHighlight}
-        enableAreaSelection={enableAreaSelection}
+        clearSelection={clearSelection}
         selectionTooltip={<PDFSelectionTooltip onClick={addHighlight} />}
         highlightTooltip={
           <PDFHighlightTooltip onRemoveClicked={deleteHighlight} />
@@ -84,12 +84,12 @@ export const ThePDFHighlighter: Story = (args) => {
           args.onHighlightUpdated(highlight);
 
           const newHighlights = [...highlights];
-          const idx = newHighlights.findIndex((h) => h.id === highlight.id);
+          const idx = newHighlights.findIndex((h) => h.key === highlight.key);
 
           newHighlights[idx] = highlight;
 
           setHighlights(newHighlights);
-          setSelectedHighlight(highlight);
+          setSelectedHighlight(highlight.key);
         }}
         onHighlightClicked={(highlight) => {
           setSelectedHighlight(highlight);
@@ -103,9 +103,8 @@ export const ThePDFHighlighter: Story = (args) => {
 
               break;
             case "Escape":
-              clearRangeSelection();
-              resetValue(setEnableAreaSelection, true);
-              setSelectedHighlight(undefined);
+              doClearSelection();
+              resetSelectedHighlight();
 
               break;
             case "Delete":

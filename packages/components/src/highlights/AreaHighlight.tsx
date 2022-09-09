@@ -8,20 +8,20 @@ import { HighlightColor } from "./types";
 import { TooltipContainer } from "../ui/TooltipContainer";
 
 const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200",
-  [HighlightColor.YELLOW]: "bg-yellow-200",
-  [HighlightColor.GREEN]: "bg-green-200",
-  [HighlightColor.BLUE]: "bg-blue-200",
+  [HighlightColor.Red]: "bg-red-200",
+  [HighlightColor.Yellow]: "bg-yellow-200",
+  [HighlightColor.Green]: "bg-green-200",
+  [HighlightColor.Blue]: "bg-blue-200",
 };
 
 const selectedColorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-300",
-  [HighlightColor.YELLOW]: "bg-yellow-300",
-  [HighlightColor.GREEN]: "bg-green-300",
-  [HighlightColor.BLUE]: "bg-blue-300",
+  [HighlightColor.Red]: "bg-red-300",
+  [HighlightColor.Yellow]: "bg-yellow-300",
+  [HighlightColor.Green]: "bg-green-300",
+  [HighlightColor.Blue]: "bg-blue-300",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = HighlightColor.Yellow;
 
 export interface AreaHighlightProps {
   className?: string;
@@ -34,10 +34,9 @@ export interface AreaHighlightProps {
   showTooltip?: boolean;
   blendMode?: "normal" | "multiply" | "difference";
 
-  onChange?: (rect: Rect) => void;
+  onChanging?: (isChanging: boolean) => void;
+  onChanged?: (rect: Rect) => void;
   onClick?: () => void;
-  onDragStart?: () => void;
-  onDragStop?: () => void;
 
   // event triggered when highlight escapes viewport
   onEscapeViewport?: () => void;
@@ -54,11 +53,10 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   showTooltip = isSelected,
   blendMode = "normal",
 
-  onChange = () => null,
-  onClick = () => null,
-  onDragStart = () => null,
-  onDragStop = () => null,
-  onEscapeViewport = () => null,
+  onChanging,
+  onChanged,
+  onClick,
+  onEscapeViewport,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
@@ -76,7 +74,7 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
   }, [rndRef]);
 
   useEffect(() => {
-    if (!inView) onEscapeViewport();
+    if (!inView) onEscapeViewport?.();
   }, [inView]);
 
   return (
@@ -90,25 +88,27 @@ export const AreaHighlight: React.FC<AreaHighlightProps> = ({
         disableDragging={!isSelected}
         position={{ x: boundingRect.left, y: boundingRect.top }}
         size={{ width: boundingRect.width, height: boundingRect.height }}
-        onResizeStop={(_mouseEvent, _direction, ref, _delta, position) =>
-          onChange({
+        onResizeStart={() => onChanging?.(true)}
+        onResizeStop={(_mouseEvent, _direction, ref, _delta, position) => {
+          onChanging?.(false);
+          onChanged?.({
             top: position.y,
             left: position.x,
             width: ref.offsetWidth,
             height: ref.offsetHeight,
-          })
-        }
-        onDragStart={() => onDragStart()}
+          });
+        }}
+        onDragStart={() => onChanging?.(true)}
         onDragStop={(_, data) => {
-          onDragStop();
-          onChange({
+          onChanging?.(false);
+          onChanged?.({
             ...boundingRect,
             top: data.y,
             left: data.x,
           });
         }}
       >
-        <div className="highlight h-full w-full" onClick={() => onClick()} />
+        <div className="highlight h-full w-full" onClick={() => onClick?.()} />
       </Rnd>
 
       {/**Tooltip attached to area highlight */}

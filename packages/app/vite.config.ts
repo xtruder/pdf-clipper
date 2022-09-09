@@ -1,23 +1,31 @@
-import { UserConfig } from "vite";
+import { defineConfig } from "vite";
 
-import reactRefresh from "@vitejs/plugin-react-refresh";
-import tsConfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react";
 import windiCSS from "vite-plugin-windicss";
 import svgr from "vite-plugin-svgr";
+import tsConfigPaths from "vite-tsconfig-paths";
+import { babelPlugin } from "@graphql-codegen/gql-tag-operations-preset";
 
-import merge from "ts-deepmerge";
-
-export const baseConfig: UserConfig = {
-  plugins: [tsConfigPaths(), windiCSS(), svgr()],
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    react({
+      babel: { plugins: [[babelPlugin, { artifactDirectory: "./src/gql" }]] },
+    }),
+    tsConfigPaths(),
+    windiCSS(),
+    svgr(),
+  ],
   build: {
     minify: "esbuild",
     target: "esnext",
   },
-};
-
-const extraConfig: UserConfig = {
-  plugins: [reactRefresh()],
-};
-
-// https://vitejs.dev/config/
-export default merge(extraConfig, baseConfig);
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
+  test: {
+    environment: "happy-dom",
+  },
+});

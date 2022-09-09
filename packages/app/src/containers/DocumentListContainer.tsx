@@ -1,6 +1,5 @@
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useAtomValue } from "jotai";
 
 import {
   TopbarProgressIndicator,
@@ -9,21 +8,41 @@ import {
   DocumentInfoCardList,
 } from "@pdf-clipper/components";
 
-import { accountDocumentsAtom, currentAccountAtom } from "~/state";
-
 import { DocumentInfoCardContainer } from "./DocumentInfoCardContainer";
+import { gql, useQuery } from "urql";
+
+const getAccountDocumentsIdsQuery = gql(`
+  query me @live {
+    me {
+      id
+      documents {
+        id
+        document {
+          id
+        }
+      }
+    }
+  }
+`);
 
 export const AccountDocumentsListContainer: React.FC<{
   className?: string;
   onOpen?: (documentId: string) => void;
 }> = ({ className, onOpen }) => {
   const AccountDocumentsListLoader = useCallback(() => {
-    const { id: accountId } = useAtomValue(currentAccountAtom);
-    const accountDocs = useAtomValue(accountDocumentsAtom(accountId));
+    const [{ data, error }] = useQuery({
+      query: getAccountDocumentsIdsQuery,
+    });
+
+    if (error || !data) throw error;
+
+    const {
+      me: { documents: accountDocs },
+    } = data;
 
     return (
       <DocumentInfoCardList className={className}>
-        {accountDocs.map(({ documentId }) => (
+        {accountDocs.map(({ document: { id: documentId } }) => (
           <DocumentInfoCardContainer
             key={documentId}
             documentId={documentId}

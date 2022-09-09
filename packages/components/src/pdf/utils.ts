@@ -1,11 +1,14 @@
+import unique from "just-unique";
+import groupBy from "just-group-by";
+import { zeroPad } from "number-slayer";
+
 import { Offset } from "~/lib/dom";
-import { groupBy, toFixed, unique } from "../lib/utils";
-import { PDFHighlight } from "./types";
+import { PDFHighlightInfoWithKey } from "./types";
 
 // get highlights per page, that are on that page or have rects on page
 export const groupHighlightsByPage = (
-  highlights: PDFHighlight[]
-): Record<number, PDFHighlight[]> => {
+  highlights: PDFHighlightInfoWithKey[]
+): Record<number, PDFHighlightInfoWithKey[]> => {
   // get all rects from all highlights
   const allRects = highlights
     .map((highlight) =>
@@ -52,4 +55,4 @@ export const groupHighlightsByPage = (
 export const getHighlightSequence = (
   pageNumber: number,
   offset: Offset
-): string => `${toFixed(pageNumber, 5)}/${toFixed(Math.round(offset.top), 5)}`;
+): string => `${zeroPad(pageNumber, 3, 0)}/${zeroPad(offset.top, 5, 0)}`;

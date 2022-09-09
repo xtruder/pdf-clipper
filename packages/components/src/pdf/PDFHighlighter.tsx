@@ -5,7 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { v4 as uuid } from "uuid";
+import { useBoolean, useResetState, useUpdateEffect } from "ahooks";
 
 import {
   getHighlightedRectsWithinPages,
@@ -13,11 +13,22 @@ import {
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
   PageRect,
-} from "../lib/pdf";
-import { Rect, clearRangeSelection } from "../lib/dom";
+} from "../lib/pageRects";
+import {
+  Rect,
+  clearRangeSelection,
+  getCanvasArea,
+  canvasToPNGBlob,
+} from "../lib/dom";
 import { getPageFromElement, getPagesFromRange } from "../lib/pdfjs";
 
-import { PDFHighlight, HighlightColor } from "./types";
+import {
+  HighlightColor,
+  PDFHighlight,
+  PDFHighlightInfo,
+  PDFHighlightInfoWithKey,
+  PDFHighlightWithKey,
+} from "./types";
 
 import {
   PDFLayer,
@@ -27,7 +38,7 @@ import {
   PDFScrollPosition,
   PDFLayerPage,
 } from "./PDFDisplay";
-import { PDFHighlightComponent } from "./PDFHighlight";
+import { PDFHighlightContainer } from "./PDFHighlight";
 import { MouseSelection, Target } from "../ui/MouseSelection";
 import { RangeTooltipContainer } from "../ui/RangeTooltipContainer";
 
@@ -35,45 +46,45 @@ import "./PDFHighlighter.css";
 import { getHighlightSequence, groupHighlightsByPage } from "./utils";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "textLayer__selection_red",
-  [HighlightColor.YELLOW]: "textLayer__selection_yellow",
-  [HighlightColor.GREEN]: "textLayer__selection_green",
-  [HighlightColor.BLUE]: "textLayer__selection_blue",
+  [HighlightColor.Red]: "textLayer__selection_red",
+  [HighlightColor.Yellow]: "textLayer__selection_yellow",
+  [HighlightColor.Green]: "textLayer__selection_green",
+  [HighlightColor.Blue]: "textLayer__selection_blue",
 };
 
 const colorToClassName: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200",
-  [HighlightColor.YELLOW]: "bg-yellow-200",
-  [HighlightColor.GREEN]: "bg-green-200",
-  [HighlightColor.BLUE]: "bg-blue-200",
+  [HighlightColor.Red]: "bg-red-200",
+  [HighlightColor.Yellow]: "bg-yellow-200",
+  [HighlightColor.Green]: "bg-green-200",
+  [HighlightColor.Blue]: "bg-blue-200",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = HighlightColor.Yellow;
 
 interface PDFHighlighterEvents {
-  // onHighlighting is triggered when highlight selection is still in progress
-  onHighlighting?: (highlight: PDFHighlight | undefined) => void;
+  /**onHighlighting is triggered when highlighting is happening */
+  onHighlighting?: (highlight: PDFHighlight | null) => void;
 
-  // onHighlightClicked is triggered when highlight is clicked
-  onHighlightClicked?: (highlight?: PDFHighlight) => void;
+  /**onHighlightUpdated is triggered when highlight is triggered */
+  onHighlightUpdated?: (highlight: PDFHighlightWithKey) => void;
 
-  // onHighlightUpdated is triggered when highlight is triggered
-  onHighlightUpdated?: (highlight: PDFHighlight) => void;
+  /**onHighlightClicked is triggered when highlight is clicked */
+  onHighlightClicked?: (key: string | null) => void;
 }
 
 export interface PDFHighlighterProps
   extends PDFDisplayProps,
     PDFHighlighterEvents {
   // list of existing highlights
-  highlights?: PDFHighlight[];
+  highlights?: Required<PDFHighlightInfoWithKey>[];
 
-  // id of currently selected highlight
-  selectedHighlight?: PDFHighlight;
+  // key of currently selected highlight
+  selectedHighlight?: string | null;
 
-  // id of highlight we should scroll to
-  scrollToHighlight?: PDFHighlight;
+  // key of highlight we should scroll to
+  scrollToHighlight?: string | null;
 
-  // color to use for highlight selection
+  /**selected highlight color */
   highlightColor?: HighlightColor;
 
   // tooltip used for highlight
@@ -85,31 +96,37 @@ export interface PDFHighlighterProps
   // enable highlights controls whether to enable highlights
   showHighlights?: boolean;
 
-  // whether to enable area selection
-  enableAreaSelection?: boolean;
+  /**whether to clear selection */
+  clearSelection?: boolean;
 }
 
 export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   highlights = [],
-  selectedHighlight,
   highlightTooltip,
   selectionTooltip,
-  scrollToHighlight,
+  selectedHighlight = null,
+  scrollToHighlight = null,
   highlightColor = defaultColor,
   showHighlights = true,
-  enableAreaSelection = true,
   enableDarkMode: isDarkReader = false,
+  clearSelection = false,
 
-  onHighlighting = () => null,
-  onHighlightUpdated = () => null,
-  onHighlightClicked = () => null,
+  onHighlighting,
+  onHighlightUpdated,
+  onHighlightClicked,
+
   ...props
 }) => {
   const [pdfViewer, setPDFViewer] = useState<PDFDisplayProxy | null>(null);
 
-  const [disableInteractions, setDisableInteractions] = useState(false);
-  const [rangeSelection, setRangeSelection] = useState<Range | null>(null);
-  const [scrollTo, setScrollTo] = useState<PDFScrollPosition>();
+  const [
+    interactionsDisabled,
+    { setTrue: disableInteractions, setFalse: enableInteractions },
+  ] = useBoolean();
+  const [rangeSelection, setRangeSelection, resetRangeSelection] =
+    useResetState<Range | null>(null);
+  const [scrollTo, setScrollTo, resetScrollTo] =
+    useResetState<PDFScrollPosition | null>(null);
 
   // pdf container ref
   const containerRef = useRef<HTMLElement | null>(null);
@@ -118,8 +135,8 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     if (!pdfViewer) return;
 
     if (isCollapsed || !range) {
-      setRangeSelection(null);
-      onHighlighting(undefined);
+      resetRangeSelection();
+      onHighlighting?.(null);
       return;
     }
 
@@ -145,9 +162,12 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
       page.viewport
     );
 
-    // create a new highlight
-    const highlight: PDFHighlight = {
-      id: uuid(),
+    const sequence = getHighlightSequence(pageNumber, scaledBoundingRect);
+
+    onHighlighting?.({
+      type: "text",
+      text,
+      color: highlightColor,
       location: {
         boundingRect: scaledBoundingRect,
         rects: rects.map((rect) =>
@@ -155,52 +175,52 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         ),
         pageNumber,
       },
-      content: { text, color: highlightColor },
-      sequence: getHighlightSequence(pageNumber, scaledBoundingRect),
-    };
-
-    onHighlighting(highlight);
+      sequence,
+    });
   };
 
-  const onMouseSelection = (start: Target, _: Target, boundingRect: Rect) => {
+  const onMouseSelection = async (
+    start: Target,
+    _: Target,
+    boundingRect: Rect
+  ) => {
     if (!pdfViewer) return;
 
-    const page = getPageFromElement(start.target);
-    if (!page) return;
+    const pageElement = getPageFromElement(start.target);
+    if (!pageElement) return;
 
-    const viewport = pdfViewer.getPageView(page.number)?.viewport;
-    if (!viewport) return;
+    const page = pdfViewer.getPageView(pageElement.number);
+    if (!page) return;
 
     // bounding rect of selection on a page
     const pageBoundingRect: PageRect = {
       ...boundingRect,
-      top: boundingRect.top - page.node.offsetTop,
-      left: boundingRect.left - page.node.offsetLeft,
-      pageNumber: page.number,
+      top: boundingRect.top - pageElement.node.offsetTop,
+      left: boundingRect.left - pageElement.node.offsetLeft,
+      pageNumber: pageElement.number,
     };
 
-    // screenshot selection
-    const image = pdfViewer.screenshotPageArea(page.number, pageBoundingRect);
-    if (!image) return;
+    const canvasArea = getCanvasArea(page.canvas, pageBoundingRect);
+    const image = await canvasToPNGBlob(canvasArea);
 
     const scaledBoundingRect = viewportRectToScaledPageRect(
       pageBoundingRect,
-      viewport
+      page.viewport
     );
 
-    // create a new higlightwith image content
-    const highlight: PDFHighlight = {
-      id: uuid(),
+    const sequence = getHighlightSequence(pageElement.number, pageBoundingRect);
+
+    onHighlighting?.({
+      type: "area",
+      image,
+      color: highlightColor,
       location: {
         boundingRect: scaledBoundingRect,
         rects: [],
-        pageNumber: page.number,
+        pageNumber: pageElement.number,
       },
-      content: { thumbnail: image, color: highlightColor },
-      sequence: getHighlightSequence(page.number, scaledBoundingRect),
-    };
-
-    onHighlighting(highlight);
+      sequence,
+    });
   };
 
   const onDoubleTap: MouseEventHandler = (event) => {
@@ -211,7 +231,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     if (annotation) {
       annotation.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     } else {
-      onHighlightClicked(undefined);
+      onHighlightClicked?.(null);
     }
   };
 
@@ -219,12 +239,15 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
   useEffect(() => {
     if (!pdfViewer || !scrollToHighlight) return;
 
-    const highlight = highlights.find((h) => h.id == scrollToHighlight?.id);
+    const highlight = highlights.find((h) => h.key === scrollToHighlight);
     setScrollTo(scrollPositionForHighlight(highlight, pdfViewer));
   }, [scrollToHighlight]);
 
   // clear range selection if changing selected highlight
-  useEffect(() => clearRangeSelection(), [selectedHighlight]);
+  useUpdateEffect(clearRangeSelection, [selectedHighlight]);
+
+  // clear range selection when changing selection
+  useUpdateEffect(clearRangeSelection, [clearSelection]);
 
   const containerClassName = `
     ${colorToRangeSelectionClassName[highlightColor]}
@@ -244,16 +267,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
           return (
             <PDFLayerPage pageNumber={pageNumber} key={pageNumber}>
               {pageHighlights.map((highlight) => (
-                <PDFHighlightComponent
-                  key={highlight.id}
+                <PDFHighlightContainer
+                  key={highlight.key}
                   highlight={highlight}
                   pdfViewer={pdfViewer}
-                  selectedHighlight={selectedHighlight}
+                  isSelected={highlight.key === selectedHighlight}
                   isDarkReader={isDarkReader}
                   highlightTooltip={highlightTooltip}
-                  onHighlightUpdated={onHighlightUpdated}
-                  onHighlightClicked={onHighlightClicked}
-                  onHighlightEditing={(h) => setDisableInteractions(!!h)}
+                  onUpdated={onHighlightUpdated}
+                  onClicked={() => onHighlightClicked?.(highlight.key)}
+                  onEditing={(editing) => {
+                    if (editing) {
+                      disableInteractions();
+                      clearRangeSelection();
+                    } else {
+                      enableInteractions();
+                    }
+                  }}
                 />
               ))}
             </PDFLayerPage>
@@ -290,23 +320,23 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         enableDarkMode={isDarkReader}
         onDocumentReady={(viewer) => {
           setPDFViewer(viewer);
-          props.onDocumentReady && props.onDocumentReady(viewer);
+          props.onDocumentReady?.(viewer);
         }}
-        disableInteractions={disableInteractions || props.disableInteractions}
+        disableInteractions={interactionsDisabled || props.disableInteractions}
         disableTextDoubleClick={true}
         onRangeSelection={(isCollapsed, range) => {
           onRangeSelection(isCollapsed, range);
-          props.onRangeSelection && props.onRangeSelection(isCollapsed, range);
+          props.onRangeSelection?.(isCollapsed, range);
         }}
         scrollTo={scrollTo || props.scrollTo}
         layers={[highlightsLayer]}
         onDoubleTap={(event) => {
           onDoubleTap(event);
-          props.onDoubleTap && props.onDoubleTap(event);
+          props.onDoubleTap?.(event);
         }}
         onPageScroll={(location) => {
-          setScrollTo(undefined);
-          props.onPageScroll && props.onPageScroll(location);
+          resetScrollTo();
+          props.onPageScroll?.(location);
         }}
         containerChildren={
           <>
@@ -315,15 +345,15 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
               blendMode={isDarkReader ? "difference" : "multiply"}
               className={`border-dashed border-2 rounded-md z-10 ${colorToClassName[highlightColor]}`}
               tooltipContainerClassName="z-12"
-              active={enableAreaSelection}
               tooltip={selectionTooltip}
-              onDragEnd={() => setDisableInteractions(false)}
+              clearSelection={clearSelection}
+              onDragEnd={enableInteractions}
               onSelecting={() => {
                 clearRangeSelection();
-                setDisableInteractions(true);
+                disableInteractions();
               }}
               onSelection={onMouseSelection}
-              onReset={() => onHighlighting(undefined)}
+              onReset={() => onHighlighting?.(null)}
             />
 
             {props.containerChildren}
@@ -337,10 +367,10 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 };
 
 const scrollPositionForHighlight = (
-  highlight: PDFHighlight | undefined,
+  highlight: PDFHighlightInfo | undefined,
   pdfViewer: PDFDisplayProxy
-): PDFScrollPosition | undefined => {
-  if (!highlight || !pdfViewer || !highlight.location) return;
+): PDFScrollPosition | null => {
+  if (!highlight || !pdfViewer || !highlight.location) return null;
 
   const page = pdfViewer.getPageView(highlight.location.pageNumber)!;
 

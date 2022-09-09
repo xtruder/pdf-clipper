@@ -1,0 +1,6 @@
+# scalar representing javascript blob
+scalar Blob
+
+extend type BlobInfo {
+  blob: Blob
+}

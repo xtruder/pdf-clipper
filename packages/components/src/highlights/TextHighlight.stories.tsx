@@ -1,6 +1,6 @@
 import { Story } from "@storybook/react";
 import React, { useState } from "react";
-import useEvent from "@react-hook/event";
+import { useEventListener } from "ahooks";
 
 import { ReactComponent as CloseIcon } from "../assets/icons/close-outline.svg";
 import { ReactComponent as BookmarkIcon } from "../assets/icons/bookmark-outline.svg";
@@ -43,16 +43,20 @@ export const TheTextHighlight: Story = (_args) => {
     );
   };
 
-  useEvent(document, "keydown", (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
-      updateSelection();
-      setTimeout(clearRangeSelection, 0);
-    }
+  useEventListener(
+    "keydown",
+    (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        updateSelection();
+        setTimeout(clearRangeSelection, 0);
+      }
 
-    if (e.key === "Delete") {
-      setClientRects(undefined);
-    }
-  });
+      if (e.key === "Delete") {
+        setClientRects(undefined);
+      }
+    },
+    { target: document }
+  );
 
   return (
     <Scrollboard onScroll={setScrollPosition}>

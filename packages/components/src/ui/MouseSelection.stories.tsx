@@ -20,7 +20,7 @@ export const TheMouseSelection: Story = (args) => {
       <MouseSelection
         eventsElRef={contentRef}
         className="mix-blend-multiply border-dashed border-2 bg-green-100"
-        active={args.active}
+        clearSelection={args.clearSelection}
         minSelection={args.minSelection}
         shouldStart={() => args.shouldStart}
         onSelection={args.onSelection}
@@ -50,7 +50,7 @@ export const TheMouseSelection: Story = (args) => {
 
 TheMouseSelection.args = {
   shouldStart: true,
-  active: true,
+  clearSelection: true,
   minSelection: 10,
   selectionKey: "alt",
 };

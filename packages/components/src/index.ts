@@ -20,3 +20,5 @@ export * from "./pdf/PDFHighlighter";
 export * from "./pdf/PDFPageThubnailsView";
 export * from "./pdf/PDFControls";
 export * from "./pdf/types";
+
+export { loadPDF } from "./lib/pdfjs";

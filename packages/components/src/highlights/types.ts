@@ -1,6 +1,6 @@
 export enum HighlightColor {
-  RED = "RED",
-  YELLOW = "YELLOW",
-  GREEN = "GREEN",
-  BLUE = "BLUE",
+  Red = "RED",
+  Yellow = "YELLOW",
+  Green = "GREEN",
+  Blue = "BLUE",
 }

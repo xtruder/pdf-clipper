@@ -1,25 +1,26 @@
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 import { getBoundingRectForRects, Rect } from "../lib/dom";
 
 import { HighlightColor } from "./types";
 import { TooltipContainer } from "../ui/TooltipContainer";
+import { useUpdate } from "ahooks";
 
 const colorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-200 text-red-800",
-  [HighlightColor.YELLOW]: "bg-yellow-200 text-yellow-800",
-  [HighlightColor.GREEN]: "bg-green-200 text-green-800",
-  [HighlightColor.BLUE]: "bg-blue-200 text-blue-800",
+  [HighlightColor.Red]: "bg-red-200 text-red-800",
+  [HighlightColor.Yellow]: "bg-yellow-200 text-yellow-800",
+  [HighlightColor.Green]: "bg-green-200 text-green-800",
+  [HighlightColor.Blue]: "bg-blue-200 text-blue-800",
 };
 
 const selectedColorToClass: Record<HighlightColor, string> = {
-  [HighlightColor.RED]: "bg-red-300",
-  [HighlightColor.YELLOW]: "bg-yellow-300",
-  [HighlightColor.GREEN]: "bg-green-300",
-  [HighlightColor.BLUE]: "bg-blue-300",
+  [HighlightColor.Red]: "bg-red-300",
+  [HighlightColor.Yellow]: "bg-yellow-300",
+  [HighlightColor.Green]: "bg-green-300",
+  [HighlightColor.Blue]: "bg-blue-300",
 };
 
-const defaultColor = HighlightColor.YELLOW;
+const defaultColor = HighlightColor.Yellow;
 
 export interface TextHighlightProps {
   className?: string;
@@ -45,15 +46,19 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
   showTooltip = isSelected,
   textBlendMode = "normal",
 
-  onSelect = () => null,
+  onSelect,
 }) => {
   const colorClass = isSelected
     ? selectedColorToClass[color || defaultColor]
     : colorToClass[color || defaultColor];
 
-  const containerElRef = useRef<HTMLDivElement | null>(null);
+  const wrapperElRef = useRef<HTMLDivElement | null>(null);
 
   const boundingRect = useMemo(() => getBoundingRectForRects(rects), [rects]);
+
+  // do manual update when wrapper reference is changed, so tooltip is correctly
+  // updated
+  useEffect(useUpdate(), [wrapperElRef]);
 
   return (
     <div className={`highlight ${className}`} onClick={onSelect}>
@@ -68,9 +73,9 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
         ))}
       </div>
 
-      {/** wrapper element, so we can place ref somewhere */}
+      {/** wrapper element, so we can place tooltips ref somewhere */}
       <div
-        ref={containerElRef}
+        ref={wrapperElRef}
         className="opacity-0 absolute pointer-events-none"
         style={boundingRect}
       />
@@ -78,7 +83,7 @@ export const TextHighlight: React.FC<TextHighlightProps> = ({
       {/** tooltip container element */}
       <TooltipContainer
         className={tooltipContainerClassName}
-        tooltipedEl={containerElRef.current}
+        tooltipedEl={wrapperElRef.current}
         placement="bottom"
         show={showTooltip}
       >
