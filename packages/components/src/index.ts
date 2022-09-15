@@ -21,4 +21,5 @@ export * from "./pdf/PDFPageThubnailsView";
 export * from "./pdf/PDFControls";
 export * from "./pdf/types";
 
-export { loadPDF } from "./lib/pdfjs";
+export { loadPDF, getPageCanvasArea, getDocumentOutline } from "./lib/pdfjs";
+export * from "./lib/pageRects";

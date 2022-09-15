@@ -1,4 +1,4 @@
-import { Rect, isDOMRectInside } from "./dom";
+import { Rect, isDOMRectInside, Size } from "./dom";
 
 export interface Scale {
   scaleX: number;
@@ -38,7 +38,7 @@ export interface PageElement {
 
 export const scaledRectToViewportRect = (
   rect: ScaledRect,
-  viewport: { width: number; height: number }
+  viewport: Size
 ): Rect => {
   const factorX = viewport.width / rect.scaleX;
   const factorY = viewport.height / rect.scaleY;
@@ -53,7 +53,7 @@ export const scaledRectToViewportRect = (
 
 export const viewportRectToScaledPageRect = (
   rect: PageRect,
-  viewport: { width: number; height: number }
+  viewport: Size
 ): ScaledPageRect => ({
   left: rect.left,
   top: rect.top,
