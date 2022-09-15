@@ -55,6 +55,12 @@ export const TooltipContainer: React.FC<TooltipContainerProps> = forwardRef(
       }
     );
 
+    // update popper on scroll
+    useEventListener("scroll", () => update?.(), {
+      target:
+        observeScroll && observeEl instanceof HTMLElement ? observeEl : null,
+    });
+
     useEffect(() => {
       if (!observeChanges || !update || !observeEl) return;
       if (!(observeEl instanceof Node)) return;
@@ -64,11 +70,6 @@ export const TooltipContainer: React.FC<TooltipContainerProps> = forwardRef(
       observer.observe(observeEl, { attributes: true });
       return () => observer.disconnect();
     }, [observeChanges, update, observeEl]);
-
-    useEventListener("scroll", () => update?.(), {
-      target:
-        observeScroll && observeEl instanceof HTMLElement ? observeEl : null,
-    });
 
     useEffect(() => {
       if (show) update?.();
