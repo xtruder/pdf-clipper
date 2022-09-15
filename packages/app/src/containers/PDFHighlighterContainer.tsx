@@ -16,8 +16,11 @@ import {
   PDFHighlight,
   PDFHighlightWithKey,
   PDFHighlightType,
+  getPageCanvasArea,
+  scaledRectToViewportRect,
 } from "@pdf-clipper/components";
 import { HighlightColor } from "~/gql/graphql";
+import { canvasToPNGBlob } from "~/lib/dom";
 
 const getDocumentHighlightsQuery = gql(`
   query getDocumentHighlights($documentId: ID!) @live {
@@ -140,6 +143,38 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
 
   const [_pdfViewer, setPdfViewer] = useState<PDFViewer>();
 
+  const screenshotHighlight = useCallback(
+    async ({ key, location }: PDFHighlightWithKey) => {
+      const page = await pdfDocument.getPage(location.pageNumber);
+
+      const viewport = page.getViewport({ scale: 5 });
+
+      const area = scaledRectToViewportRect(location.boundingRect, viewport);
+
+      const canvas = await getPageCanvasArea(page, { scale: 5, area });
+
+      const blob = await canvasToPNGBlob(canvas);
+
+      const { data, error } = await uploadBlob({
+        blob: {
+          mimeType: blob.type,
+          blob,
+        },
+      });
+
+      if (error || !data) throw error;
+
+      await updateDocumentHighlight({
+        highlight: {
+          id: key,
+          location,
+          imageHash: data.uploadBlob.hash,
+        },
+      });
+    },
+    [pdfDocument]
+  );
+
   const createHighlight = useCallback(
     async (pdfHighlight: PDFHighlight | null) => {
       if (!pdfHighlight) return;
@@ -169,6 +204,8 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
             color,
           },
         });
+
+        screenshotHighlight({ key: id, ...pdfHighlight });
       } else if (pdfHighlight.type === "text") {
         const { color, location, text, sequence } = pdfHighlight;
 
@@ -232,6 +269,8 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
             imageHash: data.uploadBlob.hash,
           },
         });
+
+        screenshotHighlight(pdfHighlight);
       }
     },
     []
