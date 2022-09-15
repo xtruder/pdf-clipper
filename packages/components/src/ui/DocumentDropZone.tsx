@@ -9,12 +9,16 @@ export interface DocumentDropZoneProps {
   onFile?: (file: File) => void;
   showProgress?: boolean;
   className?: string;
+  disabled?: boolean;
+  loader?: JSX.Element;
 }
 
 export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
   onFile,
   //showProgress = false,
   className,
+  disabled,
+  loader,
 }) => {
   const [readerErrorStr, setReaderErrorStr] = useState<JSX.Element | null>(
     null
@@ -56,6 +60,7 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
     multiple: false, // only one file for now
     maxSize: 100 * 1000000, // 100 MB for now, so we don't eat all memory
     accept: { "application/pdf": [] }, // accept only pdf for now
+    disabled,
   });
 
   const Icon = readerErrorStr ? ExclamationCircleIcon : ExclamationCircleIcon;
@@ -77,15 +82,19 @@ export const DocumentDropZone: React.FC<DocumentDropZoneProps> = ({
 
       <div className="flex justify-center items-center text-center h-full w-full bg-base-100 border-1 border-dashed p-1">
         <div
-          className={`alert ${
+          className={`flex flex-row alert ${
             readerErrorStr ? "alert-error" : ""
           } w-full min-h-20`}
         >
-          <div className="flex justify-center items-center">
-            <Icon className="w-8 h-8 stroke-current mr-2" />
+          {!loader ? (
+            <div className="flex justify-center items-center">
+              <Icon className="w-8 h-8 stroke-current mr-2" />
 
-            <span className="flex-1 w-full text-justify">{text}</span>
-          </div>
+              <span className="flex-1 w-full text-justify">{text}</span>
+            </div>
+          ) : (
+            loader
+          )}
         </div>
       </div>
     </div>
