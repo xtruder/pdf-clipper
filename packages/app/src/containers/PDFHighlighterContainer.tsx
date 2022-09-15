@@ -3,13 +3,12 @@ import useState from "react-usestateref";
 import { useToggle, useResetState } from "ahooks";
 
 import { v4 as uuid } from "uuid";
-
-import { PDFDocumentProxy } from "pdfjs-dist";
 import { gql, useMutation, useQuery } from "urql";
+import { PDFDocumentProxy } from "pdfjs-dist";
+import { PDFViewer } from "pdfjs-dist/web/pdf_viewer";
 
 import {
   PDFScrollPosition,
-  PDFDisplayProxy,
   PDFHighlightTooltip,
   PDFSelectionTooltip,
   PDFHighlighter,
@@ -139,7 +138,7 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
     useResetState<PDFScrollPosition | null>(null);
   const [clearSelection, { toggle: doClearSelection }] = useToggle();
 
-  const [_pdfViewer, setPdfViewer] = useState<PDFDisplayProxy>();
+  const [_pdfViewer, setPdfViewer] = useState<PDFViewer>();
 
   const createHighlight = useCallback(
     async (pdfHighlight: PDFHighlight | null) => {
@@ -326,7 +325,7 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
       onHighlighting={setInProgressHighlight}
       onHighlightUpdated={updateHighlight}
       onHighlightClicked={setSelectedHighlightId}
-      onDocumentReady={setPdfViewer}
+      onDisplayReady={setPdfViewer}
       onKeyDown={onKeyDown}
       onScaleChanging={(e) => onScaleChanged?.(e.scale)}
       onPageScroll={() => {

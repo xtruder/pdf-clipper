@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { useBoolean, useResetState, useUpdateEffect } from "ahooks";
 
+import { PDFViewer } from "pdfjs-dist/web/pdf_viewer";
+
 import {
   getHighlightedRectsWithinPages,
   getBoundingRectForRects,
@@ -32,7 +34,6 @@ import {
 
 import {
   PDFLayer,
-  PDFDisplayProxy,
   PDFDisplay,
   PDFDisplayProps,
   PDFScrollPosition,
@@ -42,8 +43,9 @@ import { PDFHighlightContainer } from "./PDFHighlight";
 import { MouseSelection, Target } from "../ui/MouseSelection";
 import { RangeTooltipContainer } from "../ui/RangeTooltipContainer";
 
-import "./PDFHighlighter.css";
 import { getHighlightSequence, groupHighlightsByPage } from "./utils";
+
+import "./PDFHighlighter.css";
 
 const colorToRangeSelectionClassName: Record<HighlightColor, string> = {
   [HighlightColor.Red]: "textLayer__selection_red",
@@ -117,7 +119,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
   ...props
 }) => {
-  const [pdfViewer, setPDFViewer] = useState<PDFDisplayProxy | null>(null);
+  const [pdfViewer, setPDFViewer] = useState<PDFViewer | null>(null);
 
   const [
     interactionsDisabled,
@@ -154,7 +156,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const boundingRect = getBoundingRectForRects(rects);
 
     const pageNumber = pages[0].number;
-    const page = pdfViewer.getPageView(pageNumber)!;
+    const page = pdfViewer.getPageView(pageNumber - 1)!;
     const text = range.toString();
 
     const scaledBoundingRect = viewportRectToScaledPageRect(
@@ -189,7 +191,7 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
     const pageElement = getPageFromElement(start.target);
     if (!pageElement) return;
 
-    const page = pdfViewer.getPageView(pageElement.number);
+    const page = pdfViewer.getPageView(pageElement.number - 1);
     if (!page) return;
 
     // bounding rect of selection on a page
@@ -318,9 +320,9 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
         containerRef={containerRef}
         containerClassName={containerClassName}
         enableDarkMode={isDarkReader}
-        onDocumentReady={(viewer) => {
+        onDisplayReady={(viewer) => {
           setPDFViewer(viewer);
-          props.onDocumentReady?.(viewer);
+          props.onDisplayReady?.(viewer);
         }}
         disableInteractions={interactionsDisabled || props.disableInteractions}
         disableTextDoubleClick={true}
@@ -368,11 +370,11 @@ export const PDFHighlighter: React.FC<PDFHighlighterProps> = ({
 
 const scrollPositionForHighlight = (
   highlight: PDFHighlightInfo | undefined,
-  pdfViewer: PDFDisplayProxy
+  pdfViewer: PDFViewer
 ): PDFScrollPosition | null => {
   if (!highlight || !pdfViewer || !highlight.location) return null;
 
-  const page = pdfViewer.getPageView(highlight.location.pageNumber)!;
+  const page = pdfViewer.getPageView(highlight.location.pageNumber - 1)!;
 
   const scrollPosition = {
     pageNumber: highlight.location.pageNumber,

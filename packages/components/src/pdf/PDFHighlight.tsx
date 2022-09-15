@@ -1,20 +1,25 @@
 import React from "react";
 
-import { clearRangeSelection, Rect, canvasToPNGBlob } from "../lib/dom";
+import {
+  clearRangeSelection,
+  canvasToPNGBlob,
+  getCanvasArea,
+  Rect,
+} from "../lib/dom";
 import {
   viewportRectToScaledPageRect,
   scaledRectToViewportRect,
 } from "../lib/pageRects";
 
-import { PDFDisplayProxy } from "./PDFDisplay";
 import { AreaHighlight } from "../highlights/AreaHighlight";
 import { TextHighlight } from "../highlights/TextHighlight";
 
 import { PDFHighlightInfoWithKey, PDFHighlightWithKey } from "./types";
 import { getHighlightSequence } from "./utils";
+import { PDFViewer } from "pdfjs-dist/web/pdf_viewer";
 
 export interface PDFHighlightContainerProps {
-  pdfViewer: PDFDisplayProxy | null;
+  pdfViewer: PDFViewer | null;
   highlight: PDFHighlightInfoWithKey;
   isSelected?: boolean;
   isDarkReader: boolean;
@@ -40,7 +45,7 @@ export const PDFHighlightContainer: React.FC<PDFHighlightContainerProps> = ({
   if (!highlight.location) return <></>;
 
   const viewport = pdfViewer?.getPageView(
-    highlight.location.pageNumber
+    highlight.location.pageNumber - 1
   )?.viewport;
   if (!viewport) return <></>;
 
@@ -48,9 +53,13 @@ export const PDFHighlightContainer: React.FC<PDFHighlightContainerProps> = ({
     if (!pdfViewer) return;
     if (!highlight.location) return;
 
-    const canvasArea = pdfViewer.getPageArea(
-      highlight.location.pageNumber,
-      boundingRect
+    const page = pdfViewer.getPageView(highlight.location.pageNumber - 1);
+    if (!page) return;
+
+    const canvasArea = getCanvasArea(
+      page.canvas,
+      boundingRect,
+      window.devicePixelRatio
     );
     if (!canvasArea) return;
 

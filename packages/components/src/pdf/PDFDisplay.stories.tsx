@@ -50,7 +50,7 @@ export const ThePDFDisplay: Story = (args) => {
       enableDarkMode={isDarkMode}
       //containerClassName="textLayer__selection_red"
       // handlers
-      onDocumentReady={args.onDocumentReady}
+      onDisplayReady={args.onDocumentReady}
       onTextLayerRendered={args.onTextLayerRendered}
       onKeyDown={args.onKeyDown}
       onRangeSelection={args.onRangeSelection}
@@ -74,8 +74,8 @@ ThePDFDisplay.argTypes = {
   onError: {
     action: "error",
   },
-  onDocumentReady: {
-    action: "document ready",
+  onDisplayReady: {
+    action: "display ready",
   },
   onTextLayerRendered: {
     action: "text layer rendered",

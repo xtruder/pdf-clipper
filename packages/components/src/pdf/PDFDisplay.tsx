@@ -21,10 +21,11 @@ import {
   NullL10n,
   PDFLinkService,
   PDFViewer,
+  PageView,
 } from "pdfjs-dist/web/pdf_viewer";
 
-import { Rect, getWindow, getCanvasArea, asElement } from "../lib/dom";
-import { PageView, findOrCreateContainerLayer } from "../lib/pdfjs";
+import { getWindow, asElement } from "../lib/dom";
+import { findOrCreateContainerLayer } from "../lib/pdfjs";
 
 // import worker src to set for pdfjs global worker options
 import workerSrc from "pdfjs-dist/build/pdf.worker.min.js?url";
@@ -58,16 +59,8 @@ export interface PDFLayerProps {
 
 export const PDFLayer: React.FC<PDFLayerProps> = () => <></>;
 
-export interface PDFDisplayProxy {
-  pdfDocument: PDFDocumentProxy;
-  currentScale: number;
-  container: HTMLDivElement;
-  getPageView(pageNumber: number): PageView | null;
-  getPageArea(pageNumber: number, area: Rect): HTMLCanvasElement | null;
-}
-
 interface PDFDisplayEvents {
-  onDocumentReady?: (viewer: PDFDisplayProxy) => void;
+  onDisplayReady?: (viewer: PDFViewer) => void;
   onTextLayerRendered?: (event: { pageNumber: number }) => void;
   onKeyDown?: (event: KeyboardEvent) => void;
   onRangeSelection?: (isCollapsed: boolean, range: Range | null) => void;
@@ -112,7 +105,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   disableInteractions = false,
   disableTextDoubleClick = false,
 
-  onDocumentReady,
+  onDisplayReady,
   onTextLayerRendered,
   onKeyDown,
   onRangeSelection,
@@ -166,17 +159,6 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
 
   const getPageView = (pageNumber: number): PageView | null => {
     return pdfViewerRef.current!.getPageView(pageNumber - 1) || null;
-  };
-
-  // helper function to make a screeen of a page area
-  const getPageArea = (
-    pageNumber: number,
-    area: Rect
-  ): HTMLCanvasElement | null => {
-    const page = getPageView(pageNumber);
-    if (!page || !page.canvas) return null;
-
-    return getCanvasArea(page.canvas, area, window.devicePixelRatio);
   };
 
   // when selected text on pdf has changed
@@ -279,15 +261,7 @@ export const PDFDisplay: React.FC<PDFDisplayProps> = ({
   };
 
   const onPagesInit = () => {
-    onDocumentReady?.({
-      container: containerRef.current!,
-      getPageView,
-      getPageArea: getPageArea,
-      pdfDocument,
-      get currentScale(): number {
-        return pdfViewerRef.current!.currentScale;
-      },
-    });
+    onDisplayReady?.(pdfViewerRef.current!);
 
     if (scrollTo) doScroll(scrollTo);
   };

@@ -15,22 +15,6 @@ import {
 } from "./dom";
 import { PageElement } from "./pageRects";
 
-export interface PageView {
-  viewport: Viewport;
-  canvas: HTMLCanvasElement;
-  textLayer?: {
-    textLayerDiv: HTMLDivElement;
-  };
-  div: HTMLDivElement;
-}
-
-export interface Viewport {
-  convertToPdfPoint: (x: number, y: number) => Array<number>;
-  convertToViewportRectangle: (pdfRectangle: Array<number>) => Array<number>;
-  width: number;
-  height: number;
-}
-
 export function getPageFromElement(target: HTMLElement): PageElement | null {
   const node = asElement(target.closest(".page"));
 
