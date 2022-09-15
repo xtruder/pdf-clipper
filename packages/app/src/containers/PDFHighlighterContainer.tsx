@@ -1,11 +1,16 @@
 import React, { FC, useCallback, useEffect } from "react";
 import useState from "react-usestateref";
 import { useToggle, useResetState } from "ahooks";
-
+import { gql } from "urql";
 import { v4 as uuid } from "uuid";
-import { gql, useMutation, useQuery } from "urql";
+
 import { PDFDocumentProxy } from "pdfjs-dist";
 import { PDFViewer } from "pdfjs-dist/web/pdf_viewer";
+
+import { useMyMutation, useMyQuery } from "~/gql/hooks";
+import { HighlightColor } from "~/gql/graphql";
+
+import { canvasToPNGBlob } from "~/lib/dom";
 
 import {
   PDFScrollPosition,
@@ -19,8 +24,6 @@ import {
   getPageCanvasArea,
   scaledRectToViewportRect,
 } from "@pdf-clipper/components";
-import { HighlightColor } from "~/gql/graphql";
-import { canvasToPNGBlob } from "~/lib/dom";
 
 const getDocumentHighlightsQuery = gql(`
   query getDocumentHighlights($documentId: ID!) @live {
@@ -94,7 +97,7 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
   onHighlightSelected,
   onScaleChanged,
 }) => {
-  const [{ data, error }] = useQuery({
+  const [{ data, error }] = useMyQuery({
     query: getDocumentHighlightsQuery,
     variables: { documentId },
   });
@@ -104,16 +107,16 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
 
   const pdfHighlights = data.document.highlights;
 
-  const [, createDocumentHighlight] = useMutation(
+  const [, createDocumentHighlight] = useMyMutation(
     createDocumentHighlightMutation
   );
-  const [, updateDocumentHighlight] = useMutation(
+  const [, updateDocumentHighlight] = useMyMutation(
     updateDocumentHighlightMutation
   );
-  const [, deleteDocumentHighlight] = useMutation(
+  const [, deleteDocumentHighlight] = useMyMutation(
     deleteDocumentHighlightMutation
   );
-  const [, uploadBlob] = useMutation(uploadBlobMutation);
+  const [, uploadBlob] = useMyMutation(uploadBlobMutation);
 
   const [
     inProgressHighlight,

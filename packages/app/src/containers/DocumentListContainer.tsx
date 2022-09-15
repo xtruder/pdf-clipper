@@ -1,6 +1,9 @@
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
+import { gql } from "urql";
+import { useMyQuery } from "~/gql/hooks";
+
 import {
   TopbarProgressIndicator,
   useRandomProgress,
@@ -9,7 +12,6 @@ import {
 } from "@pdf-clipper/components";
 
 import { DocumentInfoCardContainer } from "./DocumentInfoCardContainer";
-import { gql, useQuery } from "urql";
 
 const getAccountDocumentsIdsQuery = gql(`
   query me @live {
@@ -30,7 +32,7 @@ export const AccountDocumentsListContainer: React.FC<{
   onOpen?: (documentId: string) => void;
 }> = ({ className, onOpen }) => {
   const AccountDocumentsListLoader = useCallback(() => {
-    const [{ data, error }] = useQuery({
+    const [{ data, error }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
     });
 

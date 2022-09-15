@@ -1,9 +1,9 @@
 import React, { FC, useState, useEffect } from "react";
 import { suspend } from "suspend-react";
-
-import { gql, useMutation, useQuery } from "urql";
-
 import { FullScreen } from "@chiragrupani/fullscreen-react";
+
+import { gql } from "urql";
+import { useMyMutation, useMyQuery } from "~/gql/hooks";
 
 import { resetValue } from "~/lib/utils";
 
@@ -67,19 +67,19 @@ export const PDFReader: FC<PDFReaderProps> = ({
   isDarkMode = false,
   onClose,
 }) => {
-  const [{ data, error }] = useQuery({
+  const [{ data, error }] = useMyQuery({
     query: getDocumentInfoQuery,
     variables: { documentId },
   });
   if (error || !data) throw error;
 
-  const [{ data: docFileData, error: docFileError }] = useQuery({
+  const [{ data: docFileData, error: docFileError }] = useMyQuery({
     query: getDocumentFileQuery,
     variables: { documentId },
   });
   if (docFileError || !docFileData) throw docFileError;
 
-  const [, updateDocument] = useMutation(updateDocumentMutation);
+  const [, updateDocument] = useMyMutation(updateDocumentMutation);
 
   let source: Blob | string;
   if (docFileData.document.file?.blob) {

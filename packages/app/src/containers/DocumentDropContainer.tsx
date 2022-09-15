@@ -1,7 +1,12 @@
 import React, { Suspense, useCallback, useState } from "react";
+import { suspend } from "suspend-react";
+import { ErrorBoundary } from "react-error-boundary";
 
-import { gql, useMutation } from "urql";
+import { gql } from "urql";
+import { useMyMutation } from "~/gql/hooks";
 import { DocumentType } from "~/gql/graphql";
+
+import { canvasToPNGBlob } from "~/lib/dom";
 
 import {
   DocumentDropZone,
@@ -12,9 +17,6 @@ import {
   TopbarProgressIndicator,
   useContextProgress,
 } from "@pdf-clipper/components";
-import { suspend } from "suspend-react";
-import { canvasToPNGBlob } from "~/lib/dom";
-import { ErrorBoundary } from "react-error-boundary";
 
 const createDocumentMutation = gql(`
   mutation createDocument($input: CreateDocumentInput!) {
@@ -40,8 +42,8 @@ export const DocumentDropContainer: React.FC<{
   className: string;
 }> = ({ className }) => {
   const DocumentDropZoneLoader = useCallback(() => {
-    const [, uploadBlob] = useMutation(uploadBlobMutation);
-    const [, createDocument] = useMutation(createDocumentMutation);
+    const [, uploadBlob] = useMyMutation(uploadBlobMutation);
+    const [, createDocument] = useMyMutation(createDocumentMutation);
 
     const [file, setFile] = useState<File>();
     const { setProgress, setMessage } = useContextProgress();

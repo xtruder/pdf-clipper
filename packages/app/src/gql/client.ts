@@ -45,7 +45,7 @@ export const createClient = ({ url, db, accountId }: ClientArgs) => {
         }),
 
         // skip this exchange if offline is not true
-        shouldSkip: ({ context: { offline } }) => false,
+        shouldSkip: ({ context: { offline } }) => !!!offline,
       }),
       skipExchange({
         exchange: executeExchange({
@@ -54,7 +54,7 @@ export const createClient = ({ url, db, accountId }: ClientArgs) => {
         }),
 
         // skip this exchange if offline is not true
-        shouldSkip: ({ context: { offline } }) => false,
+        shouldSkip: ({ context: { offline } }) => !!!offline,
       }),
       liveQueryExchange(),
       multipartFetchExchange,

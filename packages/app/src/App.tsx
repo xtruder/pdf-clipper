@@ -1,17 +1,19 @@
 import React, { Suspense, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { v4 as uuid } from "uuid";
-
 import { ErrorBoundary } from "react-error-boundary";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { useWindowSize } from "@react-hook/window-size";
 import { useColorScheme } from "use-color-scheme";
 import { useLocalStorageState } from "ahooks";
+import { suspend } from "suspend-react";
+
+import { v4 as uuid } from "uuid";
 
 import { Provider as UrqlProvider } from "urql";
-
+import { GqlContext } from "./gql/hooks";
 import { createClient } from "./gql/client";
+
 import { Database } from "~/offline";
 
 import {
@@ -27,7 +29,6 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 
 import "virtual:windi.css";
 import "./App.css";
-import { suspend } from "suspend-react";
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = () => (
@@ -125,7 +126,9 @@ export function App(): JSX.Element {
       </HelmetProvider>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <UrqlProvider value={client}>
-          <AppRouter />
+          <GqlContext.Provider value={{ offline: true }}>
+            <AppRouter />
+          </GqlContext.Provider>
         </UrqlProvider>
       </ErrorBoundary>
     </>

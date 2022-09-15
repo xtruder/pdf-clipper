@@ -1,7 +1,8 @@
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { gql, useMutation, useQuery } from "urql";
+import { gql } from "urql";
+import { useMyMutation, useMyQuery } from "~/gql/hooks";
 
 import { ErrorFallback, DocumentInfoCard } from "@pdf-clipper/components";
 
@@ -26,7 +27,7 @@ export const DocumentInfoCardContainer: React.FC<{
   onOpen?: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardLoader = useCallback(() => {
-    const [{ data, error }] = useQuery({
+    const [{ data, error }] = useMyQuery({
       query: getDocumentInfoQuery,
       variables: {
         documentId,
@@ -35,7 +36,7 @@ export const DocumentInfoCardContainer: React.FC<{
 
     if (!data || error) throw error;
 
-    const [{ error: updateError }, updateDocument] = useMutation(
+    const [{ error: updateError }, updateDocument] = useMyMutation(
       updateDocumentMutation
     );
 

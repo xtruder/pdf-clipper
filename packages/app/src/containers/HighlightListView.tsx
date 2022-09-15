@@ -1,5 +1,8 @@
 import React, { FC, Suspense, useCallback } from "react";
-import { gql, useMutation, useQuery } from "urql";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { gql } from "urql";
+import { useMyMutation, useMyQuery } from "~/gql/hooks";
 
 import {
   ErrorFallback,
@@ -8,8 +11,6 @@ import {
   TopbarProgressIndicator,
   useRandomProgress,
 } from "@pdf-clipper/components";
-import { GetDocumentHighlightsQuery } from "~/gql/graphql";
-import { ErrorBoundary } from "react-error-boundary";
 
 const getDocumentHighlightsQuery = gql(`
   query getDocumentHighlights($documentId: ID!) @live {
@@ -30,8 +31,6 @@ const deleteDocumentHighlight = gql(`
   }
 `);
 
-type Highlight = GetDocumentHighlightsQuery["document"]["highlights"][0];
-
 export interface HighlightListViewProps {
   documentId: string;
   selectedHighlightId?: string;
@@ -50,7 +49,7 @@ export const HighlightListView: FC<HighlightListViewProps> = ({
   onHighlightPageClicked,
 }) => {
   const HighlightListLoader = useCallback(() => {
-    const [{ data, error }] = useQuery({
+    const [{ data, error }] = useMyQuery({
       query: getDocumentHighlightsQuery,
       variables: {
         documentId,
@@ -59,20 +58,14 @@ export const HighlightListView: FC<HighlightListViewProps> = ({
 
     if (error) throw error;
 
-    const [, deleteHighlight] = useMutation(deleteDocumentHighlight);
+    const [, deleteHighlight] = useMyMutation(deleteDocumentHighlight);
 
     const highlights = data?.document.highlights ?? [];
 
     return (
       <HighlightCardList>
         {highlights.map(
-          ({
-            id,
-            color,
-            image,
-            content,
-            location: { pageNumber },
-          }: Highlight) => (
+          ({ id, color, image, content, location: { pageNumber } }) => (
             <HighlightCard
               key={id}
               color={color}
