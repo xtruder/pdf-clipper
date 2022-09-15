@@ -339,13 +339,16 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
     <PDFSelectionTooltip onClick={() => createHighlight(inProgressHighlight)} />
   );
 
-  const highlights = pdfHighlights.map((h) => ({
-    type: h.image ? "area" : ("text" as PDFHighlightType),
-    key: h.id,
-    color: h.color,
-    location: h.location,
-    sequence: h.sequence,
-  }));
+  // convert from graphql response to PDFHighlight
+  const highlights = pdfHighlights.map(
+    ({ image, id, color, location, sequence }) => ({
+      type: image ? "area" : ("text" as PDFHighlightType),
+      key: id,
+      color,
+      location,
+      sequence,
+    })
+  );
 
   return (
     <PDFHighlighter
