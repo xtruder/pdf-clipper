@@ -1,6 +1,5 @@
 import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import filterObject from "just-filter-object";
 
 import { gql, useMutation, useQuery } from "urql";
 
@@ -42,7 +41,7 @@ export const DocumentInfoCardContainer: React.FC<{
 
     if (updateError) throw updateError;
 
-    const meta = filterObject(data.document.meta, (k) => k !== "__typename");
+    const { __typename: _, ...meta } = data.document.meta;
 
     const { title, description, pageCount } = meta;
 
