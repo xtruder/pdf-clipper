@@ -13,7 +13,7 @@ import {
   useContextProgress,
 } from "@pdf-clipper/components";
 import { suspend } from "suspend-react";
-import { canvasToPNGBlob, canvasToPNGDataURI } from "~/lib/dom";
+import { canvasToPNGBlob } from "~/lib/dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 const createDocumentMutation = gql(`
@@ -83,6 +83,7 @@ export const DocumentDropContainer: React.FC<{
           await getPageCanvasArea(page1, { width: 600 })
         );
 
+        // upload cover page
         const { data: coverData, error: coverError } = await uploadBlob({
           blob: {
             blob: cover,
