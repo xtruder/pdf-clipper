@@ -8,11 +8,12 @@ import { ReactComponent as InformationCircleIcon } from "../assets/icons/informa
 
 import { EditableText } from "../ui/EditableText";
 import { TopbarProgressIndicator } from "../ui/ProgressIndicator";
+import { Image } from "../ui/Image";
 
 export interface DocumentInfoCardProps {
   title?: string;
   description?: string;
-  cover?: string;
+  cover?: string | Blob;
   lastPage?: number;
   pages?: number;
   isLoading?: boolean;
@@ -147,7 +148,7 @@ export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
         onClick={() => onOpen()}
       >
         {cover ? (
-          <img src={cover} style={{ width: "100%" }} />
+          <Image src={cover} style={{ width: "100%" }} />
         ) : (
           <BookOpenIcon className="w-full h-full" />
         )}

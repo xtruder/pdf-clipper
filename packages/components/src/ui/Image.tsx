@@ -1,12 +1,15 @@
 import React, {
   forwardRef,
-  ReactEventHandler,
   useEffect,
   useState,
+  ReactEventHandler,
+  ComponentPropsWithoutRef,
 } from "react";
+import { blobToDataURL } from "../lib/dom";
 
-export interface ImageProps extends React.ComponentPropsWithoutRef<"img"> {
-  src?: string;
+export interface ImageProps
+  extends Omit<ComponentPropsWithoutRef<"img">, "src"> {
+  src?: string | Blob;
   fallbackSrc?: string;
 }
 
@@ -17,15 +20,22 @@ export const Image = forwardRef<HTMLImageElement, ImageProps>(
       errored: boolean;
       loaded: boolean;
     }>({
-      currentSrc: src || fallbackSrc,
+      currentSrc: undefined,
       errored: false,
       loaded: false,
     });
 
     // update src when property gets updated
     useEffect(() => {
-      if (src) setState((s) => ({ ...s, currentSrc: src }));
-      else if (fallbackSrc)
+      if (src) {
+        if (src instanceof Blob) {
+          Promise.resolve(blobToDataURL(src)).then((dataUrl) =>
+            setState((s) => ({ ...s, currentSrc: dataUrl }))
+          );
+        } else {
+          setState((s) => ({ ...s, currentSrc: src }));
+        }
+      } else if (fallbackSrc)
         setState((s) => ({ ...s, currentSrc: fallbackSrc }));
     }, [src, fallbackSrc]);
 

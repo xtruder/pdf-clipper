@@ -8,8 +8,6 @@ import { ReactComponent as TrashIcon } from "../assets/icons/trash-outline.svg";
 import { ReactComponent as ChevronDoubleDownIcon } from "../assets/icons/chevron-double-down-outline.svg";
 import { ReactComponent as ChevronDoubleUpIcon } from "../assets/icons/chevron-double-up-outline.svg";
 import { Image } from "../ui/Image";
-import { suspend } from "suspend-react";
-import { blobToDataURL } from "../lib/dom";
 
 const colorToClass: Record<HighlightColor, string> = {
   [HighlightColor.Red]: "bg-red-200",
@@ -111,11 +109,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({
   } else if (image || fallbackImage) {
     highlight = (
       <Image
-        src={
-          image instanceof Blob
-            ? suspend(() => blobToDataURL(image), [image])
-            : image
-        }
+        src={image}
         fallbackSrc={fallbackImage}
         className="h-initial w-full block hover:cursor-pointer"
         loading="lazy"
