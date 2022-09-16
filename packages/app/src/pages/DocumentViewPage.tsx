@@ -15,13 +15,13 @@ const getDocumentInfoQuery = gql(`
 export interface DocumentViewPageProps {}
 
 export const DocumentViewPage: React.FC<DocumentViewPageProps> = ({}) => {
-  const { documentId } = useParams();
+  const { source = "remote", documentId } = useParams();
   if (!documentId) return <a>Missing document ID</a>;
 
   const [{ data, error }] = useMyQuery({
     query: getDocumentInfoQuery,
     variables: { documentId },
-    context: { suspense: true },
+    context: { suspense: true, source: source as any },
   });
   if (error || !data) throw error;
 
@@ -29,7 +29,9 @@ export const DocumentViewPage: React.FC<DocumentViewPageProps> = ({}) => {
 
   switch (type) {
     case "PDF":
-      return <Navigate to={`/viewpdf/${documentId}`} replace={true} />;
+      return (
+        <Navigate to={`/viewpdf/${source}/${documentId}`} replace={true} />
+      );
     default:
       throw new Error(`Invalid document type ${type}`);
   }

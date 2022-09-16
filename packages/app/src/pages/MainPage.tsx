@@ -13,11 +13,11 @@ export const MainPage: React.FC<MainPageProps> = ({}) => {
     <div className="h-screen flex flex-col p-1">
       <DocumentDropContainer className="flex-none grow-0" />
 
-      <div className="divider"></div>
+      <div className="divider" />
 
       <AccountDocumentsListContainer
-        className="flex-1"
-        onOpen={(docId) => navigate(`/document/${docId}`)}
+        className="flex-1 p-1"
+        onOpen={(docId) => navigate(`/document/local/${docId}`)}
       />
     </div>
   );

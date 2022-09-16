@@ -11,7 +11,6 @@ import { suspend } from "suspend-react";
 import { v4 as uuid } from "uuid";
 
 import { Provider as UrqlProvider } from "urql";
-import { GqlContext } from "./gql/hooks";
 import { createClient } from "./gql/client";
 
 import { Database } from "~/offline";
@@ -57,14 +56,14 @@ const AppRouter: React.FC = () => {
           }
         />
         <Route
-          path="/document/:documentId"
+          path="/document/:source/:documentId"
           element={
             <PageWrapper>
               <DocumentViewPage />
             </PageWrapper>
           }
         />
-        <Route path="/viewpdf/:documentId" element={<PDFViewPage />} />
+        <Route path="/viewpdf/:source/:documentId" element={<PDFViewPage />} />
       </Routes>
     </Router>
   );
@@ -126,9 +125,7 @@ export function App(): JSX.Element {
       </HelmetProvider>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <UrqlProvider value={client}>
-          <GqlContext.Provider value={{ offline: true }}>
-            <AppRouter />
-          </GqlContext.Provider>
+          <AppRouter />
         </UrqlProvider>
       </ErrorBoundary>
     </>

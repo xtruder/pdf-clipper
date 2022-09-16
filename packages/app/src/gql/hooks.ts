@@ -13,11 +13,11 @@ import { DocumentNode } from "graphql";
 import { createContext, useContext, useMemo } from "react";
 
 export const GqlContext = createContext<{
-  offline?: boolean;
-}>({ offline: false });
+  source?: "local" | "remote";
+}>({ source: "remote" });
 
-export type OperationContextWithOffline = OperationContext & {
-  offline?: boolean;
+export type MyOperationContext = OperationContext & {
+  source?: "local" | "remote";
 };
 
 export type UseMyQueryArgs<Variables extends AnyVariables, Data> = UseQueryArgs<
@@ -69,7 +69,7 @@ export function useMyMutation<
 
   const myExecute = (
     variables: Variables,
-    context?: Partial<OperationContextWithOffline>
+    context?: Partial<MyOperationContext>
   ) => execute(variables, { ...(extraContext ?? {}), ...(context ?? {}) });
 
   return [state, myExecute];

@@ -1,8 +1,8 @@
-import React, { Suspense, useCallback } from "react";
+import React, { Suspense, useCallback, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
-import { useMyQuery } from "~/gql/hooks";
+import { GqlContext, useMyQuery } from "~/gql/hooks";
 
 import {
   TopbarProgressIndicator,
@@ -34,23 +34,37 @@ export const AccountDocumentsListContainer: React.FC<{
   const AccountDocumentsListLoader = useCallback(() => {
     const [{ data: localData }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
+      context: useMemo(() => ({ source: "local", suspense: true }), []),
       throwOnError: true,
     });
 
+    const [{ data }] = useMyQuery({
+      query: getAccountDocumentsIdsQuery,
+      context: useMemo(() => ({ suspense: false }), []),
+    });
 
-    const {
-      me: { documents: accountDocs },
-    } = data;
+    const docs = (data?.me.documents ?? []).map((d) => ({
+      ...d,
+      source: "remote",
+    }));
+    const localDocs = (localData?.me.documents ?? []).map((d) => ({
+      ...d,
+      source: "local",
+    }));
 
     return (
       <DocumentInfoCardList className={className}>
-        {accountDocs.map(({ document: { id: documentId } }) => (
-          <DocumentInfoCardContainer
-            key={documentId}
-            documentId={documentId}
-            onOpen={() => onOpen?.(documentId)}
-          />
-        ))}
+        {localDocs
+          .concat(docs)
+          .map(({ document: { id: documentId }, source: source }) => (
+            <GqlContext.Provider value={{ source: source as any }}>
+              <DocumentInfoCardContainer
+                key={documentId}
+                documentId={documentId}
+                onOpen={() => onOpen?.(documentId)}
+              />
+            </GqlContext.Provider>
+          ))}
       </DocumentInfoCardList>
     );
   }, [onOpen]);

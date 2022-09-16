@@ -30,6 +30,7 @@ export const createClient = ({ url, db, accountId }: ClientArgs) => {
   return createUrqlClient({
     url,
     suspense: true,
+    maskTypename: true,
     exchanges: [
       dedupExchange,
       cacheExchange({
@@ -45,7 +46,7 @@ export const createClient = ({ url, db, accountId }: ClientArgs) => {
         }),
 
         // skip this exchange if offline is not true
-        shouldSkip: ({ context: { offline } }) => !!!offline,
+        shouldSkip: (op) => op.context.source === "remote",
       }),
       skipExchange({
         exchange: executeExchange({
@@ -54,7 +55,7 @@ export const createClient = ({ url, db, accountId }: ClientArgs) => {
         }),
 
         // skip this exchange if offline is not true
-        shouldSkip: ({ context: { offline } }) => !!!offline,
+        shouldSkip: (op) => op.context.source === "remote",
       }),
       liveQueryExchange(),
       multipartFetchExchange,
