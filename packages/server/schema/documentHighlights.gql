@@ -28,7 +28,7 @@ type DocumentHighlight {
   color: HighlightColor!
 
   """content associated with highlight"""
-  content: JSON!
+  content: JSON
 
   """highlight location"""
   location: JSON!

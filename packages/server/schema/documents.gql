@@ -1,4 +1,5 @@
 enum DocumentType {
+
   PDF
 }
 
@@ -20,9 +21,6 @@ type DocumentMeta {
 
   """keywords associated with document"""
   keywords: [String!]
-
-  """url of document cover image"""
-  cover: String
 
   """number of document pages"""
   pageCount: Int
@@ -56,6 +54,9 @@ type Document {
   """metadata associated with document"""
   meta: DocumentMeta!
 
+  """info about document cover image"""
+  cover: BlobInfo
+
   """document visibility defines whether document is private or public"""
   visibility: DocumentVisibility!
 }
@@ -69,9 +70,6 @@ input DocumentMetaInput {
 
   """document description"""
   description: String
-
-  """url of document cover image"""
-  cover: String
 
   """number of pages in document"""
   pageCount: Int
@@ -89,6 +87,9 @@ input CreateDocumentInput {
 
   """metadata associates with document"""
   meta: DocumentMetaInput
+
+  """hash of document cover image"""
+  coverHash: String
 
   """update document visibility"""
   visibility: DocumentVisibility
