@@ -20,8 +20,12 @@ export type OperationContextWithOffline = OperationContext & {
   offline?: boolean;
 };
 
-export type UseMyQueryArgs<Variables, Data> = UseQueryArgs<Variables, Data> & {
-  context?: Partial<OperationContextWithOffline>;
+export type UseMyQueryArgs<Variables extends AnyVariables, Data> = UseQueryArgs<
+  Variables,
+  Data
+> & {
+  context?: Partial<MyOperationContext>;
+  throwOnError?: boolean;
 };
 
 export function useMyQuery<
@@ -35,7 +39,17 @@ export function useMyQuery<
     [args.context, extraContext]
   );
 
-  return useQuery({ ...args, context });
+  const [{ data, error, ...extra }, refetch] = useQuery({
+    ...args,
+    variables: { ...(args.variables ?? {}), source: context.source },
+    context,
+  });
+
+  if (args.throwOnError && error) {
+    throw error;
+  }
+
+  return [{ data, error, ...extra }, refetch];
 }
 
 export function useMyMutation<

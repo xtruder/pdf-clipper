@@ -32,11 +32,11 @@ export const AccountDocumentsListContainer: React.FC<{
   onOpen?: (documentId: string) => void;
 }> = ({ className, onOpen }) => {
   const AccountDocumentsListLoader = useCallback(() => {
-    const [{ data, error }] = useMyQuery({
+    const [{ data: localData }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
+      throwOnError: true,
     });
 
-    if (error || !data) throw error;
 
     const {
       me: { documents: accountDocs },

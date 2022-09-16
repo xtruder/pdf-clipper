@@ -97,15 +97,13 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
   onHighlightSelected,
   onScaleChanged,
 }) => {
-  const [{ data, error }] = useMyQuery({
+  const [{ data }] = useMyQuery({
     query: getDocumentHighlightsQuery,
     variables: { documentId },
+    throwOnError: true,
   });
 
-  if (error) throw error;
-  if (!data) throw new Error("missing document data");
-
-  const pdfHighlights = data.document.highlights;
+  const pdfHighlights = data!.document.highlights;
 
   const [, createDocumentHighlight] = useMyMutation(
     createDocumentHighlightMutation

@@ -27,14 +27,13 @@ export const DocumentInfoCardContainer: React.FC<{
   onOpen?: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardLoader = useCallback(() => {
-    const [{ data, error }] = useMyQuery({
+    const [{ data }] = useMyQuery({
       query: getDocumentInfoQuery,
       variables: {
         documentId,
       },
+      throwOnError: true,
     });
-
-    if (!data || error) throw error;
 
     const [{ error: updateError }, updateDocument] = useMyMutation(
       updateDocumentMutation
@@ -42,13 +41,12 @@ export const DocumentInfoCardContainer: React.FC<{
 
     if (updateError) throw updateError;
 
-    const { __typename: _, ...meta } = data.document.meta;
-
+    const meta = data!.document.meta;
     const { title, description, pageCount } = meta;
 
-    const cover = data.document.cover?.blob
-      ? data.document.cover.blob
-      : data.document.cover?.url ?? undefined;
+    const cover = data!.document.cover?.blob
+      ? data!.document.cover.blob
+      : data!.document.cover?.url ?? undefined;
 
     return (
       <DocumentInfoCard
@@ -58,12 +56,18 @@ export const DocumentInfoCardContainer: React.FC<{
         pages={pageCount ?? 0}
         onDescriptionChanged={(description) =>
           updateDocument({
-            document: { id: documentId, meta: { ...meta, description } },
+            document: {
+              id: documentId,
+              meta: { ...meta, description },
+            },
           })
         }
         onTitleChanged={(title) =>
           updateDocument({
-            document: { id: documentId, meta: { ...meta, title } },
+            document: {
+              id: documentId,
+              meta: { ...meta, title },
+            },
           })
         }
         onDeleteClicked={() =>

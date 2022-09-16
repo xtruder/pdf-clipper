@@ -67,25 +67,25 @@ export const PDFReader: FC<PDFReaderProps> = ({
   isDarkMode = false,
   onClose,
 }) => {
-  const [{ data, error }] = useMyQuery({
+  const [{ data }] = useMyQuery({
     query: getDocumentInfoQuery,
     variables: { documentId },
+    throwOnError: true,
   });
-  if (error || !data) throw error;
 
-  const [{ data: docFileData, error: docFileError }] = useMyQuery({
+  const [{ data: docFileData }] = useMyQuery({
     query: getDocumentFileQuery,
     variables: { documentId },
+    throwOnError: true,
   });
-  if (docFileError || !docFileData) throw docFileError;
 
   const [, updateDocument] = useMyMutation(updateDocumentMutation);
 
   let source: Blob | string;
-  if (docFileData.document.file?.blob) {
-    source = docFileData.document.file?.blob;
-  } else if (docFileData.document.file?.url) {
-    source = docFileData.document.file?.url;
+  if (docFileData!.document.file?.blob) {
+    source = docFileData!.document.file?.blob;
+  } else if (docFileData!.document.file?.url) {
+    source = docFileData!.document.file?.url;
   } else {
     throw new Error("missing file source");
   }
@@ -98,7 +98,7 @@ export const PDFReader: FC<PDFReaderProps> = ({
     [documentId]
   );
 
-  const meta = data.document.meta;
+  const meta = data!.document.meta;
   let { title, description, outline } = meta;
 
   const [selectedHighlightId, setSelectedHighlightId] = useState<string>();
