@@ -1,5 +1,7 @@
-import { Equal, MoreThan, IsNull, Not, QueryFailedError, In } from "typeorm";
-import GraphQLUpload from "graphql-upload/GraphQLUpload.js";
+import { Equal, QueryFailedError, EntityNotFoundError } from "typeorm";
+import { DatabaseError } from "pg";
+
+import { GraphQLYogaError } from "@graphql-yoga/node";
 
 import {
   AccountEntity,
@@ -7,6 +9,7 @@ import {
   DocumentEntity,
   DocumentHighlightEntity,
   DocumentMemberEntity,
+  DocumentRole,
 } from "./entities";
 import {
   Account,
@@ -16,22 +19,42 @@ import {
   DocumentMember,
   DocumentHighlight,
   BlobInfo,
-  Session,
-  AccountUpdateResult,
+  Maybe,
 } from "./graphql.schema";
-import { dateTimeScalar, JSONScalar } from "./scalars";
-import { onNotification } from "./subscriptions";
-import { AppDataSource } from "./data-source";
+import { dateTimeScalar, uuidScalar, JSONScalar } from "./scalars";
 
-const handleQuery = async <T>(query: () => Promise<T>): Promise<T> => {
+import { LiveQueryStore } from "./liveQuery";
+import { createHash } from "crypto";
+
+const handleError = async <T>(
+  promise: Promise<T>,
+  msg?: string,
+  code?: string
+): Promise<T> => {
   try {
-    return await query();
-  } catch (err) {
-    if (err instanceof QueryFailedError) {
-      throw new UserInputError((err as any).detail);
+    return await promise;
+  } catch (error) {
+    console.log(error);
+
+    if (error instanceof QueryFailedError) {
+      const err = error.driverError as DatabaseError;
+
+      if (msg) {
+        throw new GraphQLYogaError(msg);
+      } else if (err.code === "23505") {
+        throw new GraphQLYogaError("conflict error", {
+          code: "CONFLICT_ERROR",
+        });
+      } else {
+        throw new GraphQLYogaError(err.detail || "database error");
+      }
+    } else if (error instanceof EntityNotFoundError) {
+      throw new GraphQLYogaError(msg || error.message, {
+        code: code || "NOT_FOUND_ERROR",
+      });
     }
 
-    throw err;
+    throw error;
   }
 };
 
@@ -41,442 +64,270 @@ export interface GqlContext {
   // saveImage: (stream: Readable, key: string) => Promise<void>;
   // getImageUrl: (key: string) => Promise<string>;
   accountId: string;
+  liveQueryStore: LiveQueryStore;
 }
 
 export const resolvers: Resolvers<GqlContext> = {
   DateTime: dateTimeScalar,
   JSON: JSONScalar,
-  Upload: GraphQLUpload,
+  ID: uuidScalar,
 
   // query resolvers
   Query: {
-    async getAccountChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<Account[]> {
-      return await AccountEntity.find({
-        where: {
-          id: accountId,
-          updatedAt: MoreThan(since),
-        },
-        take: limit,
-      });
-    },
-    async getAccountInfoChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<AccountInfo[]> {
-      return await AccountEntity.find({
-        where: {
+    me: async (_, _args, { accountId }): Promise<Account> =>
+      handleError(AccountEntity.findOneByOrFail({ id: accountId })),
+    account: async (_, { id }, { accountId: _accId }): Promise<Account> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
+          id: Equal(id),
+        })
+      ),
+    document: async (_, { id }): Promise<Document> =>
+      handleError(
+        DocumentEntity.findOneByOrFail({
+          id: Equal(id),
+        })
+      ),
+    blobInfo: async (_, { hash }): Promise<BlobInfo> =>
+      handleError(
+        BlobInfoEntity.findOneByOrFail({
+          hash: Equal(hash),
+        })
+      ),
+  },
+  Document: {
+    members: async ({ id: documentId }): Promise<DocumentMember[]> =>
+      handleError(
+        DocumentMemberEntity.findBy({
+          documentId: Equal(documentId),
+        })
+      ),
+    highlights: async ({ id: documentId }): Promise<DocumentHighlight[]> =>
+      handleError(
+        DocumentHighlightEntity.findBy({
+          documentId: Equal(documentId),
+        })
+      ),
+    file: async ({ id: documentId }): Promise<Maybe<BlobInfo>> =>
+      handleError(
+        BlobInfoEntity.findOneBy({
+          documentFile: {
+            id: Equal(documentId),
+          },
+        })
+      ),
+    cover: async ({ id: documentId }): Promise<Maybe<BlobInfo>> =>
+      handleError(
+        BlobInfoEntity.findOneBy({
+          documentCover: {
+            id: Equal(documentId),
+          },
+        })
+      ),
+    createdBy: async ({ id: documentId }): Promise<AccountInfo> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
           documents: {
-            accountId: Equal(accountId),
-            acceptedAt: Not(IsNull()),
+            documentId: Equal(documentId),
           },
-          updatedAt: MoreThan(since),
-        },
-        take: limit,
-      });
-    },
-    async getDocumentChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<Document[]> {
-      return await DocumentEntity.find({
-        where: {
+        })
+      ),
+  },
+  DocumentMember: {
+    document: async ({ id: docMemberId }): Promise<Document> =>
+      handleError(
+        DocumentEntity.findOneByOrFail({
           members: {
-            role: In(["ADMIN", "VIEWER", "EDITOR"]),
-            accountId: Equal(accountId),
-            acceptedAt: Not(IsNull()),
+            id: Equal(docMemberId),
           },
-          updatedAt: MoreThan(since),
-        },
-        take: limit,
-      });
-    },
-    async getDocumentMemberChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<DocumentMember[]> {
-      return DocumentMemberEntity.find({
-        where: {
-          document: {
-            members: {
-              role: In(["ADMIN", "VIEWER", "EDITOR"]),
-              accountId: Equal(accountId),
-              acceptedAt: Not(IsNull()),
-            },
+        })
+      ),
+    account: async ({ id: docMemberId }): Promise<AccountInfo> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
+          documents: {
+            id: Equal(docMemberId),
           },
-          updatedAt: MoreThan(since),
-        },
-        take: limit,
-      });
-    },
-    async getDocumentHighlightChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<DocumentHighlight[]> {
-      return DocumentHighlightEntity.find({
-        where: {
-          document: {
-            members: {
-              role: In(["ADMIN", "VIEWER", "EDITOR"]),
-              accountId: Equal(accountId),
-              acceptedAt: Not(IsNull()),
-            },
+        })
+      ),
+    createdBy: async ({ id: docMemberId }): Promise<AccountInfo> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
+          documents: {
+            id: Equal(docMemberId),
           },
-          updatedAt: MoreThan(since),
-        },
-        take: limit,
-      });
-    },
-    async getBlobInfoChanges(
-      _,
-      { limit, since },
-      { accountId }
-    ): Promise<BlobInfo[]> {
-      return BlobInfoEntity.find({
-        where: [
-          {
-            documents: {
-              members: {
-                role: In(["ADMIN", "VIEWER", "EDITOR"]),
-                accountId: Equal(accountId),
-                acceptedAt: Not(IsNull()),
-              },
-            },
-            updatedAt: MoreThan(since),
+        })
+      ),
+  },
+  DocumentHighlight: {
+    image: async ({ id: highlightId }): Promise<Maybe<BlobInfo>> =>
+      handleError(
+        BlobInfoEntity.findOneBy({
+          highlightImage: {
+            id: Equal(highlightId),
           },
-          {
-            createdBy: accountId,
+        })
+      ),
+    document: async ({ id: highlightId }): Promise<Document> =>
+      handleError(
+        DocumentEntity.findOneByOrFail({
+          highlights: {
+            id: Equal(highlightId),
           },
-        ],
-        take: limit,
-      });
-    },
+        })
+      ),
+    createdBy: async ({ id: highlightId }): Promise<AccountInfo> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
+          createdHighlights: {
+            id: Equal(highlightId),
+          },
+        })
+      ),
   },
 
-  // subscriptions
-  Subscription: {
-    syncAccountUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<Account>(`accounts:${accountId}`),
-      resolve: (payload: Account) => [payload],
-    },
-    syncSessionUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<Session>(`sessions:${accountId}`),
-      resolve: (payload: Session): Session[] => [payload],
-    },
-    syncAccountInfoUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<AccountInfo>(`accountinfos:${accountId}`),
-      resolve: (payload: AccountInfo): AccountInfo[] => [payload],
-    },
-    syncDocumentUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<Document>(`documents:${accountId}`),
-      resolve: (payload: Document): Document[] => [payload],
-    },
-    syncDocumentMemberUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<DocumentMember>(`documentmembers:${accountId}`),
-      resolve: (payload: DocumentMember): DocumentMember[] => [payload],
-    },
-    syncDocumentHighlightUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<DocumentHighlight>(`documenthighlights:${accountId}`),
-      resolve: (payload: DocumentHighlight): DocumentHighlight[] => [payload],
-    },
-    syncBlobInfoUpdates: {
-      subscribe: (_parent, _args, { accountId }) =>
-        onNotification<BlobInfo>(`blobinfos:${accountId}`),
-      resolve: (payload: BlobInfo): BlobInfo[] => [payload],
-    },
+  BlobInfo: {
+    createdBy: async ({ hash: blobHash }): Promise<AccountInfo> =>
+      handleError(
+        AccountEntity.findOneByOrFail({
+          createdBlobs: {
+            hash: Equal(blobHash),
+          },
+        })
+      ),
   },
+
+  Account: {
+    documents: async ({ id: accountId }): Promise<DocumentMember[]> =>
+      handleError(DocumentMemberEntity.findBy({ accountId: Equal(accountId) })),
+  },
+
   Mutation: {
-    async pushAccountChanges(
-      _parent,
-      { input: accounts },
-      { accountId }
-    ): Promise<AccountUpdateResult> {
-      await AppDataSource.manager.transaction(async (mgr) => {
-        const result = await mgr.upsert(AccountEntity, accounts, ["id"]);
+    async createAccount(_, { account: { name } }) {
+      return handleError(
+        AccountEntity.create({
+          name,
+        }).save()
+      );
+    },
+    async updateAccount(_, { account: { id, name } }) {
+      const account = await handleError(
+        AccountEntity.findOneByOrFail({ id: Equal(id) })
+      );
 
-        result.identifiers.map((value) => value["id"]);
+      if (name) account.name = name;
+
+      return handleError(AccountEntity.save(account));
+    },
+    async createDocument(_, { document }, { accountId }) {
+      return handleError(
+        DocumentEntity.create({
+          ...document,
+          createdById: accountId,
+          members: [
+            {
+              accountId,
+              acceptedAt: new Date(),
+              role: DocumentRole.Admin,
+            },
+          ],
+        }).save()
+      );
+    },
+    async updateDocument(_, { document: { id, meta, visibility } }) {
+      const document = await handleError(
+        DocumentEntity.findOneByOrFail({ id: Equal(id) })
+      );
+
+      if (meta) document.meta = { ...(document.meta ?? {}), ...meta };
+      if (visibility) document.visibility = visibility;
+
+      return await handleError(DocumentEntity.save(document));
+    },
+    async deleteDocument(_, { id }) {
+      const document = await handleError(
+        DocumentEntity.findOneByOrFail({ id: Equal(id) })
+      );
+
+      return await handleError(DocumentEntity.softRemove(document));
+    },
+    async createDocumentHighlight(_, { highlight }, { accountId }) {
+      return await handleError(
+        DocumentHighlightEntity.create({
+          ...highlight,
+          createdById: accountId,
+        }).save()
+      );
+    },
+    async updateDocumentHighlight(
+      _,
+      { highlight: { id, content, location, imageHash } }
+    ) {
+      const highlight = await DocumentHighlightEntity.findOneByOrFail({
+        id: Equal(id),
       });
+
+      if (content) highlight.content = content;
+      if (location) highlight.location = location;
+      if (imageHash) highlight.imageHash = imageHash;
+
+      return DocumentHighlightEntity.save(highlight);
+    },
+    async deleteDocumentHighlight(_, { id }) {
+      const highlight = await handleError(
+        DocumentHighlightEntity.findOneByOrFail({
+          id: Equal(id),
+        })
+      );
+
+      return handleError(DocumentHighlightEntity.softRemove(highlight));
+    },
+    async uploadBlob(_, { blob: { blob, source, mimeType } }, { accountId }) {
+      const hash = createHash("sha256");
+      hash.update(new Uint8Array(await blob.arrayBuffer()));
+
+      return await handleError(
+        BlobInfoEntity.create({
+          hash: hash.digest("hex"),
+          source: source ?? "",
+          mimeType,
+          size: blob.size,
+          createdById: accountId,
+        }).save()
+      );
+    },
+    async upsertDocumentMember(
+      _,
+      { member: { accountId, documentId, accepted, role } },
+      { accountId: createdById }
+    ) {
+      const documentMember = await DocumentMemberEntity.findOneBy({
+        accountId,
+        documentId,
+      });
+
+      if (documentMember) {
+        if (accepted && !documentMember.acceptedAt)
+          documentMember.acceptedAt = new Date();
+        if (role) documentMember.role = role;
+
+        if (accepted === false && documentMember.acceptedAt) {
+          await DocumentMemberEntity.delete(documentMember.id);
+          return null;
+        }
+
+        return await handleError(documentMember.save());
+      }
+
+      return await handleError(
+        DocumentMemberEntity.create({
+          accountId,
+          documentId,
+          acceptedAt: accepted ? new Date() : undefined,
+          role,
+          createdById,
+        }).save()
+      );
     },
   },
-  // mutation resolvers
-  // Mutation: {
-  //   uploadFile: async (
-  //     _parent,
-  //     { file: inputFile },
-  //     { accountId, saveFile }
-  //   ): Promise<DeepPartial<FileInfo>> => {
-  //     const { createReadStream, mimetype: mimeType } = await inputFile;
-
-  //     const stream: ReadStream = createReadStream();
-
-  //     console.log("hashing file");
-
-  //     // hash stream content and upload file
-  //     const hasherStream = new PassThrough();
-
-  //     stream.pipe(hasherStream);
-
-  //     const [hash, tmpStream] = await Promise.all([
-  //       hashStream(hasherStream, "sha256"),
-  //       writeTmpStream(stream, "upload"),
-  //     ]);
-
-  //     const file = await AppDataSource.manager.transaction(async (mgr) => {
-  //       let file = await mgr.findOneBy(FileEntity, { hash: Equal(hash) });
-
-  //       if (file) {
-  //         // if file already exists do not upload again and just return existing
-  //         // entitiy
-  //         //return file;
-  //       } else {
-  //         file = mgr.create(FileEntity, {
-  //           hash,
-  //           mimeType,
-  //           createdById: accountId,
-  //         });
-  //       }
-
-  //       file = await handleQuery(() => mgr.save(file, { reload: true }));
-
-  //       console.log("saving file");
-
-  //       // save file based on hash before commiting transaction
-  //       await saveFile(tmpStream, hash);
-
-  //       return file;
-  //     });
-
-  //     return file.toFileInfo();
-  //   },
-  //   updateAccount: (_, { account: { id, name } }, ctx) =>
-  //     AppDataSource.manager.transaction(async (mgr) => {
-  //       const account = await mgr.findOneBy(AccountEntity, {
-  //         id,
-  //       });
-
-  //       if (account.id !== ctx.accountId)
-  //         throw new ForbiddenError("invalid account");
-
-  //       account.name = name;
-
-  //       await handleQuery(() => mgr.save(account));
-
-  //       return account.toAccount();
-  //     }),
-  //   removeMeFromDocument: async (_parent, { documentId }, { accountId }) =>
-  //     AppDataSource.manager.transaction(async (mgr) => {
-  //       const docs = await mgr.findBy(DocumentMemberEntity, {
-  //         accountId: Equal(accountId),
-  //         documentId: Equal(documentId),
-  //       });
-
-  //       if (!docs.length) return false;
-
-  //       await mgr.remove(docs);
-
-  //       return true;
-  //     }),
-  //   upsertFileInfo: async (
-  //     _parent,
-  //     { fileInfo: { hash, mimeType, sources } },
-  //     { accountId }
-  //   ) =>
-  //     AppDataSource.manager.transaction(async (mgr) => {
-  //       let file = await mgr.findOneBy(FileEntity, { hash: Equal(hash) });
-
-  //       if (file) {
-  //         if (file.createdById !== accountId)
-  //           throw new ForbiddenError("invalid account");
-
-  //         if (hash) file.hash = hash;
-  //         if (mimeType) file.mimeType = mimeType;
-  //         if (sources) file.sources = sources;
-  //       } else {
-  //         file = mgr.create(FileEntity, {
-  //           hash,
-  //           mimeType,
-  //           sources,
-  //           createdById: accountId,
-  //         });
-  //       }
-
-  //       file = await handleQuery(() => mgr.save(file, { reload: true }));
-
-  //       return file.toFileInfo();
-  //     }),
-  //   upsertDocument: async (
-  //     _parent,
-  //     { document: { id, fileHash, meta, type, members = [], deleted } },
-  //     { accountId }
-  //   ) =>
-  //     AppDataSource.manager.transaction(async (mgr) => {
-  //       let document: DocumentEntity | undefined;
-
-  //       if (id) {
-  //         document = await mgr.findOne(DocumentEntity, {
-  //           where: { id: Equal(id) },
-  //           relations: { members: true, file: true },
-  //           withDeleted: true,
-  //         });
-  //       }
-
-  //       if (!document) {
-  //         if (!members.find((m) => m.accountId === accountId)) {
-  //           members.push({
-  //             accountId,
-  //             accepted: true,
-  //             role: DocumentRole.Admin,
-  //           });
-  //         }
-
-  //         // create a new document
-  //         document = mgr.create(DocumentEntity, {
-  //           id,
-  //           fileHash,
-  //           type,
-  //           createdById: accountId,
-  //           members: members.map(({ accountId, role, accepted }) => ({
-  //             accountId,
-  //             role,
-  //             acceptedAt: accepted ? new Date() : null,
-  //           })),
-  //           meta: { ...meta },
-  //         });
-  //       } else {
-  //         const accMember = document.members.find(
-  //           (m) => m.accountId === accountId && m.acceptedAt
-  //         );
-
-  //         if (
-  //           !accMember ||
-  //           (accMember.role !== DocumentRole.Editor &&
-  //             accMember.role !== DocumentRole.Admin)
-  //         ) {
-  //           throw new ForbiddenError("invalid document role to edit document");
-  //         }
-
-  //         if (members && members.length) {
-  //           if (accMember.role !== DocumentRole.Admin) {
-  //             throw new ForbiddenError(
-  //               "invalid document role to change membership"
-  //             );
-  //           }
-
-  //           document.members = members.map((member) => {
-  //             // try to find exiting member entity or create a new one
-  //             const memberEnt =
-  //               document.members.find(
-  //                 (m) => m.accountId === member.accountId
-  //               ) ||
-  //               mgr.create(DocumentMemberEntity, {
-  //                 accountId: member.accountId,
-  //                 documentId: document.id,
-  //                 role: member.role,
-  //                 createdById: accountId,
-  //               });
-
-  //             memberEnt.accepted = member.accepted;
-  //             memberEnt.role = member.role;
-
-  //             return memberEnt;
-  //           });
-  //         }
-
-  //         if (meta) document.meta = { ...document.meta, ...meta };
-
-  //         if (deleted) {
-  //           if (accMember.role !== DocumentRole.Admin)
-  //             throw new ForbiddenError(
-  //               "invalid document role to delete document"
-  //             );
-
-  //           document.deletedAt = document.deletedAt || new Date();
-  //         } else if (deleted === false) {
-  //           if (accMember.role !== DocumentRole.Admin)
-  //             throw new ForbiddenError(
-  //               "invalid document role to undelete document"
-  //             );
-
-  //           document.deletedAt = null;
-  //         }
-  //       }
-
-  //       document = await handleQuery(() =>
-  //         mgr.save(document, { reload: true })
-  //       );
-
-  //       return document.toDocument();
-  //     }),
-  //   upsertDocumentHighlight: (
-  //     _parent,
-  //     { documentId, highlight: { id, content, deleted, location, image } },
-  //     { accountId, saveImage }
-  //   ) =>
-  //     AppDataSource.manager.transaction(async (mgr) => {
-  //       let highlight: DocumentHighlightEntity | undefined;
-
-  //       if (id) {
-  //         highlight = await mgr.findOne(DocumentHighlightEntity, {
-  //           where: { id: Equal(id) },
-  //           relations: { document: { members: true } },
-  //         });
-
-  //         if (
-  //           highlight &&
-  //           !highlight.document?.members.find(
-  //             (m) =>
-  //               m.accountId === accountId &&
-  //               m.acceptedAt &&
-  //               (m.role === DocumentRole.Editor ||
-  //                 m.role === DocumentRole.Admin)
-  //           )
-  //         )
-  //           throw new ForbiddenError("invalid document role");
-  //       }
-
-  //       if (!highlight) {
-  //         highlight = mgr.create(DocumentHighlightEntity, {
-  //           id,
-  //           location,
-  //           content,
-  //           documentId,
-  //           createdById: accountId,
-  //         });
-  //       } else {
-  //         if (content) highlight.content = content;
-  //         if (location) highlight.location = location;
-  //         if (deleted) highlight.deletedAt = highlight.deletedAt || new Date();
-  //         else if (deleted === false) highlight.deletedAt = null;
-  //       }
-
-  //       highlight = await handleQuery(() =>
-  //         mgr.save(highlight, { reload: true })
-  //       );
-
-  //       if (image) {
-  //         const { createReadStream, mimetype: mimeType } = await image;
-  //         const stream: ReadStream = createReadStream();
-
-  //         if (mimeType !== "image/png")
-  //           throw new Error("invalid highlight image type");
-
-  //         await saveImage(stream, highlight.id);
-  //       }
-
-  //       return highlight.toDocumentHighlight();
-  //     }),
-  // },
 };

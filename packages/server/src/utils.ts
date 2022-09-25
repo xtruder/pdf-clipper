@@ -1,6 +1,6 @@
 import { Blob } from "buffer";
 import { createHash } from "crypto";
-import { createReadStream, createWriteStream, read, ReadStream } from "fs";
+import { createReadStream, createWriteStream, ReadStream } from "fs";
 import { mkdtemp, rm } from "fs/promises";
 import { join } from "path";
 import { Stream } from "stream";

@@ -39,7 +39,7 @@ type DocumentHighlight {
 
 input CreateDocumentHighlightInput {
   """unique highlight id"""
-  id: ID!
+  id: ID
 
   """id of the document that highlight is associated with"""
   documentId: ID!
@@ -72,9 +72,6 @@ input UpdateDocumentHighlightInput {
 
   """hash of the image associated with document highlight"""
   imageHash: String
-
-  """whether highlight has been deleted"""
-  deleted: Boolean
 }
 
 extend type Document {
@@ -88,4 +85,7 @@ extend type Mutation {
 
   """updates document highlight"""
   updateDocumentHighlight(highlight: UpdateDocumentHighlightInput!): DocumentHighlight!
+
+  """deletes document highlight"""
+  deleteDocumentHighlight(id: ID!): DocumentHighlight!
 }

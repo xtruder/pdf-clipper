@@ -29,7 +29,7 @@ input UploadBlobInput {
   mimeType: String!
 
   """blob to upload"""
-  blob: Upload!
+  blob: File!
 
   """source where file can be retrieved from"""
   source: String

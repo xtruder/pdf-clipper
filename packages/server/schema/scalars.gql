@@ -7,5 +7,5 @@ scalar DateTime
 # JSON formatted data as string
 scalar JSON
 
-# upload field
-scalar Upload
+# file field
+scalar File

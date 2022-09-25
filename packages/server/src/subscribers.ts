@@ -1,4 +1,4 @@
-import { ValidationError } from "apollo-server-errors";
+import { GraphQLYogaError } from "@graphql-yoga/node";
 
 import {
   EventSubscriber,
@@ -35,8 +35,9 @@ export class DocumentMembersValidatorSubscriber
     });
 
     if (count <= 0)
-      throw new ValidationError(
-        "document requires at least one document admin"
+      throw new GraphQLYogaError(
+        "documument requires at least one document admin",
+        { code: "VALIDATION_ERROR" }
       );
   }
 }

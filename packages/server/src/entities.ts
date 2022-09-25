@@ -10,22 +10,24 @@ import {
   PrimaryColumn,
   JoinColumn,
   BaseEntity,
+  OneToOne,
+  Index,
 } from "typeorm";
 
-import { DeepPartial } from "typeorm";
+import type { Relation } from "typeorm";
 
 import {
   Account,
   AccountInfo,
-  Session,
   Document,
   DocumentHighlight,
   DocumentMember,
   BlobInfo,
+  HighlightColor,
 } from "./graphql.schema";
 
 @Entity({ name: "accounts" })
-export class AccountEntity extends BaseEntity {
+export class AccountEntity extends BaseEntity implements Account, AccountInfo {
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
@@ -41,38 +43,31 @@ export class AccountEntity extends BaseEntity {
   @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
   deletedAt?: Date;
 
+  get deleted() {
+    return !!this.deletedAt;
+  }
+
   @OneToMany(() => DocumentMemberEntity, (table) => table.account)
   documents: DocumentMemberEntity[];
 
-  @OneToMany(() => DocumentHighlightEntity, (table) => table.creator)
+  @OneToMany(() => DocumentHighlightEntity, (table) => table.createdBy)
   createdHighlights: DocumentHighlightEntity[];
 
-  @OneToMany(() => DocumentMemberEntity, (table) => table.creator)
+  @OneToMany(() => DocumentMemberEntity, (table) => table.createdBy)
   createdDocumentMembers: DocumentMemberEntity[];
 
-  @OneToMany(() => DocumentEntity, (table) => table.creator)
+  @OneToMany(() => DocumentEntity, (table) => table.createdBy)
   createdDocuments: DocumentEntity[];
 
-  @OneToMany(() => BlobInfoEntity, (table) => table.creator)
+  @OneToMany(() => BlobInfoEntity, (table) => table.createdBy)
+  createdBlobs: BlobInfo[];
+
+  @OneToMany(() => BlobInfoEntity, (table) => table.createdBy)
   createdFiles: BlobInfoEntity[];
-
-  toAccount = (): DeepPartial<Account> => ({
-    id: this.id,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    deletedAt: this.deletedAt,
-    name: this.name,
-  });
-
-  toAccountInfo = (): AccountInfo => ({
-    id: this.id,
-    name: this.name,
-    deleted: !!this.deletedAt,
-  });
 }
 
 @Entity({ name: "blobs" })
-export class BlobInfoEntity extends BaseEntity {
+export class BlobInfoEntity extends BaseEntity implements BlobInfo {
   @PrimaryColumn("varchar", { name: "hash", length: 100 })
   hash: string;
 
@@ -84,10 +79,10 @@ export class BlobInfoEntity extends BaseEntity {
 
   @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
   @JoinColumn({ name: "created_by" })
-  creator: AccountEntity;
+  createdBy: AccountEntity;
 
-  @Column({ name: "created_by", nullable: false })
-  createdBy: string;
+  @Column({ name: "created_by_id", nullable: false })
+  createdById: string;
 
   @Column("varchar", { name: "mime_type", length: 50, nullable: false })
   mimeType: string;
@@ -95,32 +90,30 @@ export class BlobInfoEntity extends BaseEntity {
   @Column("integer", { name: "size", nullable: false })
   size: number;
 
-  @Column("string", { name: "source" })
+  @Column("text", { name: "source" })
   source: string;
 
-  @OneToMany(() => DocumentEntity, (table) => table.id)
-  documents: DocumentEntity[];
+  @OneToOne(() => DocumentEntity, (table) => table.cover)
+  documentCover: Relation<DocumentEntity>;
 
-  @OneToMany(() => DocumentHighlightEntity, (table) => table.id)
-  highlights: DocumentHighlightEntity[];
+  @OneToOne(() => DocumentEntity, (table) => table.file)
+  documentFile: Relation<DocumentEntity>;
 
-  toBlobInfo = (): BlobInfo => ({
-    hash: this.hash,
-    mimeType: this.mimeType,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    createdBy: this.creator.toAccountInfo(),
-    size: this.size,
-    source: this.source,
-  });
+  @OneToOne(() => DocumentHighlightEntity, (table) => table.image)
+  highlightImage: Relation<DocumentHighlightEntity>;
 }
 
 export enum DocumentType {
   Pdf = "PDF",
 }
 
+export enum DocumentVisibility {
+  Private = "PRIVATE",
+  Public = "PUBLIC",
+}
+
 @Entity({ name: "documents" })
-export class DocumentEntity extends BaseEntity {
+export class DocumentEntity extends BaseEntity implements Document {
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
@@ -135,12 +128,12 @@ export class DocumentEntity extends BaseEntity {
 
   @ManyToOne(() => AccountEntity, (table) => table.createdDocuments)
   @JoinColumn({ name: "created_by" })
-  creator: AccountEntity;
+  createdBy: AccountEntity;
 
-  @Column({ name: "created_by" })
-  createdBy: string;
+  @Column({ name: "created_by_id", nullable: false })
+  createdById: string;
 
-  @Column("enum", { name: "type", enum: DocumentType })
+  @Column("enum", { name: "type", enum: DocumentType, nullable: false })
   type: DocumentType;
 
   @Column("jsonb", { name: "meta", default: {} })
@@ -154,27 +147,34 @@ export class DocumentEntity extends BaseEntity {
   @OneToMany(() => DocumentHighlightEntity, (table) => table.document)
   highlights: DocumentHighlightEntity[];
 
-  @ManyToOne(() => BlobInfoEntity, (table) => table.hash)
+  @ManyToOne(() => BlobInfoEntity, (table) => table.documentFile)
   @JoinColumn({ name: "file_hash" })
   file: BlobInfoEntity;
 
-  @Column({ name: "file_hash", nullable: true })
+  @Column({ name: "file_hash", nullable: false })
   fileHash: string;
 
-  toDocument = (): Document => ({
-    id: this.id,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    deletedAt: this.deletedAt,
-    type: this.type,
-    meta: this.meta,
-    createdBy: this.createdBy,
-    fileHash: this.fileHash,
-  });
+  @OneToOne(() => BlobInfoEntity, (table) => table.documentCover)
+  @JoinColumn({ name: "cover_hash" })
+  cover: BlobInfoEntity;
+
+  @Column({ name: "cover_hash", nullable: true })
+  coverHash: string | null;
+
+  @Column("enum", {
+    name: "visibility",
+    enum: DocumentVisibility,
+    default: DocumentVisibility.Private,
+    nullable: false,
+  })
+  visibility: DocumentVisibility;
 }
 
 @Entity({ name: "document_highlights" })
-export class DocumentHighlightEntity extends BaseEntity {
+export class DocumentHighlightEntity
+  extends BaseEntity
+  implements DocumentHighlight
+{
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
@@ -187,20 +187,12 @@ export class DocumentHighlightEntity extends BaseEntity {
   @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
   deletedAt: Date;
 
-  @Column("jsonb", { name: "content" })
-  content: any;
+  @ManyToOne(() => AccountEntity, (table) => table.createdHighlights)
+  @JoinColumn({ name: "created_by_id" })
+  createdBy: AccountEntity;
 
-  @Column("jsonb", { name: "location" })
-  location: any;
-
-  @ManyToOne(() => AccountEntity, (table) => table.createdHighlights, {
-    eager: true,
-  })
-  @JoinColumn({ name: "created_by" })
-  creator: AccountEntity;
-
-  @Column({ name: "created_by" })
-  createdBy: string;
+  @Column({ name: "created_by_id" })
+  createdById: string;
 
   @ManyToOne(() => DocumentEntity, (table) => table.highlights)
   @JoinColumn({ name: "document_id" })
@@ -209,23 +201,24 @@ export class DocumentHighlightEntity extends BaseEntity {
   @Column({ name: "document_id" })
   documentId: string;
 
-  @ManyToOne(() => BlobInfoEntity, (table) => table.hash)
+  @Column("varchar", { name: "sequence", length: 100 })
+  sequence: string;
+
+  @Column("varchar", { name: "color", length: 20 })
+  color: HighlightColor;
+
+  @Column("jsonb", { name: "content", default: {} })
+  content: any;
+
+  @Column("jsonb", { name: "location", default: {} })
+  location: any;
+
+  @OneToOne(() => BlobInfoEntity, (table) => table.highlightImage)
   @JoinColumn({ name: "image_hash" })
   image: BlobInfoEntity;
 
   @Column({ name: "image_hash", nullable: true })
   imageHash: string;
-
-  toDocumentHighlight = (): DocumentHighlight => ({
-    id: this.id,
-    documentId: this.documentId,
-    location: this.location,
-    content: this.content,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    deletedAt: this.deletedAt,
-    createdBy: this.createdBy,
-  });
 }
 
 export enum DocumentRole {
@@ -235,7 +228,8 @@ export enum DocumentRole {
 }
 
 @Entity({ name: "document_members" })
-export class DocumentMemberEntity extends BaseEntity {
+@Index(["accountId", "documentId"], { unique: true })
+export class DocumentMemberEntity extends BaseEntity implements DocumentMember {
   @PrimaryGeneratedColumn("uuid", { name: "id" })
   id: string;
 
@@ -278,20 +272,8 @@ export class DocumentMemberEntity extends BaseEntity {
     eager: true,
   })
   @JoinColumn({ name: "created_by" })
-  creator: AccountEntity;
+  createdBy: AccountEntity;
 
-  @Column({ name: "created_by", nullable: true })
-  createdBy: string;
-
-  toDocumentMember = (): DocumentMember => ({
-    id: this.id,
-    documentId: this.documentId,
-    role: this.role,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    deletedAt: this.deletedAt,
-    acceptedAt: this.acceptedAt,
-    accountId: this.accountId,
-    createdBy: this.createdBy,
-  });
+  @Column({ name: "created_by_id", nullable: true })
+  createdById: string;
 }

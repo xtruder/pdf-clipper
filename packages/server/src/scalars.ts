@@ -1,5 +1,6 @@
 import { GraphQLScalarType, Kind } from "graphql";
 import { GraphQLYogaError } from "@graphql-yoga/node";
+import { validate } from "uuid";
 
 export const dateTimeScalar = new GraphQLScalarType<Date, string>({
   name: "DateTime",
@@ -57,11 +58,15 @@ export const JSONScalar = new GraphQLScalarType<any, string>({
   },
 
   parseValue(value: unknown): any {
-    if (typeof value !== "string")
-      throw new GraphQLYogaError(`error parsing JSON value: ${value}`, {
-        code: "VALIDATION_ERROR",
-      });
-    return JSON.parse(value);
+    if (typeof value === "string") {
+      return JSON.parse(value);
+    } else if (typeof value === "object") {
+      return value;
+    }
+
+    throw new GraphQLYogaError(`error parsing JSON value: ${value}`, {
+      code: "VALIDATION_ERROR",
+    });
   },
 
   parseLiteral(ast): any {
@@ -72,5 +77,37 @@ export const JSONScalar = new GraphQLScalarType<any, string>({
     throw new GraphQLYogaError(`invalid JSON kind: ${ast.kind}`, {
       code: "VALIDATION_ERROR",
     });
+  },
+});
+
+export const uuidScalar = new GraphQLScalarType<string, string>({
+  name: "ID",
+  description: "ID scalar type",
+
+  serialize(value: any): string {
+    return value;
+  },
+
+  parseValue(value: unknown): string {
+    if (typeof value !== "string" || !validate(value)) {
+      throw new GraphQLYogaError(`error parsing UUID value: ${value}`, {
+        code: "VALIDATION_ERROR",
+      });
+    }
+
+    return value;
+  },
+
+  parseLiteral(ast): any {
+    if (ast.kind !== Kind.STRING || !validate(ast.value)) {
+      throw new GraphQLYogaError(
+        `error parsing UUID value: '${"value" in ast ? ast.value : ""}'`,
+        {
+          code: "VALIDATION_ERROR",
+        }
+      );
+    }
+
+    return ast.value;
   },
 });
