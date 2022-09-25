@@ -6,7 +6,9 @@ config:
     ID: string
     DateTime: Date
     JSON: any
+    File: File
   useIndexSignature: true
+  inputMaybeValue: T | undefined
   #defaultMapper: ./types#DeepPartial<{T}>
 generates:
   src/graphql.schema.ts:

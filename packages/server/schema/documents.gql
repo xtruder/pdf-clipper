@@ -104,9 +104,6 @@ input UpdateDocumentInput {
 
   """update document visibility"""
   visibility: DocumentVisibility
-
-  """whether to make document deleted"""
-  deleted: Boolean
 }
 
 extend type Query {
@@ -120,4 +117,7 @@ extend type Mutation {
 
   """updates existing document"""
   updateDocument(document: UpdateDocumentInput!): Document!
+
+  """deletes existing document"""
+  deleteDocument(id: ID!): Document!
 }

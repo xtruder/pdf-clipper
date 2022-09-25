@@ -27,6 +27,11 @@ services:
       POSTGRES_PASSWORD: postgrespassword
     network_mode: "service:docker"
 
+  redis:
+    image: redis:7
+    restart: always
+    network_mode: "service:docker"
+
   # file storage
   minio:
     image: quay.io/minio/minio

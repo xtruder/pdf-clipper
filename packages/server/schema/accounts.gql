@@ -32,6 +32,11 @@ input AccountUpdateInput {
   name: String
 }
 
+input AccountCreateInput {
+  """name of the account"""
+  name: String
+}
+
 type Query {
   """returns information about current account"""
   me: Account!
@@ -41,6 +46,9 @@ type Query {
 }
 
 type Mutation {
+  """creates a new account"""
+  createAccount(account: AccountCreateInput!): Account!
+
   """updates account"""
   updateAccount(account: AccountUpdateInput!): Account!
 }

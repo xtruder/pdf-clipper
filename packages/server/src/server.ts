@@ -1,27 +1,32 @@
-import { constraintDirective } from "graphql-constraint-directive";
 import { createServer, Plugin } from "@graphql-yoga/node";
+import { useGraphQLMiddleware } from "@envelop/graphql-middleware";
 
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { IResolvers } from "@graphql-tools/utils";
+
+import { applyLiveQueryJSONDiffPatchGenerator } from "@n1ru4l/graphql-live-query-patch-jsondiffpatch";
 
 import { flow } from "./util/flow";
 import { logger } from "./logging";
 import { GqlContext } from "./resolvers";
-import { getFileUrl, getImageUrl, saveFile, saveImage } from "./minio";
-import { InMemoryLiveQueryStore } from "@n1ru4l/in-memory-live-query-store";
-import { applyLiveQueryJSONDiffPatchGenerator } from "@n1ru4l/graphql-live-query-patch-jsondiffpatch";
+//import { getFileUrl, getImageUrl, saveFile, saveImage } from "./minio";
+import { permissions } from "./permissions";
+import {
+  liveQueryInvalidate,
+  LiveQueryStore,
+  RedisLiveQueryStore,
+} from "./liveQuery";
 
 export type ServerOptions = {
   port?: number;
 };
 
 interface ExecuteContext {
-  liveQueryStore: InMemoryLiveQueryStore;
+  liveQueryStore: LiveQueryStore;
 }
 
 export async function startServer(
   typeDefs: any,
-  resolvers: IResolvers,
+  resolvers: any,
   options: ServerOptions
 ) {
   const { port = 4000 } = options;
@@ -30,7 +35,6 @@ export async function startServer(
     typeDefs,
     resolvers,
   });
-  schema = constraintDirective()(schema);
 
   const liveQueryPlugin: Plugin<ExecuteContext> = {
     onExecute: (onExecuteContext) => {
@@ -45,7 +49,7 @@ export async function startServer(
     },
   };
 
-  const liveQueryStore = new InMemoryLiveQueryStore();
+  const liveQueryStore = new RedisLiveQueryStore("", {});
 
   const server = createServer({
     port,
@@ -56,10 +60,14 @@ export async function startServer(
     },
     logging: logger,
     cors: true,
-    plugins: [liveQueryPlugin],
+    maskedErrors: false,
+    plugins: [
+      liveQueryPlugin,
+      useGraphQLMiddleware([permissions, liveQueryInvalidate]),
+    ],
     context: ({ req }): GqlContext & ExecuteContext => ({
       accountId: (
-        req.headers["accountid"] || "c633bd68-30ce-4116-b54e-3054dc8caebc"
+        req.headers["accountid"] || "1391b1f3-abe5-4b1f-8520-e2582cde320e"
       ).toString(),
       liveQueryStore,
       // getFileUrl,
