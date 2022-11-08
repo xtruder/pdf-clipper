@@ -5,6 +5,8 @@ dist-ssr
 *.local
 .eslintcache
 *.bak
+.pnpm-store
+.pnpm-debug.log
 
 # cypress
 cypress/screenshots

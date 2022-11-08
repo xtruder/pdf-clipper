@@ -1,29 +1,44 @@
 import { Exchange, subscriptionExchange } from "urql";
 import { getOperationAST } from "graphql";
 import { Repeater } from "@repeaterjs/repeater";
+import { debug } from "debug";
 
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import { applyAsyncIterableIteratorToSink } from "@n1ru4l/push-pull-async-iterable-iterator";
 import { applyLiveQueryJSONDiffPatch } from "@n1ru4l/graphql-live-query-patch-jsondiffpatch";
 import { ExecutionLivePatchResult } from "@n1ru4l/graphql-live-query-patch";
 
+const log = debug("liveQueryExchange");
+
 function makeEventStreamSource(url: string) {
   return new Repeater<ExecutionLivePatchResult>(async (push, end) => {
+    log("eventsource openening", url);
+
     const eventsource = new EventSource(url);
 
+    eventsource.onopen = function () {
+      log("eventsource opened", url);
+    };
+
     eventsource.onmessage = function (event) {
+      log("eventsource event", event);
+
       const data = JSON.parse(event.data);
       push(data);
       if (eventsource.readyState === 2) {
+        log("evensource ended", url);
         end();
       }
     };
 
     eventsource.onerror = function (error) {
-      end(error);
+      log("eventsource error", error);
+      end(new Error("error with eventsource stream"));
     };
 
     await end;
+
+    log("eventsource closing", url);
     eventsource.close();
   });
 }
@@ -55,15 +70,23 @@ export const liveQueryExchange: () => Exchange = () =>
         );
       }
 
+      log("forward subscription operation", operation);
+
       return {
-        subscribe: (sink) => ({
-          unsubscribe: applyAsyncIterableIteratorToSink(
+        subscribe: (sink) => {
+          const unsub = applyAsyncIterableIteratorToSink(
             applyLiveQueryJSONDiffPatch(
               makeEventStreamSource(targetUrl.toString())
             ),
             sink
-          ),
-        }),
+          );
+          return {
+            unsubscribe: () => {
+              log("unsubscribing", targetUrl.toString());
+              unsub();
+            },
+          };
+        },
       };
     },
     enableAllOperations: true,

@@ -1,23 +1,29 @@
-import {
+import { useQuery, useMutation } from "urql";
+import { createContext, useContext, useMemo } from "react";
+
+import type {
   AnyVariables,
   OperationContext,
   OperationResult,
   TypedDocumentNode,
-  useMutation,
   UseMutationState,
-  useQuery,
   UseQueryArgs,
   UseQueryResponse,
+  UseQueryState,
 } from "urql";
-import { DocumentNode } from "graphql";
-import { createContext, useContext, useMemo } from "react";
+import type { DocumentNode } from "graphql";
+
+export type DataSource = "local" | "remote";
 
 export const GqlContext = createContext<{
-  source?: "local" | "remote";
+  source?: DataSource;
+  propagateError?: boolean;
 }>({ source: "remote" });
 
 export type MyOperationContext = OperationContext & {
-  source?: "local" | "remote";
+  source?: DataSource;
+  propagateError?: boolean;
+  errorPrefix?: string;
 };
 
 export type UseMyQueryArgs<Variables extends AnyVariables, Data> = UseQueryArgs<
@@ -25,9 +31,38 @@ export type UseMyQueryArgs<Variables extends AnyVariables, Data> = UseQueryArgs<
   Data
 > & {
   context?: Partial<MyOperationContext>;
+
+  /** whether to throw if error has been raised */
   throwOnError?: boolean;
+
+  /** whether to suspend query when loading (same as context.suspense) */
+  suspend?: boolean;
+
+  /** which data source to use */
+  source?: DataSource;
+
+  /** whether to propagate error (handled by error exchange) */
+  propagateError?: boolean;
+
+  /** error prefix for propagated error */
+  errorPrefix?: string;
 };
 
+export function useMyQuery<
+  Data = any,
+  Variables extends AnyVariables = AnyVariables
+>(
+  args: UseMyQueryArgs<Variables, Data> & { throwOnError: true }
+): [
+  UseQueryState<Data, Variables> & {
+    data: Data;
+  },
+  (opts?: Partial<OperationContext>) => void
+];
+export function useMyQuery<
+  Data = any,
+  Variables extends AnyVariables = AnyVariables
+>(args: UseMyQueryArgs<Variables, Data>): UseQueryResponse<Data, Variables>;
 export function useMyQuery<
   Data = any,
   Variables extends AnyVariables = AnyVariables
@@ -35,28 +70,63 @@ export function useMyQuery<
   const extraContext = useContext(GqlContext);
 
   const context = useMemo(
-    () => ({ ...(extraContext ?? {}), ...(args.context ?? {}) }),
-    [args.context, extraContext]
+    () => ({
+      ...(extraContext ?? {}),
+      ...(args.context ?? {}),
+      ...(args.suspend && { suspense: args.suspend }),
+      ...(args.source && { source: args.source }),
+      propagateError: args.propagateError,
+      errorPrefix: args.errorPrefix,
+    }),
+    [
+      args.context,
+      extraContext.source,
+      extraContext.propagateError,
+      args.suspend,
+      args.source,
+      args.propagateError,
+      args.errorPrefix,
+    ]
   );
 
-  const [{ data, error, ...extra }, refetch] = useQuery({
+  const [state, refetch] = useQuery({
     ...args,
     variables: { ...(args.variables ?? {}), source: context.source },
     context,
   });
 
-  if (args.throwOnError && error) {
-    throw error;
+  if (state.error && args.throwOnError) {
+    throw state.error;
   }
 
-  return [{ data, error, ...extra }, refetch];
+  return [state, refetch];
 }
+
+export type UseMyMutationArgs = {
+  throwOnError?: boolean;
+  propagateError?: boolean;
+  errorPrefix?: string;
+};
 
 export function useMyMutation<
   Data = any,
   Variables extends AnyVariables = AnyVariables
 >(
-  query: DocumentNode | TypedDocumentNode<Data, Variables> | string
+  query: DocumentNode | TypedDocumentNode<Data, Variables> | string,
+  args?: UseMyMutationArgs & { throwOnError?: true }
+): [
+  UseMutationState<Data, Variables>,
+  (
+    variables: Variables,
+    context?: Partial<OperationContext>
+  ) => Promise<OperationResult<Data, Variables> & { data: Data }>
+];
+export function useMyMutation<
+  Data = any,
+  Variables extends AnyVariables = AnyVariables
+>(
+  query: DocumentNode | TypedDocumentNode<Data, Variables> | string,
+  args?: UseMyMutationArgs
 ): [
   UseMutationState<Data, Variables>,
   (
@@ -67,10 +137,23 @@ export function useMyMutation<
   const [state, execute] = useMutation(query);
   const extraContext = useContext(GqlContext);
 
-  const myExecute = (
+  const myExecute = async (
     variables: Variables,
     context?: Partial<MyOperationContext>
-  ) => execute(variables, { ...(extraContext ?? {}), ...(context ?? {}) });
+  ) => {
+    const result = await execute(variables, {
+      ...(extraContext ?? {}),
+      ...(context ?? {}),
+      propagateError: args?.propagateError,
+      errorPrefix: args?.errorPrefix,
+    });
+
+    if (result.error && args?.throwOnError) {
+      throw result.error;
+    }
+
+    return result;
+  };
 
   return [state, myExecute];
 }

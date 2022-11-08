@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect } from "react";
 import useState from "react-usestateref";
 import { useToggle, useResetState } from "ahooks";
-import { gql } from "urql";
+import { Context, gql } from "urql";
 import { v4 as uuid } from "uuid";
 
 import { PDFDocumentProxy } from "pdfjs-dist";
@@ -54,7 +54,7 @@ const updateDocumentHighlightMutation = gql(`
 
 const deleteDocumentHighlightMutation = gql(`
   mutation deleteDocumentHighlight($highlightId: ID!) {
-    updateDocumentHighlight(highlight: {id: $highlightId, deleted: true}) {
+    deleteDocumentHighlight(id: $highlightId) {
       id
     }
   }
@@ -101,18 +101,32 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
     query: getDocumentHighlightsQuery,
     variables: { documentId },
     throwOnError: true,
+    suspend: true,
+    requestPolicy: "cache-first",
   });
 
-  const pdfHighlights = data!.document.highlights;
+  const pdfHighlights = data.document.highlights;
 
   const [, createDocumentHighlight] = useMyMutation(
-    createDocumentHighlightMutation
+    createDocumentHighlightMutation,
+    {
+      throwOnError: true,
+      propagateError: true,
+    }
   );
   const [, updateDocumentHighlight] = useMyMutation(
-    updateDocumentHighlightMutation
+    updateDocumentHighlightMutation,
+    {
+      throwOnError: true,
+      propagateError: true,
+    }
   );
   const [, deleteDocumentHighlight] = useMyMutation(
-    deleteDocumentHighlightMutation
+    deleteDocumentHighlightMutation,
+    {
+      throwOnError: true,
+      propagateError: true,
+    }
   );
   const [, uploadBlob] = useMyMutation(uploadBlobMutation);
 
@@ -182,18 +196,7 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
 
       const id = uuid();
       if (pdfHighlight.type === "area") {
-        const { color, location, image, sequence } = pdfHighlight;
-
-        const { data, error } = await uploadBlob({
-          blob: {
-            mimeType: image.type,
-            blob: image,
-          },
-        });
-
-        if (error || !data) throw error;
-
-        const imageHash = data.uploadBlob.hash;
+        const { color, location, sequence } = pdfHighlight;
 
         await createDocumentHighlight({
           highlight: {
@@ -201,10 +204,11 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
             sequence,
             documentId,
             location,
-            imageHash,
             color,
           },
         });
+
+        console.log("doc highlight created");
 
         screenshotHighlight({ key: id, ...pdfHighlight });
       } else if (pdfHighlight.type === "text") {
@@ -252,22 +256,29 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
       setSelectedHighlightId(pdfHighlight.key);
 
       if (pdfHighlight.type === "area") {
-        const { key, location, image } = pdfHighlight;
+        const { key, location, image: _image } = pdfHighlight;
 
-        const { data, error } = await uploadBlob({
-          blob: {
-            mimeType: image.type,
-            blob: image,
-          },
-        });
+        // first only update location
+        // await updateDocumentHighlight({
+        //   highlight: {
+        //     id: key,
+        //     location,
+        //   },
+        // });
 
-        if (error || !data) throw error;
+        // const { data, error } = await uploadBlob({
+        //   blob: {
+        //     mimeType: image.type,
+        //     blob: image,
+        //   },
+        // });
+
+        // if (error || !data) throw error;
 
         await updateDocumentHighlight({
           highlight: {
             id: key,
             location,
-            imageHash: data.uploadBlob.hash,
           },
         });
 
@@ -342,8 +353,8 @@ export const PDFHighlighterContainer: FC<PDFHighlighterContainerProps> = ({
 
   // convert from graphql response to PDFHighlight
   const highlights = pdfHighlights.map(
-    ({ image, id, color, location, sequence }) => ({
-      type: image ? "area" : ("text" as PDFHighlightType),
+    ({ content, id, color, location, sequence }) => ({
+      type: content?.text ? "text" : ("area" as PDFHighlightType),
       key: id,
       color,
       location,

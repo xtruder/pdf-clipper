@@ -14,8 +14,8 @@ export type Scalars = {
   Float: number;
   Blob: Blob;
   DateTime: Date;
+  File: Blob;
   JSON: any;
-  Upload: Blob;
 };
 
 export type Account = {
@@ -30,6 +30,11 @@ export type Account = {
   name?: Maybe<Scalars['String']>;
   /** Account last update time */
   updatedAt: Scalars['DateTime'];
+};
+
+export type AccountCreateInput = {
+  /** name of the account */
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type AccountInfo = {
@@ -51,6 +56,7 @@ export type AccountUpdateInput = {
 
 export type BlobInfo = {
   __typename?: 'BlobInfo';
+  /** client only field that represents the actual blob data */
   blob?: Maybe<Scalars['Blob']>;
   /** blob creation time */
   createdAt: Scalars['DateTime'];
@@ -85,6 +91,8 @@ export type CreateDocumentHighlightInput = {
   location: Scalars['JSON'];
   /** sequential document highlight index */
   sequence: Scalars['String'];
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: InputMaybe<Scalars['String']>;
 };
 
 export type CreateDocumentInput = {
@@ -111,7 +119,7 @@ export type Document = {
   /** document deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
   /** file associated with document */
-  file?: Maybe<BlobInfo>;
+  file: BlobInfo;
   /** gets all highlights associated with document */
   highlights: Array<DocumentHighlight>;
   /** unique document ID */
@@ -148,6 +156,8 @@ export type DocumentHighlight = {
   location: Scalars['JSON'];
   /** sequential document highlight index */
   sequence: Scalars['String'];
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: Maybe<Scalars['String']>;
   /** highlight last udpate time */
   updatedAt: Scalars['DateTime'];
 };
@@ -235,10 +245,16 @@ export enum HighlightColor {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** creates a new account */
+  createAccount: Account;
   /** creates a new document */
   createDocument: Document;
   /** creates document highlight */
   createDocumentHighlight: DocumentHighlight;
+  /** deletes existing document */
+  deleteDocument: Document;
+  /** deletes document highlight */
+  deleteDocumentHighlight: DocumentHighlight;
   /** updates account */
   updateAccount: Account;
   /** updates existing document */
@@ -248,7 +264,12 @@ export type Mutation = {
   /** uploads blob and returns blob information */
   uploadBlob: BlobInfo;
   /** creates or updates document member */
-  upsertDocumentMember: DocumentHighlight;
+  upsertDocumentMember?: Maybe<DocumentMember>;
+};
+
+
+export type MutationCreateAccountArgs = {
+  account: AccountCreateInput;
 };
 
 
@@ -259,6 +280,16 @@ export type MutationCreateDocumentArgs = {
 
 export type MutationCreateDocumentHighlightArgs = {
   highlight: CreateDocumentHighlightInput;
+};
+
+
+export type MutationDeleteDocumentArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationDeleteDocumentHighlightArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -327,19 +358,17 @@ export type QueryDocumentArgs = {
 export type UpdateDocumentHighlightInput = {
   /** content associated with highlight serialized as JSON */
   content?: InputMaybe<Scalars['JSON']>;
-  /** whether highlight has been deleted */
-  deleted?: InputMaybe<Scalars['Boolean']>;
   /** id of the highlight to update */
   id: Scalars['ID'];
   /** hash of the image associated with document highlight */
   imageHash?: InputMaybe<Scalars['String']>;
   /** location of a highlight serialized as JSON */
   location?: InputMaybe<Scalars['JSON']>;
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdateDocumentInput = {
-  /** whether to make document deleted */
-  deleted?: InputMaybe<Scalars['Boolean']>;
   /** document id to update */
   id: Scalars['ID'];
   /** metadata associates with document */
@@ -350,7 +379,7 @@ export type UpdateDocumentInput = {
 
 export type UploadBlobInput = {
   /** blob to upload */
-  blob: Scalars['Upload'];
+  blob: Scalars['File'];
   /** blob mime type */
   mimeType: Scalars['String'];
   /** source where file can be retrieved from */
@@ -385,6 +414,13 @@ export type UpdateDocumentMutationVariables = Exact<{
 
 export type UpdateDocumentMutation = { __typename?: 'Mutation', updateDocument: { __typename?: 'Document', id: string, type: DocumentType, createdAt: Date, updatedAt: Date, deletedAt?: Date | null, visibility: DocumentVisibility, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, outline?: any | null }, cover?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null } };
 
+export type DeleteDocumentMutationVariables = Exact<{
+  documentId: Scalars['ID'];
+}>;
+
+
+export type DeleteDocumentMutation = { __typename?: 'Mutation', deleteDocument: { __typename?: 'Document', id: string } };
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -395,49 +431,50 @@ export type GetDocumentHighlightsQueryVariables = Exact<{
 }>;
 
 
-export type GetDocumentHighlightsQuery = { __typename?: 'Query', document: { __typename?: 'Document', id: string, highlights: Array<{ __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null }> } };
+export type GetDocumentHighlightsQuery = { __typename?: 'Query', document: { __typename?: 'Document', id: string, highlights: Array<{ __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null, document: { __typename?: 'Document', id: string } }> } };
 
 export type DeleteDocumentHighlightMutationVariables = Exact<{
   highlightId: Scalars['ID'];
 }>;
 
 
-export type DeleteDocumentHighlightMutation = { __typename?: 'Mutation', updateDocumentHighlight: { __typename?: 'DocumentHighlight', id: string } };
+export type DeleteDocumentHighlightMutation = { __typename?: 'Mutation', deleteDocumentHighlight: { __typename?: 'DocumentHighlight', id: string } };
 
 export type CreateDocumentHighlightMutationVariables = Exact<{
   highlight: CreateDocumentHighlightInput;
 }>;
 
 
-export type CreateDocumentHighlightMutation = { __typename?: 'Mutation', createDocumentHighlight: { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null } };
+export type CreateDocumentHighlightMutation = { __typename?: 'Mutation', createDocumentHighlight: { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null, document: { __typename?: 'Document', id: string } } };
 
 export type UpdateDocumentHighlightMutationVariables = Exact<{
   highlight: UpdateDocumentHighlightInput;
 }>;
 
 
-export type UpdateDocumentHighlightMutation = { __typename?: 'Mutation', updateDocumentHighlight: { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null } };
+export type UpdateDocumentHighlightMutation = { __typename?: 'Mutation', updateDocumentHighlight: { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null, document: { __typename?: 'Document', id: string } } };
 
-export type GetDocumentFileQueryVariables = Exact<{
+export type GetDocumentInfoWithFileQueryVariables = Exact<{
   documentId: Scalars['ID'];
 }>;
 
 
-export type GetDocumentFileQuery = { __typename?: 'Query', document: { __typename?: 'Document', id: string, file?: { __typename?: 'BlobInfo', hash: string, url?: string | null, blob?: Blob | null } | null } };
+export type GetDocumentInfoWithFileQuery = { __typename?: 'Query', document: { __typename?: 'Document', id: string, type: DocumentType, createdAt: Date, updatedAt: Date, deletedAt?: Date | null, visibility: DocumentVisibility, file: { __typename?: 'BlobInfo', hash: string, url?: string | null, blob?: Blob | null }, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, outline?: any | null }, cover?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null } };
 
 export type DocumentInfoFragmentFragment = { __typename?: 'Document', id: string, type: DocumentType, createdAt: Date, updatedAt: Date, deletedAt?: Date | null, visibility: DocumentVisibility, meta: { __typename?: 'DocumentMeta', title?: string | null, description?: string | null, pageCount?: number | null, outline?: any | null }, cover?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null };
 
-export type DocumentHighlightFragmentFragment = { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null };
+export type DocumentHighlightFragmentFragment = { __typename?: 'DocumentHighlight', id: string, sequence: string, createdAt: Date, updatedAt: Date, color: HighlightColor, content?: any | null, location: any, createdBy: { __typename?: 'AccountInfo', id: string, name?: string | null }, image?: { __typename?: 'BlobInfo', url?: string | null, blob?: Blob | null } | null, document: { __typename?: 'Document', id: string } };
 
 export const DocumentInfoFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"DocumentInfoFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Document"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"meta"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"pageCount"}},{"kind":"Field","name":{"kind":"Name","value":"outline"}}]}},{"kind":"Field","name":{"kind":"Name","value":"cover"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"blob"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"deletedAt"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}}]}}]} as unknown as DocumentNode<DocumentInfoFragmentFragment, unknown>;
-export const DocumentHighlightFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"DocumentHighlightFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"DocumentHighlight"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sequence"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdBy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"location"}},{"kind":"Field","name":{"kind":"Name","value":"image"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"blob"}}]}}]}}]} as unknown as DocumentNode<DocumentHighlightFragmentFragment, unknown>;
+export const DocumentHighlightFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"DocumentHighlightFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"DocumentHighlight"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sequence"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"createdBy"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"color"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"location"}},{"kind":"Field","name":{"kind":"Name","value":"image"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"blob"}}]}},{"kind":"Field","name":{"kind":"Name","value":"document"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<DocumentHighlightFragmentFragment, unknown>;
 export const CreateDocumentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createDocument"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateDocumentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createDocument"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"document"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateDocumentMutation, CreateDocumentMutationVariables>;
 export const UploadBlobDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"uploadBlob"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"blob"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UploadBlobInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"uploadBlob"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"blob"},"value":{"kind":"Variable","name":{"kind":"Name","value":"blob"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hash"}}]}}]}}]} as unknown as DocumentNode<UploadBlobMutation, UploadBlobMutationVariables>;
 export const GetDocumentInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDocumentInfo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"directives":[{"kind":"Directive","name":{"kind":"Name","value":"live"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"document"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentInfoFragment"}}]}}]}},...DocumentInfoFragmentFragmentDoc.definitions]} as unknown as DocumentNode<GetDocumentInfoQuery, GetDocumentInfoQueryVariables>;
 export const UpdateDocumentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateDocument"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"document"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateDocumentInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateDocument"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"document"},"value":{"kind":"Variable","name":{"kind":"Name","value":"document"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentInfoFragment"}}]}}]}},...DocumentInfoFragmentFragmentDoc.definitions]} as unknown as DocumentNode<UpdateDocumentMutation, UpdateDocumentMutationVariables>;
+export const DeleteDocumentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteDocument"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteDocument"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<DeleteDocumentMutation, DeleteDocumentMutationVariables>;
 export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"me"},"directives":[{"kind":"Directive","name":{"kind":"Name","value":"live"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"documents"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"document"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
 export const GetDocumentHighlightsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDocumentHighlights"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"directives":[{"kind":"Directive","name":{"kind":"Name","value":"live"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"document"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"highlights"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentHighlightFragment"}}]}}]}}]}},...DocumentHighlightFragmentFragmentDoc.definitions]} as unknown as DocumentNode<GetDocumentHighlightsQuery, GetDocumentHighlightsQueryVariables>;
-export const DeleteDocumentHighlightDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteDocumentHighlight"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"highlightId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateDocumentHighlight"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"highlight"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"highlightId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"deleted"},"value":{"kind":"BooleanValue","value":true}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<DeleteDocumentHighlightMutation, DeleteDocumentHighlightMutationVariables>;
+export const DeleteDocumentHighlightDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteDocumentHighlight"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"highlightId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteDocumentHighlight"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"highlightId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<DeleteDocumentHighlightMutation, DeleteDocumentHighlightMutationVariables>;
 export const CreateDocumentHighlightDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createDocumentHighlight"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"highlight"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateDocumentHighlightInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createDocumentHighlight"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"highlight"},"value":{"kind":"Variable","name":{"kind":"Name","value":"highlight"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentHighlightFragment"}}]}}]}},...DocumentHighlightFragmentFragmentDoc.definitions]} as unknown as DocumentNode<CreateDocumentHighlightMutation, CreateDocumentHighlightMutationVariables>;
 export const UpdateDocumentHighlightDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateDocumentHighlight"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"highlight"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateDocumentHighlightInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateDocumentHighlight"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"highlight"},"value":{"kind":"Variable","name":{"kind":"Name","value":"highlight"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentHighlightFragment"}}]}}]}},...DocumentHighlightFragmentFragmentDoc.definitions]} as unknown as DocumentNode<UpdateDocumentHighlightMutation, UpdateDocumentHighlightMutationVariables>;
-export const GetDocumentFileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDocumentFile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"document"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"file"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hash"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"blob"}}]}}]}}]}}]} as unknown as DocumentNode<GetDocumentFileQuery, GetDocumentFileQueryVariables>;
+export const GetDocumentInfoWithFileDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDocumentInfoWithFile"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"directives":[{"kind":"Directive","name":{"kind":"Name","value":"live"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"document"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"documentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"DocumentInfoFragment"}},{"kind":"Field","name":{"kind":"Name","value":"file"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"hash"}},{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"blob"}}]}}]}}]}},...DocumentInfoFragmentFragmentDoc.definitions]} as unknown as DocumentNode<GetDocumentInfoWithFileQuery, GetDocumentInfoWithFileQueryVariables>;

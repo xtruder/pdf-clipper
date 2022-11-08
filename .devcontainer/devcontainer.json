@@ -24,7 +24,7 @@
 	"antfu.vite",
 	"simonsiefke.svg-preview",
 	"editorconfig.editorconfig",
-	"golang.Go"
+	"GitHub.vscode-pull-request-github"
 ],
   "portsAttributes": {
 	"3000": {

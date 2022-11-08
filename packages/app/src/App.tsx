@@ -1,18 +1,19 @@
-import React, { Suspense, useEffect, useMemo } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { ErrorBoundary } from "react-error-boundary";
-import { Helmet, HelmetProvider } from "react-helmet-async";
+import { Client, Provider as UrqlProvider } from "urql";
+import { v4 as uuid } from "uuid";
+
 import { useWindowSize } from "@react-hook/window-size";
 import { useColorScheme } from "use-color-scheme";
 import { useLocalStorageState } from "ahooks";
 import { suspend } from "suspend-react";
 
-import { v4 as uuid } from "uuid";
+import { ErrorBoundary } from "react-error-boundary";
+import { Helmet, HelmetProvider } from "react-helmet-async";
+import { ToastContainer } from "react-toastify";
 
-import { Provider as UrqlProvider } from "urql";
-import { createClient } from "./gql/client";
-
+import { createClient } from "~/gql/client";
 import { Database } from "~/offline";
 
 import {
@@ -28,10 +29,50 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 
 import "virtual:windi.css";
 import "./App.css";
+import "react-toastify/dist/ReactToastify.css";
+
+/** initializes database, graphql client and created initial account */
+const useInitClient = (): Client => {
+  // create offline database instance
+  const db = useMemo(() => new Database(), []);
+
+  // get current account id from local storage
+  const [currentAccountId, setCurrentAccountId] = useLocalStorageState(
+    "currentAccountId",
+    {
+      defaultValue: () => uuid(),
+      serializer: (val) => val,
+      deserializer: (val) => val,
+    }
+  );
+
+  // create initial account if it does not exist
+  suspend(async () => {
+    const account = await db.accounts.get(currentAccountId);
+    if (!account) {
+      await db.accounts.add({ id: currentAccountId });
+      setCurrentAccountId(currentAccountId);
+    }
+  }, []);
+
+  // create graphql client
+  const client = useMemo(
+    () =>
+      createClient({
+        url: "http://localhost:4000/graphql",
+        accountId: currentAccountId,
+        db,
+      }),
+    [currentAccountId]
+  );
+
+  return client;
+};
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const ShowProgress: React.FC = () => (
-    <TopbarProgressIndicator {...useContextProgress()} />
+  const ShowProgress: React.FC = useCallback(
+    () => <TopbarProgressIndicator {...useContextProgress()} />,
+    []
   );
 
   return (
@@ -70,37 +111,12 @@ const AppRouter: React.FC = () => {
 };
 
 export function App(): JSX.Element {
+  // initialize graphql client
+  const client = useInitClient();
+
+  // get color schema and windwo size information
   const { scheme } = useColorScheme();
   const [width, height] = useWindowSize();
-
-  const db = useMemo(() => new Database(), []);
-
-  const [currentAccountId, setCurrentAccountId] = useLocalStorageState(
-    "currentAccountId",
-    {
-      defaultValue: () => uuid(),
-    }
-  );
-
-  const client = useMemo(
-    () =>
-      createClient({
-        url: "https://neki",
-        accountId: currentAccountId,
-        db,
-      }),
-    []
-  );
-
-  suspend(async () => {
-    const account = await db.accounts.get(currentAccountId);
-    if (!account) {
-      await db.accounts.add({
-        id: currentAccountId,
-      });
-      setCurrentAccountId(currentAccountId);
-    }
-  }, []);
 
   // define global --vh and --vw css variables that have viewport width and height set
   useEffect(() => {
@@ -128,6 +144,19 @@ export function App(): JSX.Element {
           <AppRouter />
         </UrqlProvider>
       </ErrorBoundary>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={scheme as any}
+        style={{ minWidth: "600px" }}
+      />
     </>
   );
 }

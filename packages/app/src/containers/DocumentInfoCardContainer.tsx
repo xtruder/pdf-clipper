@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback } from "react";
+import React, { Suspense, useCallback, useEffect } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
@@ -22,24 +22,40 @@ const updateDocumentMutation = gql(`
   }
 `);
 
+const deleteDocumentMutation = gql(`
+  mutation deleteDocument($documentId: ID!) {
+    deleteDocument(id: $documentId) {
+      id
+    }
+  }
+`);
+
 export const DocumentInfoCardContainer: React.FC<{
   documentId: string;
   onOpen?: () => void;
 }> = ({ documentId, onOpen }) => {
   const DocumentInfoCardLoader = useCallback(() => {
+    useEffect(() => () => console.log("info card recreated"), []);
     const [{ data }] = useMyQuery({
       query: getDocumentInfoQuery,
       variables: {
         documentId,
       },
+      requestPolicy: "cache-and-network",
       throwOnError: true,
     });
 
-    const [{ error: updateError }, updateDocument] = useMyMutation(
-      updateDocumentMutation
-    );
+    const [, updateDocument] = useMyMutation(updateDocumentMutation, {
+      propagateError: true,
+      throwOnError: true,
+      errorPrefix: "Document update error: ",
+    });
 
-    if (updateError) throw updateError;
+    const [, deleteDocument] = useMyMutation(deleteDocumentMutation, {
+      propagateError: true,
+      throwOnError: true,
+      errorPrefix: "Document delete error: ",
+    });
 
     const meta = data!.document.meta;
     const { title, description, pageCount } = meta;
@@ -54,27 +70,23 @@ export const DocumentInfoCardContainer: React.FC<{
         description={description ?? undefined}
         cover={cover}
         pages={pageCount ?? 0}
-        onDescriptionChanged={(description) =>
+        onDescriptionChanged={(description, reset) =>
           updateDocument({
             document: {
               id: documentId,
               meta: { ...meta, description },
             },
-          })
+          }).catch(reset)
         }
-        onTitleChanged={(title) =>
+        onTitleChanged={(title, reset) =>
           updateDocument({
             document: {
               id: documentId,
               meta: { ...meta, title },
             },
-          })
+          }).catch(reset)
         }
-        onDeleteClicked={() =>
-          updateDocument({
-            document: { id: documentId, deleted: true },
-          })
-        }
+        onDeleteClicked={() => deleteDocument({ documentId })}
         onOpen={onOpen}
       />
     );

@@ -15,56 +15,57 @@ export interface RadialProgressIndicatorProps extends ProgressIndicatorProps {
   inside?: JSX.Element;
 }
 
-export const RadialProgressIndicator: React.FC<
-  RadialProgressIndicatorProps
-> = ({
-  className = "",
-  progress,
-  message,
-  showPct = true,
-  inside,
-  size = "md",
-}) => {
-  const progressPct = Math.round(progress * 100).toString();
+export const RadialProgressIndicator: React.FC<RadialProgressIndicatorProps> =
+  ({
+    className = "",
+    progress,
+    message,
+    showPct = true,
+    inside,
+    size = "md",
+  }) => {
+    const progressPct = Math.round(progress * 100).toString();
 
-  inside = inside ? (
-    inside
-  ) : showPct ? (
-    <>{progressPct}%</>
-  ) : progress < 1 ? (
-    <>
-      Loading
-      <LoadingDots />
-    </>
-  ) : (
-    <>Loaded</>
-  );
+    inside = inside ? (
+      inside
+    ) : showPct ? (
+      <>{progressPct}%</>
+    ) : progress < 1 ? (
+      <>
+        Loading
+        <LoadingDots />
+      </>
+    ) : (
+      <>Loaded</>
+    );
 
-  const style = {
-    "--value": progressPct,
-    "--size": size === "sm" ? "6rem" : size === "md" ? "9rem" : "12rem",
-    "--thickness": size === "sm" ? "0.5rem" : size === "md" ? "0.8rem" : "1rem",
-  } as CSSProperties;
+    const style = {
+      "--value": progressPct,
+      "--size": size === "sm" ? "6rem" : size === "md" ? "9rem" : "12rem",
+      "--thickness":
+        size === "sm" ? "0.5rem" : size === "md" ? "0.8rem" : "1rem",
+    } as CSSProperties;
 
-  return (
-    <div
-      className={`flex flex-col items-center justify-center h-full w-full ${className}`}
-    >
-      <div>
-        <div
-          className="radial-progress bg-primary text-primary-content border-4 border-primary"
-          style={style}
-        >
-          {inside}
+    return (
+      <div
+        className={`flex flex-col items-center justify-center h-full w-full ${className}`}
+      >
+        <div>
+          <div
+            className="radial-progress bg-primary text-primary-content border-4 border-primary"
+            style={style}
+          >
+            {inside}
+          </div>
         </div>
+        {message && <span>{message}</span>}
       </div>
-      {message && <span>{message}</span>}
-    </div>
-  );
-};
+    );
+  };
 
 export interface TopbarProgessIndicatorProps extends ProgressIndicatorProps {
-  loadingText?: string;
+  progressText?: string;
+  showPct?: boolean;
   className?: string;
   progressClassName?: string;
 }
@@ -72,7 +73,8 @@ export interface TopbarProgessIndicatorProps extends ProgressIndicatorProps {
 export const TopbarProgressIndicator: React.FC<TopbarProgessIndicatorProps> = ({
   progress,
   message,
-  loadingText = "Loading",
+  progressText = "Loading",
+  showPct = true,
   className = "",
   progressClassName = "",
 }) => {
@@ -85,11 +87,13 @@ export const TopbarProgressIndicator: React.FC<TopbarProgessIndicatorProps> = ({
         value={progressPct}
         max={100}
       />
-      <div className="mt-2">
-        <span>
-          {loadingText} {progressPct}%{message && <>: {message}</>}
-        </span>
-      </div>
+      {showPct && (
+        <div className="mt-2">
+          <span>
+            {message ? message : progressText} {progressPct}%
+          </span>
+        </div>
+      )}
     </div>
   );
 };

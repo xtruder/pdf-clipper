@@ -7,9 +7,7 @@ const container = document.querySelector("#root")!;
 const root = createRoot(container);
 
 root.render(
-  <StrictMode>
-    <Suspense fallback={<></>}>
-      <App />
-    </Suspense>
-  </StrictMode>
+  <Suspense fallback={<></>}>
+    <App />
+  </Suspense>
 );

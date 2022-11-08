@@ -24,7 +24,7 @@ import {
   DocumentMember,
   BlobInfo,
   HighlightColor,
-} from "./graphql.schema";
+} from "../graphql/graphql.schema";
 
 @Entity({ name: "accounts" })
 export class AccountEntity extends BaseEntity implements Account, AccountInfo {
@@ -154,11 +154,11 @@ export class DocumentEntity extends BaseEntity implements Document {
   @Column({ name: "file_hash", nullable: false })
   fileHash: string;
 
-  @OneToOne(() => BlobInfoEntity, (table) => table.documentCover)
+  @ManyToOne(() => BlobInfoEntity, (table) => table.documentCover)
   @JoinColumn({ name: "cover_hash" })
   cover: BlobInfoEntity;
 
-  @Column({ name: "cover_hash", nullable: true })
+  @Column({ name: "cover_hash", nullable: true, unique: false })
   coverHash: string | null;
 
   @Column("enum", {
@@ -213,9 +213,12 @@ export class DocumentHighlightEntity
   @Column("jsonb", { name: "location", default: {} })
   location: any;
 
-  @OneToOne(() => BlobInfoEntity, (table) => table.highlightImage)
+  @ManyToOne(() => BlobInfoEntity, (table) => table.highlightImage)
   @JoinColumn({ name: "image_hash" })
   image: BlobInfoEntity;
+
+  @Column("text", { name: "thumbnail", nullable: true })
+  thumbnail: string;
 
   @Column({ name: "image_hash", nullable: true })
   imageHash: string;
@@ -238,9 +241,6 @@ export class DocumentMemberEntity extends BaseEntity implements DocumentMember {
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt: Date;
-
-  @DeleteDateColumn({ name: "deleted_at", type: "timestamp" })
-  deletedAt: Date;
 
   @Column("timestamp", { name: "accepted_at", nullable: true })
   acceptedAt?: Date;
@@ -268,9 +268,7 @@ export class DocumentMemberEntity extends BaseEntity implements DocumentMember {
   @Column({ name: "document_id" })
   documentId: string;
 
-  @ManyToOne(() => AccountEntity, (table) => table.createdDocumentMembers, {
-    eager: true,
-  })
+  @ManyToOne(() => AccountEntity, (table) => table.createdDocumentMembers)
   @JoinColumn({ name: "created_by" })
   createdBy: AccountEntity;
 

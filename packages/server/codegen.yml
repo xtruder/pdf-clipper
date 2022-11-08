@@ -11,7 +11,7 @@ config:
   inputMaybeValue: T | undefined
   #defaultMapper: ./types#DeepPartial<{T}>
 generates:
-  src/graphql.schema.ts:
+  src/graphql/graphql.schema.ts:
     plugins:
       - "typescript"
       - "typescript-resolvers"

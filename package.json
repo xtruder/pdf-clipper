@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "description": "",
-  "scripts": {},
+  "scripts": {
+    "preinstall": "npx only-allow pnpm"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xtruder/pdf-clipper.git"

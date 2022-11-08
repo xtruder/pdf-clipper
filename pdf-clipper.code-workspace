@@ -14,9 +14,6 @@
     {
       "name": "server",
       "path": "packages/server"
-    },
-    {
-      "path": "packages/server-go"
     }
   ],
   "settings": {

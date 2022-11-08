@@ -27,8 +27,8 @@ export interface DocumentInfoCardProps {
   onExportMarkdownClicked?: () => void;
   onDownloadDocumentClicked?: () => void;
   onDownloadAllClicked?: () => void;
-  onDescriptionChanged?: (text: string) => void;
-  onTitleChanged?: (text: string) => void;
+  onDescriptionChanged?: (text: string, reset: () => void) => void;
+  onTitleChanged?: (text: string, reset: () => void) => void;
 }
 
 export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
@@ -130,10 +130,11 @@ export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
             </ul>
           </div>
           <div
-            className="btn btn-xs sm:btn-sm mb-[1px]"
+            className="btn btn-xs sm:btn-sm mb-[1px] relative"
             onClick={() => onDeleteClicked()}
           >
             <TrashIcon className="w-4 h-4 sm:w-6 sm:h-6" />
+
             <span className="hidden md:block md:ml-1">Delete</span>
           </div>
         </div>
@@ -157,7 +158,7 @@ export const DocumentInfoCard: React.FC<DocumentInfoCardProps> = ({
         {isLoading ? (
           <TopbarProgressIndicator
             progress={loadingProgress || 0}
-            loadingText="Loading document meta"
+            progressText="Loading document meta"
           />
         ) : (
           cardBody

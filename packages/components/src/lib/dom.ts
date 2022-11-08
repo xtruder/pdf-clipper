@@ -155,7 +155,7 @@ export const getBoundingRectForRects = (clientRects: Rect[]): Rect => {
     };
   }, rects[0]);
 
-  const { X0, X1, Y0, Y1 } = optimal;
+  const { X0, X1, Y0, Y1 } = optimal ?? { X0: 0, X1: 0, Y0: 0, Y1: 0 };
 
   return {
     left: X0,

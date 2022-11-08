@@ -46,7 +46,7 @@ type Document {
   deletedAt: DateTime
 
   """file associated with document"""
-  file: BlobInfo
+  file: BlobInfo!
 
   """type of the document"""
   type: DocumentType!

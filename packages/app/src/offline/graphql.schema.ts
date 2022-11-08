@@ -14,8 +14,8 @@ export type Scalars = {
   Float: number;
   Blob: Blob;
   DateTime: Date;
+  File: Blob;
   JSON: any;
-  Upload: Blob;
 };
 
 export type Account = {
@@ -30,6 +30,11 @@ export type Account = {
   name?: Maybe<Scalars['String']>;
   /** Account last update time */
   updatedAt: Scalars['DateTime'];
+};
+
+export type AccountCreateInput = {
+  /** name of the account */
+  name?: InputMaybe<Scalars['String']>;
 };
 
 export type AccountInfo = {
@@ -51,6 +56,7 @@ export type AccountUpdateInput = {
 
 export type BlobInfo = {
   __typename?: 'BlobInfo';
+  /** client only field that represents the actual blob data */
   blob?: Maybe<Scalars['Blob']>;
   /** blob creation time */
   createdAt: Scalars['DateTime'];
@@ -85,6 +91,8 @@ export type CreateDocumentHighlightInput = {
   location: Scalars['JSON'];
   /** sequential document highlight index */
   sequence: Scalars['String'];
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: InputMaybe<Scalars['String']>;
 };
 
 export type CreateDocumentInput = {
@@ -111,7 +119,7 @@ export type Document = {
   /** document deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
   /** file associated with document */
-  file?: Maybe<BlobInfo>;
+  file: BlobInfo;
   /** gets all highlights associated with document */
   highlights: Array<DocumentHighlight>;
   /** unique document ID */
@@ -148,6 +156,8 @@ export type DocumentHighlight = {
   location: Scalars['JSON'];
   /** sequential document highlight index */
   sequence: Scalars['String'];
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: Maybe<Scalars['String']>;
   /** highlight last udpate time */
   updatedAt: Scalars['DateTime'];
 };
@@ -235,10 +245,16 @@ export enum HighlightColor {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** creates a new account */
+  createAccount: Account;
   /** creates a new document */
   createDocument: Document;
   /** creates document highlight */
   createDocumentHighlight: DocumentHighlight;
+  /** deletes existing document */
+  deleteDocument: Document;
+  /** deletes document highlight */
+  deleteDocumentHighlight: DocumentHighlight;
   /** updates account */
   updateAccount: Account;
   /** updates existing document */
@@ -248,7 +264,12 @@ export type Mutation = {
   /** uploads blob and returns blob information */
   uploadBlob: BlobInfo;
   /** creates or updates document member */
-  upsertDocumentMember: DocumentHighlight;
+  upsertDocumentMember?: Maybe<DocumentMember>;
+};
+
+
+export type MutationCreateAccountArgs = {
+  account: AccountCreateInput;
 };
 
 
@@ -259,6 +280,16 @@ export type MutationCreateDocumentArgs = {
 
 export type MutationCreateDocumentHighlightArgs = {
   highlight: CreateDocumentHighlightInput;
+};
+
+
+export type MutationDeleteDocumentArgs = {
+  id: Scalars['ID'];
+};
+
+
+export type MutationDeleteDocumentHighlightArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -327,19 +358,17 @@ export type QueryDocumentArgs = {
 export type UpdateDocumentHighlightInput = {
   /** content associated with highlight serialized as JSON */
   content?: InputMaybe<Scalars['JSON']>;
-  /** whether highlight has been deleted */
-  deleted?: InputMaybe<Scalars['Boolean']>;
   /** id of the highlight to update */
   id: Scalars['ID'];
   /** hash of the image associated with document highlight */
   imageHash?: InputMaybe<Scalars['String']>;
   /** location of a highlight serialized as JSON */
   location?: InputMaybe<Scalars['JSON']>;
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdateDocumentInput = {
-  /** whether to make document deleted */
-  deleted?: InputMaybe<Scalars['Boolean']>;
   /** document id to update */
   id: Scalars['ID'];
   /** metadata associates with document */
@@ -350,7 +379,7 @@ export type UpdateDocumentInput = {
 
 export type UploadBlobInput = {
   /** blob to upload */
-  blob: Scalars['Upload'];
+  blob: Scalars['File'];
   /** blob mime type */
   mimeType: Scalars['String'];
   /** source where file can be retrieved from */
@@ -427,6 +456,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Account: ResolverTypeWrapper<Partial<Account>>;
+  AccountCreateInput: ResolverTypeWrapper<Partial<AccountCreateInput>>;
   AccountInfo: ResolverTypeWrapper<Partial<AccountInfo>>;
   AccountUpdateInput: ResolverTypeWrapper<Partial<AccountUpdateInput>>;
   Blob: ResolverTypeWrapper<Partial<Scalars['Blob']>>;
@@ -444,6 +474,7 @@ export type ResolversTypes = {
   DocumentRole: ResolverTypeWrapper<Partial<DocumentRole>>;
   DocumentType: ResolverTypeWrapper<Partial<DocumentType>>;
   DocumentVisibility: ResolverTypeWrapper<Partial<DocumentVisibility>>;
+  File: ResolverTypeWrapper<Partial<Scalars['File']>>;
   HighlightColor: ResolverTypeWrapper<Partial<HighlightColor>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
@@ -454,13 +485,13 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   UpdateDocumentHighlightInput: ResolverTypeWrapper<Partial<UpdateDocumentHighlightInput>>;
   UpdateDocumentInput: ResolverTypeWrapper<Partial<UpdateDocumentInput>>;
-  Upload: ResolverTypeWrapper<Partial<Scalars['Upload']>>;
   UploadBlobInput: ResolverTypeWrapper<Partial<UploadBlobInput>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Account: Partial<Account>;
+  AccountCreateInput: Partial<AccountCreateInput>;
   AccountInfo: Partial<AccountInfo>;
   AccountUpdateInput: Partial<AccountUpdateInput>;
   Blob: Partial<Scalars['Blob']>;
@@ -475,6 +506,7 @@ export type ResolversParentTypes = {
   DocumentMemberInput: Partial<DocumentMemberInput>;
   DocumentMeta: Partial<DocumentMeta>;
   DocumentMetaInput: Partial<DocumentMetaInput>;
+  File: Partial<Scalars['File']>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
   JSON: Partial<Scalars['JSON']>;
@@ -484,7 +516,6 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']>;
   UpdateDocumentHighlightInput: Partial<UpdateDocumentHighlightInput>;
   UpdateDocumentInput: Partial<UpdateDocumentInput>;
-  Upload: Partial<Scalars['Upload']>;
   UploadBlobInput: Partial<UploadBlobInput>;
 };
 
@@ -537,7 +568,7 @@ export type DocumentResolvers<ContextType = any, ParentType extends ResolversPar
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  file?: Resolver<Maybe<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
+  file?: Resolver<ResolversTypes['BlobInfo'], ParentType, ContextType>;
   highlights?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   members?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
@@ -558,6 +589,7 @@ export type DocumentHighlightResolvers<ContextType = any, ParentType extends Res
   image?: Resolver<Maybe<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
   location?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
   sequence?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  thumbnail?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -583,18 +615,25 @@ export type DocumentMetaResolvers<ContextType = any, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface FileScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['File'], any> {
+  name: 'File';
+}
+
 export interface JsonScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSON'], any> {
   name: 'JSON';
 }
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  createAccount?: Resolver<ResolversTypes['Account'], ParentType, ContextType, RequireFields<MutationCreateAccountArgs, 'account'>>;
   createDocument?: Resolver<ResolversTypes['Document'], ParentType, ContextType, RequireFields<MutationCreateDocumentArgs, 'document'>>;
   createDocumentHighlight?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationCreateDocumentHighlightArgs, 'highlight'>>;
+  deleteDocument?: Resolver<ResolversTypes['Document'], ParentType, ContextType, RequireFields<MutationDeleteDocumentArgs, 'id'>>;
+  deleteDocumentHighlight?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationDeleteDocumentHighlightArgs, 'id'>>;
   updateAccount?: Resolver<ResolversTypes['Account'], ParentType, ContextType, RequireFields<MutationUpdateAccountArgs, 'account'>>;
   updateDocument?: Resolver<ResolversTypes['Document'], ParentType, ContextType, RequireFields<MutationUpdateDocumentArgs, 'document'>>;
   updateDocumentHighlight?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationUpdateDocumentHighlightArgs, 'highlight'>>;
   uploadBlob?: Resolver<ResolversTypes['BlobInfo'], ParentType, ContextType, RequireFields<MutationUploadBlobArgs, 'blob'>>;
-  upsertDocumentMember?: Resolver<ResolversTypes['DocumentHighlight'], ParentType, ContextType, RequireFields<MutationUpsertDocumentMemberArgs, 'member'>>;
+  upsertDocumentMember?: Resolver<Maybe<ResolversTypes['DocumentMember']>, ParentType, ContextType, RequireFields<MutationUpsertDocumentMemberArgs, 'member'>>;
 };
 
 export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
@@ -612,10 +651,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   me?: Resolver<ResolversTypes['Account'], ParentType, ContextType>;
 };
 
-export interface UploadScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Upload'], any> {
-  name: 'Upload';
-}
-
 export type Resolvers<ContextType = any> = {
   Account?: AccountResolvers<ContextType>;
   AccountInfo?: AccountInfoResolvers<ContextType>;
@@ -626,11 +661,11 @@ export type Resolvers<ContextType = any> = {
   DocumentHighlight?: DocumentHighlightResolvers<ContextType>;
   DocumentMember?: DocumentMemberResolvers<ContextType>;
   DocumentMeta?: DocumentMetaResolvers<ContextType>;
+  File?: GraphQLScalarType;
   JSON?: GraphQLScalarType;
   Mutation?: MutationResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  Upload?: GraphQLScalarType;
 };
 
 export type DirectiveResolvers<ContextType = any> = {

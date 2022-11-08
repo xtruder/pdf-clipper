@@ -33,13 +33,16 @@ type DocumentHighlight {
   """highlight location"""
   location: JSON!
 
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
+
   """image associated with highlight"""
   image: BlobInfo
 }
 
 input CreateDocumentHighlightInput {
   """unique highlight id"""
-  id: ID
+  id: ID!
 
   """id of the document that highlight is associated with"""
   documentId: ID!
@@ -56,6 +59,9 @@ input CreateDocumentHighlightInput {
   """location of a highlight serialized as JSON"""
   location: JSON!
 
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
+
   """hash of the image associated with document highlight"""
   imageHash: String
 }
@@ -69,6 +75,9 @@ input UpdateDocumentHighlightInput {
 
   """location of a highlight serialized as JSON"""
   location: JSON
+
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
 
   """hash of the image associated with document highlight"""
   imageHash: String

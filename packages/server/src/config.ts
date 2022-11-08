@@ -2,7 +2,7 @@ import getenv from "getenv.ts";
 
 export const isDev: boolean = getenv.string("NODE_ENV", "dev") === "dev";
 
-export const appPort: number = getenv.int("APP_PORT", 4000);
+export const port: number = getenv.int("APP_PORT", 4000);
 
 export const traceExporterName = getenv.string("TRACE_EXPORTER_NAME", "noop");
 

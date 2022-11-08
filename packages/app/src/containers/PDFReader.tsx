@@ -23,17 +23,9 @@ import { HighlightListView } from "./HighlightListView";
 import { PDFHighlighterContainer } from "./PDFHighlighterContainer";
 
 const getDocumentInfoQuery = gql(`
-  query getDocumentInfo($documentId: ID!) @live {
+  query getDocumentInfoWithFile($documentId: ID!) @live {
     document(id: $documentId) {
       ...DocumentInfoFragment
-    }
-  }
-`);
-
-const getDocumentFileQuery = gql(`
-  query getDocumentFile($documentId: ID!) {
-    document(id: $documentId) {
-      id
       file {
         hash
         url
@@ -71,21 +63,19 @@ export const PDFReader: FC<PDFReaderProps> = ({
     query: getDocumentInfoQuery,
     variables: { documentId },
     throwOnError: true,
+    suspend: true,
   });
 
-  const [{ data: docFileData }] = useMyQuery({
-    query: getDocumentFileQuery,
-    variables: { documentId },
+  const [, updateDocument] = useMyMutation(updateDocumentMutation, {
+    propagateError: true,
     throwOnError: true,
   });
 
-  const [, updateDocument] = useMyMutation(updateDocumentMutation);
-
   let source: Blob | string;
-  if (docFileData!.document.file?.blob) {
-    source = docFileData!.document.file?.blob;
-  } else if (docFileData!.document.file?.url) {
-    source = docFileData!.document.file?.url;
+  if (data.document.file?.blob) {
+    source = data.document.file?.blob;
+  } else if (data.document.file?.url) {
+    source = data.document.file?.url;
   } else {
     throw new Error("missing file source");
   }

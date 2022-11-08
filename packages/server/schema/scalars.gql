@@ -9,3 +9,6 @@ scalar JSON
 
 # file field
 scalar File
+
+# client only blob field
+scalar Blob

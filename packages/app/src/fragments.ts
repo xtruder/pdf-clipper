@@ -8,7 +8,7 @@ export const DocumentInfoFragment = gql(`
       title
       description
       pageCount
-        outline
+      outline
     }
     cover {
       url
@@ -37,6 +37,9 @@ export const DocumentHighlightFragment = gql(`
     image {
       url
       blob
+    }
+    document {
+      id
     }
   }
 `);

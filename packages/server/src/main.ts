@@ -1,10 +1,14 @@
-import { appPort } from "./config";
-import { AppDataSource } from "./data-source";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { port } from "./config";
+import { MinioStorage } from "./db/blob-storage";
+import { AppDataSource } from "./db/data-source";
+import { createGraphQLServer } from "./graphql/graphql-server";
 import { startInstrumentation } from "./instrumentation";
-import { resolvers } from "./resolvers";
-import { startServer } from "./server";
+import { RedisLiveQueryStore } from "./graphql/live-query";
 import { logger } from "./logging";
-import { typeDefs } from "./schema";
+import { resolvers } from "./graphql/resolvers";
+import { typeDefs } from "./graphql/schema";
+import { createServer } from "./server";
 
 // AppDataSource.initialize()
 //   .then(async () => {
@@ -26,20 +30,52 @@ import { typeDefs } from "./schema";
 //   .catch((error) => console.log(error));
 
 async function main() {
+  logger.info("starting instrumentation");
   await startInstrumentation();
 
   // initialize data source
   logger.info("initializing data source");
   await AppDataSource.initialize();
 
-  logger.info("loading graphql schema");
+  logger.debug("creating blob storage");
+  const blobStorage = new MinioStorage(
+    {
+      endPoint: "localhost",
+      port: 9000,
+      useSSL: false,
+      accessKey: "8kiOWgHm0lW7HK1o",
+      secretKey: "MRBxJT1zVQLs2g0gbDRfPzQpWgfn3Oqb",
+    },
+    "files"
+  );
 
-  logger.info("starting server");
-  const { graphqlURL, stop } = await startServer(typeDefs, resolvers, {
-    port: appPort,
+  logger.debug("creating redis live query store");
+  const liveQueryStore = new RedisLiveQueryStore("", {});
+
+  logger.info("loading graphql schema");
+  const schema = makeExecutableSchema({
+    typeDefs,
+    resolvers,
   });
 
-  logger.info(`🚀 Server ready at ${graphqlURL}`);
+  logger.debug("creating graphql server");
+  const graphqlServer = createGraphQLServer({
+    schema,
+    liveQueryStore,
+    blobStorage,
+  });
+
+  logger.debug("creating server");
+  const server = createServer({
+    port,
+    graphqlServer,
+    blobStorage,
+  });
+
+  logger.info("starting server listener");
+  const listener = server.listen(port, () => {
+    logger.info(`server started on localhost:${port}`);
+  });
 
   let isShuttingDown = false;
   process.on("SIGINT", () => {
@@ -48,7 +84,7 @@ async function main() {
     }
 
     isShuttingDown = true;
-    stop();
+    listener.close();
   });
 }
 

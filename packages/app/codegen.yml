@@ -1,6 +1,5 @@
 schema:
 - ../server/schema/*.gql
-- local-schema.gql
 documents:
 - 'src/**/*.ts'
 - 'src/**/*.tsx'
@@ -11,12 +10,12 @@ config:
     DateTime: Date
     JSON: any
     Blob: Blob
-    Upload: Blob
+    File: Blob
 generates:
   src/gql/:
     preset: gql-tag-operations-preset
     presetConfig:
-      augmentedModuleName: '@urql/core'
+      augmentedModuleName: 'urql'
   src/offline/graphql.schema.ts:
     plugins:
       - typescript

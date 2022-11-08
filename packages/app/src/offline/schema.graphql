@@ -28,6 +28,11 @@ type Account {
   updatedAt: DateTime!
 }
 
+input AccountCreateInput {
+  """name of the account"""
+  name: String
+}
+
 type AccountInfo {
   """whether account has been deleted"""
   deleted: Boolean!
@@ -47,6 +52,7 @@ input AccountUpdateInput {
 scalar Blob
 
 type BlobInfo {
+  """client only field that represents the actual blob data"""
   blob: Blob
   """blob creation time"""
   createdAt: DateTime!
@@ -81,6 +87,8 @@ input CreateDocumentHighlightInput {
   location: JSON!
   """sequential document highlight index"""
   sequence: String!
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
 }
 
 input CreateDocumentInput {
@@ -108,7 +116,7 @@ type Document {
   """document deletion time"""
   deletedAt: DateTime
   """file associated with document"""
-  file: BlobInfo
+  file: BlobInfo!
   """gets all highlights associated with document"""
   highlights: [DocumentHighlight!]!
   """unique document ID"""
@@ -144,6 +152,8 @@ type DocumentHighlight {
   location: JSON!
   """sequential document highlight index"""
   sequence: String!
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
   """highlight last udpate time"""
   updatedAt: DateTime!
 }
@@ -220,6 +230,8 @@ enum DocumentVisibility {
   PUBLIC
 }
 
+scalar File
+
 enum HighlightColor {
   BLUE
   GREEN
@@ -230,10 +242,16 @@ enum HighlightColor {
 scalar JSON
 
 type Mutation {
+  """creates a new account"""
+  createAccount(account: AccountCreateInput!): Account!
   """creates a new document"""
   createDocument(document: CreateDocumentInput!): Document!
   """creates document highlight"""
   createDocumentHighlight(highlight: CreateDocumentHighlightInput!): DocumentHighlight!
+  """deletes existing document"""
+  deleteDocument(id: ID!): Document!
+  """deletes document highlight"""
+  deleteDocumentHighlight(id: ID!): DocumentHighlight!
   """updates account"""
   updateAccount(account: AccountUpdateInput!): Account!
   """updates existing document"""
@@ -243,7 +261,7 @@ type Mutation {
   """uploads blob and returns blob information"""
   uploadBlob(blob: UploadBlobInput!): BlobInfo!
   """creates or updates document member"""
-  upsertDocumentMember(member: DocumentMemberInput!): DocumentHighlight!
+  upsertDocumentMember(member: DocumentMemberInput!): DocumentMember
 }
 
 type PageInfo {
@@ -270,19 +288,17 @@ type Query {
 input UpdateDocumentHighlightInput {
   """content associated with highlight serialized as JSON"""
   content: JSON
-  """whether highlight has been deleted"""
-  deleted: Boolean
   """id of the highlight to update"""
   id: ID!
   """hash of the image associated with document highlight"""
   imageHash: String
   """location of a highlight serialized as JSON"""
   location: JSON
+  """thumbnail of the image associated with highlight encoded as datauri"""
+  thumbnail: String
 }
 
 input UpdateDocumentInput {
-  """whether to make document deleted"""
-  deleted: Boolean
   """document id to update"""
   id: ID!
   """metadata associates with document"""
@@ -291,11 +307,9 @@ input UpdateDocumentInput {
   visibility: DocumentVisibility
 }
 
-scalar Upload
-
 input UploadBlobInput {
   """blob to upload"""
-  blob: Upload!
+  blob: File!
   """blob mime type"""
   mimeType: String!
   """source where file can be retrieved from"""

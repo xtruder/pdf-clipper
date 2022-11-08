@@ -1,16 +1,18 @@
-import { GraphQLYogaError } from "@graphql-yoga/node";
+import { GraphQLError } from "graphql";
 import { shield, rule, deny, allow } from "graphql-shield";
 import { Equal, In, IsNull, Not } from "typeorm";
 import {
   AccountEntity,
   BlobInfoEntity,
   DocumentMemberEntity,
-} from "./entities";
+} from "../db/entities";
 
 const withError = (
   result: any,
-  throwErr: GraphQLYogaError = new GraphQLYogaError("authorization error", {
-    code: "AUTHORIZATION_ERROR",
+  throwErr: GraphQLError = new GraphQLError("authorization error", {
+    extensions: {
+      code: "AUTHORIZATION_ERROR",
+    },
   })
 ) => (!!result ? !!result : throwErr);
 
@@ -18,8 +20,10 @@ const isAuthenticated = rule({ cache: "contextual" })(
   async (_parent, _args, { accountId }) =>
     withError(
       await AccountEntity.findOneBy({ id: accountId }),
-      new GraphQLYogaError("account not authenticated", {
-        code: "AUTHENTICATION_ERROR",
+      new GraphQLError("account not authenticated", {
+        extensions: {
+          code: "AUTHENTICATION_ERROR",
+        },
       })
     )
 );
@@ -32,8 +36,10 @@ const isDocumentMember = rule({ cache: "contextual" })(
         documentId: Equal(args.id),
         accountId: Equal(ctx.accountId),
       }),
-      new GraphQLYogaError("account not member of document", {
-        code: "AUTHORIZATION_ERROR",
+      new GraphQLError("account not member of document", {
+        extensions: {
+          code: "AUTHORIZATION_ERROR",
+        },
       })
     )
 );
@@ -49,8 +55,32 @@ const isDocumentEditor = (getDocId: (parent: any, args: any) => any) =>
         documentId: Equal(id),
         accountId: Equal(ctx.accountId),
       }),
-      new GraphQLYogaError("account not document editor", {
-        code: "AUTHORIZATION_ERROR",
+      new GraphQLError("account not document editor", {
+        extensions: {
+          code: "AUTHORIZATION_ERROR",
+        },
+      })
+    );
+  });
+
+const isHighlightEditor = (getId: (parent: any, args: any) => any) =>
+  rule({ cache: "no_cache" })(async (parent, args, ctx) => {
+    const id = getId(parent, args);
+
+    return withError(
+      await DocumentMemberEntity.findOneBy({
+        role: In(["ADMIN", "EDITOR"]),
+        accountId: Equal(ctx.accountId),
+        document: {
+          highlights: {
+            id: Equal(id),
+          },
+        },
+      }),
+      new GraphQLError("account not highlight editor", {
+        extensions: {
+          code: "AUTHORIZATION_ERROR",
+        },
       })
     );
   });
@@ -103,10 +133,10 @@ export const permissions = shield(
       createDocumentHighlight: isDocumentEditor(
         (_, args) => args?.highlight?.documentId
       ),
-      updateDocumentHighlight: isDocumentEditor(
-        (_, args) => args?.highlight?.documentId
+      updateDocumentHighlight: isHighlightEditor(
+        (_, args) => args?.highlight?.id
       ),
-      deleteDocumentHighlight: isDocumentEditor((_, { id }) => id),
+      deleteDocumentHighlight: isHighlightEditor((_, args) => args?.id),
       uploadBlob: isAuthenticated,
       upsertDocumentMember: isDocumentEditor(
         (_, args) => args?.member?.documentId

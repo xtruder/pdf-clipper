@@ -12,6 +12,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  Blob: any;
   DateTime: Date;
   File: File;
   JSON: any;
@@ -55,6 +56,8 @@ export type AccountUpdateInput = {
 
 export type BlobInfo = {
   __typename?: 'BlobInfo';
+  /** client only field that represents the actual blob data */
+  blob?: Maybe<Scalars['Blob']>;
   /** blob creation time */
   createdAt: Scalars['DateTime'];
   /** account information about blob creator */
@@ -114,7 +117,7 @@ export type Document = {
   /** document deletion time */
   deletedAt?: Maybe<Scalars['DateTime']>;
   /** file associated with document */
-  file?: Maybe<BlobInfo>;
+  file: BlobInfo;
   /** gets all highlights associated with document */
   highlights: Array<DocumentHighlight>;
   /** unique document ID */
@@ -151,6 +154,8 @@ export type DocumentHighlight = {
   location: Scalars['JSON'];
   /** sequential document highlight index */
   sequence: Scalars['String'];
+  /** thumbnail of the image associated with highlight encoded as datauri */
+  thumbnail?: Maybe<Scalars['String']>;
   /** highlight last udpate time */
   updatedAt: Scalars['DateTime'];
 };
@@ -451,6 +456,7 @@ export type ResolversTypes = ResolversObject<{
   AccountCreateInput: AccountCreateInput;
   AccountInfo: ResolverTypeWrapper<AccountInfo>;
   AccountUpdateInput: AccountUpdateInput;
+  Blob: ResolverTypeWrapper<Scalars['Blob']>;
   BlobInfo: ResolverTypeWrapper<BlobInfo>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
   CreateDocumentHighlightInput: CreateDocumentHighlightInput;
@@ -485,6 +491,7 @@ export type ResolversParentTypes = ResolversObject<{
   AccountCreateInput: AccountCreateInput;
   AccountInfo: AccountInfo;
   AccountUpdateInput: AccountUpdateInput;
+  Blob: Scalars['Blob'];
   BlobInfo: BlobInfo;
   Boolean: Scalars['Boolean'];
   CreateDocumentHighlightInput: CreateDocumentHighlightInput;
@@ -532,7 +539,12 @@ export type AccountInfoResolvers<ContextType = any, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export interface BlobScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Blob'], any> {
+  name: 'Blob';
+}
+
 export type BlobInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['BlobInfo'] = ResolversParentTypes['BlobInfo']> = ResolversObject<{
+  blob?: Resolver<Maybe<ResolversTypes['Blob']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   hash?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -553,7 +565,7 @@ export type DocumentResolvers<ContextType = any, ParentType extends ResolversPar
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   createdBy?: Resolver<ResolversTypes['AccountInfo'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  file?: Resolver<Maybe<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
+  file?: Resolver<ResolversTypes['BlobInfo'], ParentType, ContextType>;
   highlights?: Resolver<Array<ResolversTypes['DocumentHighlight']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   members?: Resolver<Array<ResolversTypes['DocumentMember']>, ParentType, ContextType>;
@@ -574,6 +586,7 @@ export type DocumentHighlightResolvers<ContextType = any, ParentType extends Res
   image?: Resolver<Maybe<ResolversTypes['BlobInfo']>, ParentType, ContextType>;
   location?: Resolver<ResolversTypes['JSON'], ParentType, ContextType>;
   sequence?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  thumbnail?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -638,6 +651,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type Resolvers<ContextType = any> = ResolversObject<{
   Account?: AccountResolvers<ContextType>;
   AccountInfo?: AccountInfoResolvers<ContextType>;
+  Blob?: GraphQLScalarType;
   BlobInfo?: BlobInfoResolvers<ContextType>;
   DateTime?: GraphQLScalarType;
   Document?: DocumentResolvers<ContextType>;

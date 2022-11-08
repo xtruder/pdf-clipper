@@ -23,6 +23,8 @@ export interface EditableTextProps {
 
   // class name for clamped lines
   clampClassName?: string;
+
+  /** number of lines to clamp */
   clampLines?: number;
 
   // whether to edit on element focus
@@ -38,7 +40,7 @@ export interface EditableTextProps {
   showEditIcon?: boolean;
 
   // on change gets triggered when text content has changed
-  onChange?: (text: string) => void;
+  onChange?: (text: string, reset: () => void) => void;
 }
 
 export const EditableText: React.FC<EditableTextProps> = ({
@@ -86,7 +88,13 @@ export const EditableText: React.FC<EditableTextProps> = ({
     if (textRef.current === previousText) return;
 
     setPreviousText(textRef.current);
-    onChange(textRef.current);
+    onChange(textRef.current, () => {
+      if (editableDivRef.current)
+        editableDivRef.current.innerText = previousText;
+      textRef.current = previousText;
+      setPreviousText(previousText);
+      setIsEditing(true);
+    });
   }, [isEditing]);
 
   return (

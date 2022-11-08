@@ -11,6 +11,9 @@ type BlobInfo {
   """blob source URI"""
   source: String
 
+  """client only field that represents the actual blob data"""
+  blob: Blob
+
   """blob download URL"""
   url: String
 

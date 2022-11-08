@@ -1,22 +1,22 @@
-import React, { Suspense, useCallback, useState } from "react";
-import { suspend } from "suspend-react";
-import { ErrorBoundary } from "react-error-boundary";
+import React, { useEffect, useState } from "react";
 
 import { gql } from "urql";
+import { debug } from "debug";
+import { toast } from "react-toastify";
+
 import { useMyMutation } from "~/gql/hooks";
-import { DocumentType } from "~/gql/graphql";
+import { CreateDocumentInput, DocumentType } from "~/gql/graphql";
 
 import { canvasToPNGBlob } from "~/lib/dom";
 
 import {
   DocumentDropZone,
-  ErrorFallback,
   getDocumentOutline,
   getPageCanvasArea,
   loadPDF,
-  TopbarProgressIndicator,
-  useContextProgress,
 } from "@pdf-clipper/components";
+
+const log = debug("DocumentDropContainer");
 
 const createDocumentMutation = gql(`
   mutation createDocument($input: CreateDocumentInput!) {
@@ -34,47 +34,55 @@ const uploadBlobMutation = gql(`
   }
 `);
 
-const mimeToDocType: Record<string, string> = {
-  "application/pdf": "PDF",
+const mimeToDocType: Record<string, DocumentType> = {
+  "application/pdf": DocumentType.Pdf,
 };
 
 export const DocumentDropContainer: React.FC<{
   className: string;
-}> = ({ className }) => {
-  const DocumentDropZoneLoader = useCallback(() => {
-    const [, uploadBlob] = useMyMutation(uploadBlobMutation);
-    const [, createDocument] = useMyMutation(createDocumentMutation);
+  onDocument?: (id: string) => void;
+}> = ({ className, onDocument }) => {
+  const [, uploadBlob] = useMyMutation(uploadBlobMutation, {
+    throwOnError: true,
+  });
+  const [, createDocument] = useMyMutation(createDocumentMutation, {
+    throwOnError: true,
+  });
 
-    const [file, setFile] = useState<File>();
-    const { setProgress, setMessage } = useContextProgress();
+  const [progress, setProgress] = useState<number>();
+  const [error, setError] = useState<Error>();
+  const [success, setSuccess] = useState(false);
 
-    suspend(async () => {
-      if (!file) return;
+  const reset = () => {
+    setError(undefined);
+    setSuccess(false);
+  };
 
-      const docType = mimeToDocType[file.type || ""];
-      if (!docType) throw new Error("invalid file type: " + file.type);
+  const onFile = async (file: File) => {
+    reset();
 
-      const { data, error } = await uploadBlob({
+    try {
+      const {
+        data: {
+          uploadBlob: { hash: fileHash },
+        },
+      } = await uploadBlob({
         blob: {
           blob: file,
           mimeType: file.type,
         },
       });
 
-      if (error || !data) throw error;
-
-      const {
-        uploadBlob: { hash: fileHash },
-      } = data;
+      const docType = mimeToDocType[file.type];
 
       if (docType === "PDF") {
-        setMessage("loading pdf");
+        log("loading pdf", file.name);
 
         const pdfDocument = await loadPDF(file, ({ loaded, total }) =>
           setProgress(total / loaded)
         );
 
-        setMessage("getting document metadata");
+        log("getting document metadata", pdfDocument._pdfInfo);
 
         // get pdf document metadata
         const { info }: { info: any } = await pdfDocument.getMetadata();
@@ -86,59 +94,71 @@ export const DocumentDropContainer: React.FC<{
         );
 
         // upload cover page
-        const { data: coverData, error: coverError } = await uploadBlob({
+        const {
+          data: {
+            uploadBlob: { hash: coverHash },
+          },
+        } = await uploadBlob({
           blob: {
             blob: cover,
             mimeType: cover.type,
           },
         });
 
-        if (!coverData || coverError) throw coverError;
-
-        const {
-          uploadBlob: { hash: coverHash },
-        } = coverData;
-
         // get pdf document outline
         const outline = await getDocumentOutline(pdfDocument);
 
-        setMessage("creating document");
+        const input: CreateDocumentInput = {
+          type: DocumentType.Pdf,
+          fileHash,
+          meta: {
+            pageCount: pdfDocument.numPages,
+            title: info["Title"],
+            author: info["Author"],
+            outline,
+          },
+          coverHash,
+        };
+
+        log("creating document", input);
 
         // create the actual document
-        const { data, error } = await createDocument({
-          input: {
-            type: DocumentType.Pdf,
-            fileHash,
-            meta: {
-              pageCount: pdfDocument.numPages,
-              title: info["Title"],
-              author: info["Author"],
-              outline,
-            },
-            coverHash,
+        const {
+          data: {
+            createDocument: { id },
           },
+        } = await createDocument({
+          input,
         });
-        if (error || !data) throw error;
 
-        setMessage("");
+        onDocument?.(id);
       }
-    }, [file]);
 
-    return <DocumentDropZone onFile={setFile} className={className} />;
-  }, [className]);
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err);
+      toast.error(`Upload error: ${err.message}`);
+    }
+
+    setProgress(undefined);
+  };
+
+  useEffect(() => {
+    const t = error || success ? setTimeout(reset, 5000) : undefined;
+    return () => clearTimeout(t);
+  }, [error, success]);
 
   return (
-    <Suspense
-      fallback={
-        <DocumentDropZone
-          disabled={true}
-          loader={<TopbarProgressIndicator {...useContextProgress()} />}
-        />
-      }
-    >
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <DocumentDropZoneLoader />
-      </ErrorBoundary>
-    </Suspense>
+    <DocumentDropZone
+      className={className}
+      accept={{
+        "application/pdf": [],
+      }}
+      onFile={onFile}
+      onFileRejected={(file) => setError(new Error(file.errors[0]!.message))}
+      error={error}
+      success={success}
+      progress={progress}
+    />
   );
 };

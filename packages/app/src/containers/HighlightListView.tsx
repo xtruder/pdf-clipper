@@ -12,7 +12,7 @@ import {
   useRandomProgress,
 } from "@pdf-clipper/components";
 
-const getDocumentHighlightsQuery = gql(`
+export const getDocumentHighlightsQuery = gql(`
   query getDocumentHighlights($documentId: ID!) @live {
     document(id: $documentId) {
       id
@@ -25,7 +25,7 @@ const getDocumentHighlightsQuery = gql(`
 
 const deleteDocumentHighlight = gql(`
   mutation deleteDocumentHighlight($highlightId: ID!) {
-    updateDocumentHighlight(highlight: {id: $highlightId, deleted: true}) {
+    deleteDocumentHighlight(id: $highlightId) {
       id
     }
   }
@@ -49,14 +49,13 @@ export const HighlightListView: FC<HighlightListViewProps> = ({
   onHighlightPageClicked,
 }) => {
   const HighlightListLoader = useCallback(() => {
-    const [{ data, error }] = useMyQuery({
+    const [{ data }] = useMyQuery({
       query: getDocumentHighlightsQuery,
       variables: {
         documentId,
       },
+      throwOnError: true,
     });
-
-    if (error) throw error;
 
     const [, deleteHighlight] = useMyMutation(deleteDocumentHighlight);
 
@@ -70,7 +69,7 @@ export const HighlightListView: FC<HighlightListViewProps> = ({
               key={id}
               color={color}
               image={image?.blob ? image.blob : image?.url ?? undefined}
-              text={content}
+              text={typeof content === "object" ? "" : content}
               pageNumber={pageNumber}
               selected={id === selectedHighlightId}
               scrollIntoView={id === scrollToHighlightId}

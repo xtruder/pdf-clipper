@@ -9,6 +9,10 @@ import {
   BlobInfoEntity,
 } from "./entities";
 import { DocumentMembersValidatorSubscriber } from "./subscribers";
+import { getLogger } from "../logging";
+import { WinstonAdaptor } from "typeorm-logger-adaptor/logger/winston";
+
+const logger = getLogger("typeorm");
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -28,5 +32,5 @@ export const AppDataSource = new DataSource({
   ],
   migrations: [],
   subscribers: [DocumentMembersValidatorSubscriber],
-  logger: "advanced-console",
+  logger: new WinstonAdaptor(logger, ["query"], true),
 });

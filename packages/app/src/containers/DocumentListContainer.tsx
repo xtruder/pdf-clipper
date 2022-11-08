@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useMemo } from "react";
+import React, { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
@@ -29,18 +29,20 @@ const getAccountDocumentsIdsQuery = gql(`
 
 export const AccountDocumentsListContainer: React.FC<{
   className?: string;
-  onOpen?: (documentId: string) => void;
+  onOpen?: (documentId: string, source: string) => void;
 }> = ({ className, onOpen }) => {
   const AccountDocumentsListLoader = useCallback(() => {
     const [{ data: localData }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
-      context: useMemo(() => ({ source: "local", suspense: true }), []),
+      source: "local",
       throwOnError: true,
+      suspend: true,
     });
 
     const [{ data }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
-      context: useMemo(() => ({ suspense: false }), []),
+      source: "remote",
+      suspend: false,
     });
 
     const docs = (data?.me.documents ?? []).map((d) => ({
@@ -56,12 +58,15 @@ export const AccountDocumentsListContainer: React.FC<{
       <DocumentInfoCardList className={className}>
         {localDocs
           .concat(docs)
-          .map(({ document: { id: documentId }, source: source }) => (
-            <GqlContext.Provider value={{ source: source as any }}>
+          .map(({ document: { id: documentId }, source }) => (
+            <GqlContext.Provider
+              value={{ source: source as any }}
+              key={`${source}-${documentId}`}
+            >
               <DocumentInfoCardContainer
-                key={documentId}
+                key={`${source}-${documentId}`}
                 documentId={documentId}
-                onOpen={() => onOpen?.(documentId)}
+                onOpen={() => onOpen?.(documentId, source)}
               />
             </GqlContext.Provider>
           ))}
@@ -70,9 +75,7 @@ export const AccountDocumentsListContainer: React.FC<{
   }, [onOpen]);
 
   return (
-    <Suspense
-      fallback={<TopbarProgressIndicator progress={useRandomProgress(600)} />}
-    >
+    <Suspense fallback={<TopbarProgressIndicator progress={0} />}>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
         <AccountDocumentsListLoader />
       </ErrorBoundary>

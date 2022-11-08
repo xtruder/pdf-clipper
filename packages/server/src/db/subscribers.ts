@@ -1,4 +1,4 @@
-import { GraphQLYogaError } from "@graphql-yoga/node";
+import { GraphQLError } from "graphql";
 
 import {
   EventSubscriber,
@@ -35,9 +35,11 @@ export class DocumentMembersValidatorSubscriber
     });
 
     if (count <= 0)
-      throw new GraphQLYogaError(
+      throw new GraphQLError(
         "documument requires at least one document admin",
-        { code: "VALIDATION_ERROR" }
+        {
+          extensions: { code: "VALIDATION_ERROR" },
+        }
       );
   }
 }
