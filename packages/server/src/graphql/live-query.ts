@@ -28,9 +28,11 @@ export class RedisLiveQueryStore implements LiveQueryStore {
     this.liveQueryStore = new InMemoryLiveQueryStore(parameter);
 
     this.sub.subscribe(CHANNEL, (err) => {
-      this.logger.debug("subscribed to %s", CHANNEL);
+      if (err) {
+        return this.logger.error("error subscribing to redis", err);
+      }
 
-      if (err) throw err;
+      return this.logger.debug("subscribed to %s", CHANNEL);
     });
 
     this.sub.on("message", (channel: string, resourceIdentifier: string) => {
