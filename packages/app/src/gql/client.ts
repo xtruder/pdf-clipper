@@ -20,13 +20,13 @@ import {
 import { Database } from "~/offline/db";
 import { GqlContext } from "~/offline/resolvers";
 import schema, { introspectionSchema } from "~/offline/schema";
-import { DocumentHighlightFragment } from "~/fragments";
 import { getDocumentHighlightsQuery } from "~/containers/HighlightListView";
 
 import {
   CreateDocumentHighlightMutation,
   CreateDocumentHighlightMutationVariables,
 } from "./graphql";
+import { DocumentHighlightFragment } from "./fragments";
 import { MyOperationContext } from "./hooks";
 import { fetchWithTimeout } from "./utils";
 
