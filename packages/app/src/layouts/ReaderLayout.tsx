@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import { FallbackProps } from "react-error-boundary";
 
 import {
   ErrorFallback,
@@ -7,6 +7,7 @@ import {
   TopbarProgressIndicator,
   useContextProgress,
 } from "@pdf-clipper/components";
+import { MyErrorBoundary } from "~/MyErrorBoundary";
 
 export const ReaderLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -24,11 +25,11 @@ export const ReaderLayout: React.FC<{ children: React.ReactNode }> = ({
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-1 relative">
-        <ErrorBoundary FallbackComponent={ShowError}>
+        <MyErrorBoundary FallbackComponent={ShowError}>
           <ContextProgressProvider>
             <Suspense fallback={<ShowProgress />}>{children}</Suspense>
           </ContextProgressProvider>
-        </ErrorBoundary>
+        </MyErrorBoundary>
       </div>
     </div>
   );

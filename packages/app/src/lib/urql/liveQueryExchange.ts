@@ -1,7 +1,8 @@
+import { debug } from "debug";
 import { Exchange, subscriptionExchange } from "urql";
 import { getOperationAST } from "graphql";
 import { Repeater } from "@repeaterjs/repeater";
-import { debug } from "debug";
+import ReconnectingEventSource from "reconnecting-eventsource";
 
 import { isLiveQueryOperationDefinitionNode } from "@n1ru4l/graphql-live-query";
 import { applyAsyncIterableIteratorToSink } from "@n1ru4l/push-pull-async-iterable-iterator";
@@ -14,10 +15,17 @@ function makeEventStreamSource(url: string) {
   return new Repeater<ExecutionLivePatchResult>(async (push, end) => {
     log("eventsource openening", url);
 
-    const eventsource = new EventSource(url);
+    const eventsource = new ReconnectingEventSource(url);
+
+    const openTimeout = setTimeout(() => {
+      log("eventsource open timeout");
+      eventsource.close();
+      end(new Error("connection timeout"));
+    }, 3000);
 
     eventsource.onopen = function () {
       log("eventsource opened", url);
+      clearTimeout(openTimeout);
     };
 
     eventsource.onmessage = function (event) {
@@ -25,6 +33,7 @@ function makeEventStreamSource(url: string) {
 
       const data = JSON.parse(event.data);
       push(data);
+
       if (eventsource.readyState === 2) {
         log("evensource ended", url);
         end();
@@ -33,7 +42,7 @@ function makeEventStreamSource(url: string) {
 
     eventsource.onerror = function (error) {
       log("eventsource error", error);
-      end(new Error("error with eventsource stream"));
+      end(new Error("connection error"));
     };
 
     await end;
