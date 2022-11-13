@@ -1,16 +1,15 @@
 import React, { FC, Suspense, useCallback } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
 import { useMyMutation, useMyQuery } from "~/gql/hooks";
 
 import {
-  ErrorFallback,
   HighlightCard,
   HighlightCardList,
   TopbarProgressIndicator,
   useRandomProgress,
 } from "@pdf-clipper/components";
+import { MyErrorBoundary } from "~/MyErrorBoundary";
 
 export const getDocumentHighlightsQuery = gql(`
   query getDocumentHighlights($documentId: ID!) @live {
@@ -88,9 +87,9 @@ export const HighlightListView: FC<HighlightListViewProps> = ({
     <Suspense
       fallback={<TopbarProgressIndicator progress={useRandomProgress(600)} />}
     >
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <MyErrorBoundary>
         <HighlightListLoader />
-      </ErrorBoundary>
+      </MyErrorBoundary>
     </Suspense>
   );
 };

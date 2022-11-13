@@ -1,5 +1,4 @@
 import React, { Suspense, useCallback } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
 import { GqlContext, useMyQuery } from "~/gql/hooks";
@@ -12,6 +11,7 @@ import {
 } from "@pdf-clipper/components";
 
 import { DocumentInfoCardContainer } from "./DocumentInfoCardContainer";
+import { MyErrorBoundary } from "~/MyErrorBoundary";
 
 const getAccountDocumentsIdsQuery = gql(`
   query me @live {
@@ -42,7 +42,8 @@ export const AccountDocumentsListContainer: React.FC<{
     const [{ data }] = useMyQuery({
       query: getAccountDocumentsIdsQuery,
       source: "remote",
-      suspend: false,
+      throwOnError: true,
+      suspend: true,
     });
 
     const docs = (data?.me.documents ?? []).map((d) => ({
@@ -76,9 +77,9 @@ export const AccountDocumentsListContainer: React.FC<{
 
   return (
     <Suspense fallback={<TopbarProgressIndicator progress={0} />}>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <MyErrorBoundary>
         <AccountDocumentsListLoader />
-      </ErrorBoundary>
+      </MyErrorBoundary>
     </Suspense>
   );
 };

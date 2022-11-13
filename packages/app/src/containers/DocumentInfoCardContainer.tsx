@@ -1,10 +1,10 @@
 import React, { Suspense, useCallback, useEffect } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 
 import { gql } from "urql";
 import { useMyMutation, useMyQuery } from "~/gql/hooks";
 
-import { ErrorFallback, DocumentInfoCard } from "@pdf-clipper/components";
+import { DocumentInfoCard } from "@pdf-clipper/components";
+import { MyErrorBoundary } from "~/MyErrorBoundary";
 
 const getDocumentInfoQuery = gql(`
   query getDocumentInfo($documentId: ID!) @live {
@@ -96,9 +96,9 @@ export const DocumentInfoCardContainer: React.FC<{
     <Suspense
       fallback={<DocumentInfoCard isLoading={true} loadingProgress={0} />}
     >
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <MyErrorBoundary>
         <DocumentInfoCardLoader />
-      </ErrorBoundary>
+      </MyErrorBoundary>
     </Suspense>
   );
 };

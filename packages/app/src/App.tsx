@@ -24,6 +24,7 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 import "virtual:windi.css";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
+import { MyErrorBoundary } from "./MyErrorBoundary";
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = useCallback(
@@ -32,11 +33,11 @@ const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <MyErrorBoundary>
       <ContextProgressProvider>
         <Suspense fallback={<ShowProgress />}>{children}</Suspense>
       </ContextProgressProvider>
-    </ErrorBoundary>
+    </MyErrorBoundary>
   );
 };
 
