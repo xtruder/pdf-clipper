@@ -47,6 +47,7 @@
     "react-router-dom": "^6.3.0",
     "react-toastify": "^9.1.0",
     "react-usestateref": "^1.0.8",
+    "reconnecting-eventsource": "^1.6.2",
     "suspend-react": "^0.0.8",
     "urql": "^3.0.1",
     "urql-custom-scalars-exchange": "^1.0.1",
