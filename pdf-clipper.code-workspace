@@ -42,5 +42,23 @@
     "typescript.tsdk": "./node_modules/typescript/lib",
     "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
     "sqltools.connections": [],
+    "githubIssues.queries": [
+      {
+        "label": "App issues",
+        "query": "repo:${owner}/${repository} state:open is:issue label:app"
+      },
+      {
+        "label": "Server issues",
+        "query": "repo:${owner}/${repository} state:open is:issue label:server",
+      },
+      {
+        "label": "My issues",
+        "query": "repo:${owner}/${repository} state:open is:issue assignee:offlinehacker"
+      },
+      {
+        "label": "Created Issues",
+        "query": "author:${user} state:open repo:${owner}/${repository} sort:created-desc",
+      }
+    ],
   }
 }
