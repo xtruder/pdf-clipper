@@ -17,8 +17,15 @@ function makeEventStreamSource(url: string) {
 
     const eventsource = new ReconnectingEventSource(url);
 
+    const openTimeout = setTimeout(() => {
+      log("eventsource open timeout");
+      eventsource.close();
+      end(new Error("connection timeout"));
+    }, 3000);
+
     eventsource.onopen = function () {
       log("eventsource opened", url);
+      clearTimeout(openTimeout);
     };
 
     eventsource.onmessage = function (event) {
@@ -26,6 +33,7 @@ function makeEventStreamSource(url: string) {
 
       const data = JSON.parse(event.data);
       push(data);
+
       if (eventsource.readyState === 2) {
         log("evensource ended", url);
         end();
@@ -34,7 +42,7 @@ function makeEventStreamSource(url: string) {
 
     eventsource.onerror = function (error) {
       log("eventsource error", error);
-      end(new Error("error with eventsource stream"));
+      end(new Error("connection error"));
     };
 
     await end;
