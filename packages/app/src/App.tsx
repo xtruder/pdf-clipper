@@ -1,20 +1,12 @@
-import React, { Suspense, useCallback, useEffect, useMemo } from "react";
+import React, { Suspense, useCallback, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-import { Client, Provider as UrqlProvider } from "urql";
-import { v4 as uuid } from "uuid";
 
 import { useWindowSize } from "@react-hook/window-size";
 import { useColorScheme } from "use-color-scheme";
-import { useLocalStorageState } from "ahooks";
-import { suspend } from "suspend-react";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ToastContainer } from "react-toastify";
-
-import { createClient } from "~/gql/client";
-import { Database } from "~/offline";
 
 import {
   ErrorFallback,
@@ -23,6 +15,8 @@ import {
   ContextProgressProvider,
 } from "@pdf-clipper/components";
 
+import { ClientProvider } from "./ClientProvider";
+
 import { DocumentViewPage } from "~/pages/DocumentViewPage";
 import { MainPage } from "~/pages/MainPage";
 import PDFViewPage from "~/pages/PDFReaderPage";
@@ -30,44 +24,6 @@ import PDFViewPage from "~/pages/PDFReaderPage";
 import "virtual:windi.css";
 import "./App.css";
 import "react-toastify/dist/ReactToastify.css";
-
-/** initializes database, graphql client and created initial account */
-const useInitClient = (): Client => {
-  // create offline database instance
-  const db = useMemo(() => new Database(), []);
-
-  // get current account id from local storage
-  const [currentAccountId, setCurrentAccountId] = useLocalStorageState(
-    "currentAccountId",
-    {
-      defaultValue: () => uuid(),
-      serializer: (val) => val,
-      deserializer: (val) => val,
-    }
-  );
-
-  // create initial account if it does not exist
-  suspend(async () => {
-    const account = await db.accounts.get(currentAccountId);
-    if (!account) {
-      await db.accounts.add({ id: currentAccountId });
-      setCurrentAccountId(currentAccountId);
-    }
-  }, []);
-
-  // create graphql client
-  const client = useMemo(
-    () =>
-      createClient({
-        url: "http://localhost:4000/graphql",
-        accountId: currentAccountId,
-        db,
-      }),
-    [currentAccountId]
-  );
-
-  return client;
-};
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ShowProgress: React.FC = useCallback(
@@ -111,9 +67,6 @@ const AppRouter: React.FC = () => {
 };
 
 export function App(): JSX.Element {
-  // initialize graphql client
-  const client = useInitClient();
-
   // get color schema and windwo size information
   const { scheme } = useColorScheme();
   const [width, height] = useWindowSize();
@@ -140,9 +93,9 @@ export function App(): JSX.Element {
         </Helmet>
       </HelmetProvider>
       <ErrorBoundary FallbackComponent={ErrorFallback}>
-        <UrqlProvider value={client}>
+        <ClientProvider>
           <AppRouter />
-        </UrqlProvider>
+        </ClientProvider>
       </ErrorBoundary>
       <ToastContainer
         position="bottom-center"
