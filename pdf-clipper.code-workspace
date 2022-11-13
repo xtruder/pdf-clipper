@@ -32,12 +32,10 @@
       "editor.rulers": [80, 120]
     },
     "files.exclude": {
-      "node_modules": true
-    },
-    "search.exclude": {
       "**/node_modules": true,
       "**/dist": true,
-      "**/package-lock.json": true
+      "**/pnpm-lock.json": true,
+      "**/.pnpm-store": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib",
     "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
