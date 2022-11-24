@@ -1,7 +1,4 @@
-{
-  # nixos-unstable
-  pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-22.05.tar.gz") { }
-}:
+{ pkgs }:
 
 let
   fontConfigEtc = (
@@ -42,6 +39,6 @@ in pkgs.mkShell {
   GO_TAGS = "postgres";
 
   shellHook = ''
-    PATH=$PWD/node_modules/.bin:~/go/bin:$PATH
+    PATH=$PWD/node_modules/.bin:$PATH
   '';
 }

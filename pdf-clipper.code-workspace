@@ -39,7 +39,6 @@
     },
     "typescript.tsdk": "./node_modules/typescript/lib",
     "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix",
-    "sqltools.connections": [],
     "githubIssues.queries": [
       {
         "label": "App issues",

@@ -9,50 +9,49 @@
   "userEnvProbe": "loginShell",
   "updateRemoteUserUID": false,
 
-  "onCreateCommand": "nix-shell --command 'echo done building nix dev environment'",
+  "onCreateCommand": "nix build --no-link .",
 
   "settings": {
     "nix.enableLanguageServer": true
   },
 
   "extensions": [
-	"arrterian.nix-env-selector",
-	"jnoortheen.nix-ide",
-	"fsevenm.run-it-on",
-	"esbenp.prettier-vscode",
-	"voorjaar.windicss-intellisense",
-	"antfu.vite",
-	"simonsiefke.svg-preview",
-	"editorconfig.editorconfig",
-	"GitHub.vscode-pull-request-github"
-],
+    "mkhl.direnv",
+    "jnoortheen.nix-ide",
+    "esbenp.prettier-vscode",
+    "voorjaar.windicss-intellisense",
+    "antfu.vite",
+    "simonsiefke.svg-preview",
+    "editorconfig.editorconfig",
+    "GitHub.vscode-pull-request-github"
+  ],
   "portsAttributes": {
-	"3000": {
-		"label": "vite"
-	},
-	"3001": {
-		"label": "storybook"
-	},
-	"4000": {
-		"label": "server"
-	},
-	"5432": {
-		"label": "postgres"
-	},
-	"6000": {
-		"label": "imgproxy"
-	},
-	"6080": {
-		"label": "imgproxy"
-	},
-	"8080": {
-		"label": "server"
-	},
-	"9000": {
-		"label": "minio"
-	},
-	"9001": {
-		"label": "minio-web"
-	}
-}
+    "3000": {
+      "label": "vite"
+    },
+    "3001": {
+      "label": "storybook"
+    },
+    "4000": {
+      "label": "server"
+    },
+    "5432": {
+      "label": "postgres"
+    },
+    "6000": {
+      "label": "imgproxy"
+    },
+    "6080": {
+      "label": "imgproxy"
+    },
+    "8080": {
+      "label": "server"
+    },
+    "9000": {
+      "label": "minio"
+    },
+    "9001": {
+      "label": "minio-web"
+    }
+  }
 }
