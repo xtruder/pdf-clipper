@@ -6,15 +6,7 @@ dist-ssr
 
 # node
 node_modules
-.pnpm-store
-.pnpm-debug.log
 
 # cypress
 cypress/screenshots
 cypress/videos
-
-# env
-.direnv
-
-# nix
-result
