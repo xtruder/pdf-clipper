@@ -1,29 +1,32 @@
 {
   "compilerOptions": {
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
-    "strict": true,
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": true,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "noEmit": true,
+
+    // Best practices
+    "strict": true,
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Some stricter flags
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "allowJs": false,
-    "isolatedModules": true,
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "downlevelIteration": true,
-    "composite": true,
-    "jsx": "react",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "node"],
-    "baseUrl": ".",
+    "noPropertyAccessFromIndexSignature": true,
+
+    "paths": {
+      "@/*": ["./app/*"]
+    },
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }
