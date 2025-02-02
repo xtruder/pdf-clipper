@@ -1,5 +1,4 @@
-import React from "react";
-import { Story } from "@storybook/react";
+import { type Meta, type StoryObj } from "@storybook/react";
 
 import { Modal, ActionModal, NavbarModal } from "./Modal";
 
@@ -11,85 +10,90 @@ const loreipsum = (
   </p>
 );
 
-export default {
+const meta: Meta<typeof Modal> = {
   title: "ui/Modal",
+  component: Modal,
 };
 
-const sizeArgType = {
-  control: {
-    type: "select",
-    options: ["auto", "md", "lg"],
+export default meta;
+type Story = StoryObj<typeof Modal>;
+
+export const TheModal: Story = {
+  args: {
+    show: true,
+    size: "md",
   },
 };
 
-export const TheModal: Story = (args) => {
-  return (
-    <>
-      <Modal size={args.size} show={args.showed}>
-        {loreipsum}
-      </Modal>
-    </>
-  );
-};
+// export const TheModal: Story = () => {
+//   return (
+//     return (
+//     <>
+//       <Modal size={args.size} show={args.showed}>
+//         {loreipsum}
+//       </Modal>
+//     </>
+//   );
+// };
 
-TheModal.argTypes = {
-  size: sizeArgType,
-};
+// TheModal.argTypes = {
+//   size: sizeArgType,
+// };
 
-TheModal.args = {
-  showed: true,
-};
+// TheModal.args = {
+//   showed: true,
+// };
 
-export const TheActionModal: Story = (args) => {
-  return (
-    <>
-      <a>{loreipsum}</a>
-      <ActionModal
-        size={args.size}
-        show={args.showed}
-        actions={[
-          {
-            name: "accept",
-            content: "Accept",
-            close: true,
-            primary: true,
-          },
-          {
-            name: "close",
-            content: "Close",
-            close: true,
-          },
-        ]}
-      >
-        {loreipsum}
-      </ActionModal>
-    </>
-  );
-};
+// export const TheActionModal: StoryFn = (args) => {
+//   return (
+//     <>
+//       <a>{loreipsum}</a>
+//       <ActionModal
+//         size={args.size}
+//         show={args.showed}
+//         actions={[
+//           {
+//             name: "accept",
+//             content: "Accept",
+//             close: true,
+//             primary: true,
+//           },
+//           {
+//             name: "close",
+//             content: "Close",
+//             close: true,
+//           },
+//         ]}
+//       >
+//         {loreipsum}
+//       </ActionModal>
+//     </>
+//   );
+// };
 
-TheActionModal.argTypes = {
-  size: sizeArgType,
-};
+// TheActionModal.argTypes = {
+//   size: sizeArgType,
+// };
 
-TheActionModal.args = {
-  showed: true,
-};
+// TheActionModal.args = {
+//   showed: true,
+// };
 
-export const TheNavbarModal: Story = (args) => {
-  return (
-    <>
-      <a>{loreipsum}</a>
-      <NavbarModal size={args.size} show={args.showed}>
-        {loreipsum}
-      </NavbarModal>
-    </>
-  );
-};
+// export const TheNavbarModal: StoryFn = (args) => {
+//   return (
+//     <>
+//       <a>{loreipsum}</a>
+//       <NavbarModal size={args.size} show={args.showed}>
+//         {loreipsum}
+//       </NavbarModal>
+//     </>
+//   );
+// };
 
-TheNavbarModal.argTypes = {
-  size: sizeArgType,
-};
+// TheNavbarModal.argTypes = {
+//   size: sizeArgType,
+// };
 
-TheNavbarModal.args = {
-  showed: true,
-};
+// TheNavbarModal.args = {
+//   showed: true,
+// };

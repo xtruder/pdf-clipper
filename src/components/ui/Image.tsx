@@ -1,9 +1,9 @@
-import React, {
+import {
   forwardRef,
   useEffect,
   useState,
-  ReactEventHandler,
-  ComponentPropsWithoutRef,
+  type ReactEventHandler,
+  type ComponentPropsWithoutRef,
 } from "react";
 import { blobToDataURL } from "../../lib/dom";
 

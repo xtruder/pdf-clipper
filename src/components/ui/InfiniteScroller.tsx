@@ -1,4 +1,4 @@
-import React, { FC, ComponentType, useState, useCallback } from "react";
+import { type FC, type ComponentType, useCallback } from "react";
 import useStateRef from "react-usestateref";
 
 export interface PageParams {

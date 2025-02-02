@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { ReactComponent as ArrowLeftIcon } from "../assets/icons/arrow-left-outline.svg";
+import ArrowLeftIcon from "../../assets/icons/arrow-left-outline.svg?react";
 
 export type ModalArgs = {
   size: "auto" | "md" | "lg";
@@ -22,14 +22,14 @@ export const Modal: React.FC<ModalArgs> = ({
       size === "auto"
         ? "h-auto"
         : size === "md"
-        ? "h-3/4 md:h-1/2"
-        : "h-screen md:h-3/4",
+          ? "h-3/4 md:h-1/2"
+          : "h-screen md:h-3/4",
     rounded:
       size === "auto"
         ? "rounded-t-xl md:rounded-box"
         : size === "md"
-        ? "rounded-t-xl md:rounded-box"
-        : "rounded-none md:rounded-box",
+          ? "rounded-t-xl md:rounded-box"
+          : "rounded-none md:rounded-box",
     margin: "mx-0 md:mx-4",
     position: "items-end md:items-center",
   };

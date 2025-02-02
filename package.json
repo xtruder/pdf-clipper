@@ -16,12 +16,13 @@
     "dev": "bunx --bun vite",
     "build": "vite build",
     "preview": "vite preview",
-    "storybook": "start-storybook -p 3001",
+    "storybook": "bunx --bun storybook dev -p 3001",
     "test": "npm run cypress:test",
     "cypress:start": "cypress open-ct",
     "cypress:test": "cypress run-ct"
   },
   "devDependencies": {
+    "@storybook/addon-controls": "^8.5.3",
     "@storybook/builder-vite": "^8.5.3",
     "@storybook/react": "^8.5.3",
     "@storybook/react-vite": "^8.5.3",
@@ -39,6 +40,7 @@
     "@react-hook/window-size": "^3.1.1",
     "@tanstack/react-router": "^1.99.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-usestateref": "^1.0.9"
   }
 }

@@ -15,6 +15,7 @@ const viteConfig: UserConfig = {
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.mdx", "../src/**/*.stories.@(ts|tsx)"],
   addons: [
+    "@storybook/addon-controls",
     "@storybook/addon-links",
     "@storybook/addon-essentials",
     "storybook-dark-mode",

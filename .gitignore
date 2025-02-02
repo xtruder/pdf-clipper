@@ -3,7 +3,6 @@ dist
 dist-ssr
 *.local
 .eslintcache
-*.bak
 
 # node
 node_modules

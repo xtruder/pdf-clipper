@@ -1,5 +1,6 @@
 import { createContextState } from "create-context-state";
-import React, { CSSProperties, useEffect } from "react";
+import React, { useEffect } from "react";
+import type { CSSProperties } from "react";
 import useState from "react-usestateref";
 import setRandomInterval from "set-random-interval";
 

@@ -1,9 +1,8 @@
-import React from "react";
-import { Story } from "@storybook/react";
+import { type StoryFn } from "@storybook/react";
 import {
   InfiniteScroller,
-  LoadPageResponse,
-  PageParams,
+  type LoadPageResponse,
+  type PageParams,
 } from "./InfiniteScroller";
 
 export default {
@@ -16,7 +15,7 @@ const LoadMore = ({ onLoad }: { onLoad: () => void }) => (
   <button onClick={onLoad}>Load More...</button>
 );
 
-export const TheInfiniteScroller: Story = (args) => {
+export const TheInfiniteScroller: StoryFn = () => {
   const todos = [
     {
       id: "1",

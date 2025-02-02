@@ -1,4 +1,5 @@
-import React, { ForwardedRef, forwardRef, useEffect, useRef } from "react";
+import React, { forwardRef, useEffect, useRef } from "react";
+import type { ForwardedRef } from "react";
 import useMergedRef from "@react-hook/merged-ref";
 
 export interface ScrollboardProps {

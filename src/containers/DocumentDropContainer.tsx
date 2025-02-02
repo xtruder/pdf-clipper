@@ -14,7 +14,7 @@ import {
   getDocumentOutline,
   getPageCanvasArea,
   loadPDF,
-} from "@pdf-clipper/components";
+} from "@components";
 
 const log = debug("DocumentDropContainer");
 

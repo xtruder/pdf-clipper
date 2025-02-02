@@ -5,12 +5,6 @@ import { useDarkMode } from "storybook-dark-mode";
 
 import { useWindowSize } from "@react-hook/window-size";
 
-import {
-  ContextProgressProvider,
-  useContextProgress,
-  TopbarProgressIndicator,
-} from "../src/components/src/ui/ProgressIndicator";
-
 const preview: Preview = {
   decorators: [
     (Story, { parameters }) => {
@@ -35,20 +29,8 @@ const preview: Preview = {
         document.documentElement.classList.remove("dark");
       }
 
-      const ShowProgress: FC = () => (
-        <TopbarProgressIndicator {...useContextProgress()} />
-      );
-
-      const StoryWrapper: FC<PropsWithChildren> = ({ children }) => (
-        <ContextProgressProvider>
-          <Suspense fallback={<ShowProgress />}>{children}</Suspense>
-        </ContextProgressProvider>
-      );
-
       return (
-        <StoryWrapper>
-          <Story />
-        </StoryWrapper>
+        <Story />
       );
     },
   ],
