@@ -21,7 +21,7 @@ html, body {
   100% { transform: rotate(360deg); }
 }
 
-@media (min-width: 640px) {
+/* @media (min-width: 640px) {
  .md\:card-normal [class~=card-body] {
     padding: var(--padding-card, 2rem);
     font-size: 1rem;
@@ -30,7 +30,7 @@ html, body {
   .md\:card-normal [class~=card-title] {
     margin-bottom: .75rem;
   }
-}
+} */
 
 /* Fixes for drawer to disable pointer events for overlay when not active */
 .drawer-toggle ~ .drawer-side {
@@ -41,7 +41,7 @@ html, body {
   pointer-events: all;
 }
 
-@screen lg {
+/* @screen lg {
   .drawer-toggle ~ .drawer-side {
     pointer-events: all;
   }
@@ -52,4 +52,4 @@ html, body {
   .drawer-toggle:checked~.drawer-side {
     display: block;
   }
-}
+} */

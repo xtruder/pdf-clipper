@@ -1,13 +1,16 @@
-import React, { Suspense, FC, PropsWithChildren, useEffect } from "react";
+import React, { useEffect } from "react";
 
 import { Preview } from "@storybook/react";
 import { useDarkMode } from "storybook-dark-mode";
 
 import { useWindowSize } from "@react-hook/window-size";
 
+import "../src/index.css";
+import "../src/App.css";
+
 const preview: Preview = {
   decorators: [
-    (Story, { parameters }) => {
+    (Story, { }) => {
       const isDarkMode = useDarkMode();
       const [width, height] = useWindowSize();
 
